@@ -11,8 +11,11 @@ dependencies:
   espressif/esp_lcd_st77916: "^1.0.1"
   espressif/esp_lcd_touch_cst816s: "^1.1.2"
 
-  # the rotary encoder (no button on this board)
+  # the rotary encoder. espressif/button is NOT optional here: esp_lvgl_port's
+  # knob support includes iot_button.h unconditionally and will not compile
+  # without it, even though this board has no push switch to read.
   espressif/knob: "^1.1.0"
+  espressif/button: "^4.2.0"
 
   # album art
   espressif/esp_jpeg: "^1.3"

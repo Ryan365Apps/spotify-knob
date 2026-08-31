@@ -126,10 +126,27 @@ dependencies:
   espressif/esp_lcd_st77916: "^1.0.1"       # QSPI panel driver
   espressif/esp_lcd_touch_cst816s: "^1.1.2"
   espressif/knob: "^1.1.0"                  # quadrature decoding for the encoder
+  espressif/button: "^4.2.0"                # required by esp_lvgl_port, see below
   espressif/esp_jpeg: "^1.3"                # album art decode
 ```
 
-Versions checked against the ESP Component Registry on 2026-08-31. `espressif/button` is deliberately absent — this board has no button.
+**`espressif/button` is required even though this board has no button.** `esp_lvgl_port.h` includes `esp_lvgl_port_knob.h` unconditionally, and that header hard-fails with `#error LVLG Knob requires button component` when `iot_button.h` is missing. It is a compile-time dependency of the port layer, not a statement about the hardware — the firmware simply never creates a button handle. Removing it breaks the build of every file that touches LVGL, not just the encoder.
+
+**Known-good resolved set**, from an actual dependency resolution on 2026-08-31 against **ESP-IDF v5.5.5**. If a future build misbehaves, pin to exactly these:
+
+| Component | Resolved |
+|---|---|
+| `lvgl/lvgl` | 9.5.0 |
+| `espressif/esp_lvgl_port` | 2.9.0 |
+| `espressif/esp_lcd_st77916` | 1.0.1 |
+| `espressif/esp_lcd_touch_cst816s` | 1.1.2 |
+| `espressif/esp_lcd_touch` | 1.2.1 (pulled in by cst816s) |
+| `espressif/knob` | 1.1.0 |
+| `espressif/esp_jpeg` | 1.3.1 |
+| `espressif/button` | 4.2.0 |
+| `espressif/cmake_utilities` | 0.5.3 (transitive) |
+
+All eight downloaded cleanly with no version conflicts.
 
 Everything else is in-tree ESP-IDF: `esp_wifi`, `esp_http_client`, `cJSON`, `nvs_flash`, and the mbedTLS certificate bundle (`CONFIG_MBEDTLS_CERTIFICATE_BUNDLE=y`) which covers `accounts.spotify.com`, `api.spotify.com` and the `i.scdn.co` image CDN without you pinning any certificates.
 
@@ -287,7 +304,7 @@ Result recorded in section 1 under Verified constraints. Volume works on the des
 
 ### Wave 1 — Toolchain — **COMPLETE (2026-08-31)**
 
-ESP-IDF v5.5.x installed and verified. Board schematic in the repo.
+ESP-IDF v5.5.5 installed. Schematic read and section 3's pin map verified against it. `firmware/knob/` builds clean with the full dependency set — see section 4 for the known-good versions.
 
 ### Wave 2 — Board bring-up
 
@@ -373,7 +390,7 @@ This screen is the recovery documentation. It should never be seen, and it must 
 |---|---|---|
 | Volume refused by the phone (**confirmed, Wave 0**) | R5 as originally written is unbuildable | Second dial mode is chosen at runtime: seek on the phone, volume on devices that allow it |
 | ~~Pin map wrong~~ | — | **Closed 2026-08-31** — verified against the schematic; see section 3 |
-| Component versions clash with each other or with IDF 5.5 | Half a day | `firmware/knob/` builds the full set with no hardware — run it before the board arrives |
+| ~~Component versions clash~~ | — | **Closed 2026-08-31** — full set builds clean on IDF 5.5.5 |
 | Rate limit hit despite the budget | Screen goes stale intermittently | `Retry-After` handling plus interval doubling, Wave 7 |
 | Refresh token expiry at 6 months | Device dies silently | Wave 8 web config; calendar reminder as the interim |
 | Accidental skips from knocking the knob | Daily irritation | Burst collapsing + lockout in Wave 6; quarter-turn commit as fallback |
@@ -391,17 +408,9 @@ This screen is the recovery documentation. It should never be seen, and it must 
 
 **This wave needs the board.** It is written to be worked through in order the day it arrives.
 
-**Do this part now, before the board arrives.** `firmware/knob/` is a project that pulls in every library the real firmware needs and does nothing else. It builds with no hardware attached, and passing it closes the last risk that can be closed early:
+**Dependency check — PASSED 2026-08-31.** `firmware/knob/` builds clean against ESP-IDF v5.5.5: all ten dependencies resolved, everything compiled and linked, `knob.bin` at 214 KB with 95% of the app partition free. The only failure it produced was a missing `espressif/button`, now fixed and explained in section 4.
 
-```powershell
-cd firmware\knob
-idf.py set-target esp32s3
-idf.py build
-```
-
-"Project build complete" is the whole test. If a component fails to download, correct its version in `main/idf_component.yml` against components.espressif.com. If one fails to compile, note which and stop — that means a version constraint needs loosening, not that anything is wrong with the design.
-
-Everything from Checkpoint A onwards needs the board.
+Everything from Checkpoint A onwards needs the board. Nothing else can be done before it arrives.
 
 **Approach:** four checkpoints, each verified before starting the next. Bringing up a QSPI display, an I2C touch controller and an encoder simultaneously and then asking "why is the screen black" is the slow way to do this.
 
@@ -498,7 +507,7 @@ Fill the screen red, then green, then blue, two seconds apart.
 
 #### Checkpoint D — The dial
 
-**D1.** Add the `espressif/knob` component. Encoder A on **8**, B on **7**. There is no button, so `espressif/button` is not needed.
+**D1.** Encoder A on **8**, B on **7**. `espressif/button` is in the dependency list for compile reasons only — do not wire it to anything.
 
 **D2.** Register with `lvgl_port_add_encoder()`, passing a knob handle and no button handle.
 
