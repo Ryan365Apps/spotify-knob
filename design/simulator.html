@@ -1,0 +1,1591 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Radial Simulator</title>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans+Condensed:wght@600;700&family=IBM+Plex+Sans:wght@400;500&family=Michroma&family=Montserrat:wght@400;500;600&display=swap">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<style>
+  :root{
+    --ground:#EDEDE8;--panel:#FFF;--plinth:#15181D;--rule:#CFCEC6;
+    --ink:#22252B;--ink-soft:#5D6270;--ink-faint:#8B8F9C;
+    --brass:#8A6A1F;--brass-line:#B99436;
+    --sans:"IBM Plex Sans",system-ui,sans-serif;
+    --cond:"IBM Plex Sans Condensed","IBM Plex Sans",system-ui,sans-serif;
+    --mono:"IBM Plex Mono",ui-monospace,monospace;
+    --display:"Michroma","Montserrat",system-ui,sans-serif;
+    --ui:"Montserrat",system-ui,sans-serif;
+    --green:#1DB954;--green-lit:#3FE07A;--amber:#E8B84B;--amber-lit:#F5CE6B;
+    --live:#E23D4C;--live-lit:#FF7A87;
+  }
+  @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+    --ground:#0E1013;--panel:#161920;--plinth:#08090B;--rule:#2A2F37;
+    --ink:#DADDE4;--ink-soft:#99A1AF;--ink-faint:#6B7280;
+    --brass:#D8B25A;--brass-line:#8A6E2C;
+  }}
+  :root[data-theme="dark"]{
+    --ground:#0E1013;--panel:#161920;--plinth:#08090B;--rule:#2A2F37;
+    --ink:#DADDE4;--ink-soft:#99A1AF;--ink-faint:#6B7280;
+    --brass:#D8B25A;--brass-line:#8A6E2C;
+  }
+
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--ground);color:var(--ink);
+    font-family:var(--sans);font-size:15px;line-height:1.55;-webkit-font-smoothing:antialiased}
+  .wrap{max-width:1180px;margin:0 auto;padding:44px 28px 96px}
+
+  header{border-bottom:1px solid var(--rule);padding-bottom:24px;margin-bottom:36px}
+  .eyebrow{font-family:var(--mono);font-size:11px;letter-spacing:.16em;text-transform:uppercase;
+    color:var(--brass);margin:0 0 12px}
+  h1{font-family:var(--cond);font-weight:700;font-size:clamp(30px,4.5vw,44px);line-height:1.04;
+    margin:0 0 14px;letter-spacing:-.01em}
+  .lede{max-width:64ch;color:var(--ink-soft);margin:0}
+
+  .stage{display:flex;gap:44px;align-items:flex-start;flex-wrap:wrap}
+  .figure{flex:none}
+  .aside{flex:1;min-width:320px;display:flex;flex-direction:column;gap:20px}
+
+  /* ---------------- the device ---------------- */
+  .plinth{background:var(--plinth);border-radius:18px;padding:52px;
+    display:flex;align-items:center;justify-content:center;border:1px solid var(--rule)}
+  .device{position:relative;width:360px;height:360px;flex:none;cursor:pointer;
+    touch-action:none;user-select:none;-webkit-user-select:none}
+  #bezel{position:absolute;inset:-30px;border-radius:50%;pointer-events:none;
+    background:repeating-conic-gradient(#191C21 0deg 2.5deg,#23262C 2.5deg 5deg);
+    -webkit-mask:radial-gradient(farthest-side,transparent calc(100% - 22px),#000 calc(100% - 22px));
+            mask:radial-gradient(farthest-side,transparent calc(100% - 22px),#000 calc(100% - 22px));
+    transition:transform .12s ease-out}
+  #bezel i{position:absolute;left:50%;top:3px;width:4px;height:14px;margin-left:-2px;
+    background:#4A5058;border-radius:2px}
+
+  .screen{--u:1px;position:absolute;inset:0;border-radius:50%;overflow:hidden;
+    background:#000;color:#fff;font-family:var(--ui);
+    box-shadow:0 0 0 6px #2A2E35,0 14px 34px rgba(0,0,0,.55)}
+  #screenRoot{position:absolute;inset:0}
+  #dimmer{position:absolute;inset:0;background:#000;pointer-events:none;opacity:0}
+  #sleepveil{position:absolute;inset:0;background:#000;pointer-events:none;opacity:0;
+    transition:opacity .6s}
+  #sleepveil.on{opacity:1}
+
+  .legend{margin:16px 4px 0;font-family:var(--mono);font-size:11.5px;color:var(--ink-faint);
+    line-height:2}
+  .legend b{color:var(--ink-soft);font-weight:500}
+  .legend .k{display:inline-block;border:1px solid var(--rule);border-radius:4px;
+    padding:0 6px;margin-right:2px;color:var(--ink-soft)}
+
+  /* ---------------- in-screen widgets (from screens.html) ---------------- */
+  .art{position:absolute;inset:0}
+  .art img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+  .art::before{content:"";position:absolute;inset:0;background:
+    radial-gradient(120% 90% at 22% 18%,var(--a1,#E4572E) 0%,var(--a1t,rgba(228,87,46,0)) 58%),
+    radial-gradient(100% 100% at 84% 22%,var(--a2,#F2B705) 0%,var(--a2t,rgba(242,183,5,0)) 52%),
+    radial-gradient(130% 110% at 60% 96%,var(--a3,#2B3A67) 0%,var(--a3t,rgba(43,58,103,0)) 62%),
+    linear-gradient(160deg,var(--a4,#7A2E1E) 0%,#241726 62%,#0E1018 100%)}
+  .art.real::before{content:none}
+  .art::after{content:"";position:absolute;inset:0;background:rgba(0,0,0,0)}
+  .art.d55::after{background:rgba(0,0,0,.55)}
+  .art.d94::after{background:rgba(0,0,0,.94)}
+  .scrim{position:absolute;inset:0;
+    background:radial-gradient(circle at 50% 50%,rgba(0,0,0,.62) 0%,rgba(0,0,0,.26) 60%,rgba(0,0,0,.55) 100%)}
+
+  .pchip{position:absolute;inset:9px}
+  .pchip::after{content:"";position:absolute;top:-5px;left:50%;
+    width:11px;height:11px;border-radius:999px;background:#fff;
+    transform:translateX(-50%);box-shadow:0 0 10px rgba(255,255,255,.85)}
+  .dial{position:absolute;inset:0;width:100%;height:100%}
+  .idlecanvas{position:absolute;inset:0;width:100%;height:100%}
+
+  .midtext{position:absolute;left:0;right:0;top:50%;transform:translateY(-50%);
+    padding:0 24px;text-align:center;text-shadow:0 2px 18px rgba(0,0,0,.95)}
+  .ttl{font-family:var(--display);font-size:27px;line-height:1.18;margin:0 0 12px}
+  .sub2{font-family:var(--ui);font-size:16px;font-weight:500;
+    color:rgba(255,255,255,.6);margin:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .marquee{overflow:hidden;position:relative;width:100%}
+  .marquee.roll{
+    -webkit-mask:linear-gradient(90deg,transparent,#000 8%,#000 92%,transparent);
+            mask:linear-gradient(90deg,transparent,#000 8%,#000 92%,transparent)}
+  .marquee .ttl{display:inline-block;white-space:nowrap;margin-bottom:12px}
+  .marquee.roll .ttl{animation:slide 6.5s cubic-bezier(.5,0,.5,1) infinite}
+  @keyframes slide{0%,12%{transform:translateX(0)}
+    50%,62%{transform:translateX(calc(-100% + 280px))}100%{transform:translateX(0)}}
+  @media (prefers-reduced-motion:reduce){.marquee.roll .ttl{animation:none}}
+
+  .bigval{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+    text-align:center}
+  .bigval .v{font-family:var(--display);font-size:54px;line-height:1;
+    letter-spacing:-.01em;font-variant-numeric:tabular-nums}
+  .bigval .v small{font-size:23px;opacity:.5;margin-left:4px}
+  .bigval .u{position:absolute;left:0;right:0;top:58%;font-family:var(--ui);
+    font-size:14px;font-weight:500;color:rgba(255,255,255,.4);margin:0}
+  .bigval.stack{flex-direction:column}
+  .bigval.stack .u{position:static;margin-top:14px}
+
+  .row{position:absolute;left:0;right:0;top:50%;transform:translateY(-50%);
+    display:flex;align-items:center;justify-content:center;gap:40px}
+  .row svg{fill:#fff;filter:drop-shadow(0 2px 10px rgba(0,0,0,.9))}
+  .row .side{width:40px;height:40px;opacity:.85}
+  .row .mid{width:58px;height:58px}
+  .row [data-act]{cursor:pointer}
+
+  .chips{position:absolute;left:0;right:0;bottom:46px;
+    display:flex;justify-content:center;gap:12px}
+  .mchip{padding:10px 18px;border-radius:999px;cursor:pointer;
+    font-family:var(--display);font-size:11px;letter-spacing:.02em;
+    background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.16);
+    color:rgba(255,255,255,.62)}
+  .mchip.on{background:rgba(29,185,84,.24);border-color:var(--green-lit);color:#EAFFF1;
+    box-shadow:0 0 20px rgba(63,224,122,.45),inset 0 0 16px rgba(63,224,122,.22)}
+  .mchip.on.seek{background:rgba(232,184,75,.24);border-color:var(--amber-lit);color:#FFF6E2;
+    box-shadow:0 0 20px rgba(245,206,107,.45),inset 0 0 16px rgba(245,206,107,.22)}
+  .mchip.dead{opacity:.26;cursor:default}
+
+  .devpill{position:absolute;left:50%;transform:translateX(-50%);top:42px;
+    display:flex;align-items:center;gap:8px;cursor:pointer;
+    padding:8px 18px;border-radius:999px;
+    background:rgba(255,255,255,.11);border:1px solid rgba(255,255,255,.18);
+    font-family:var(--display);font-size:10px;letter-spacing:.02em}
+  .devpill svg{width:14px;height:14px;fill:currentColor}
+
+  .expired .v{font-family:var(--display);font-size:20px;line-height:1.5}
+  .addr{font-family:var(--mono);font-size:18px;margin-top:20px;
+    background:rgba(255,255,255,.1);padding:9px 15px;border-radius:8px}
+  .warn{color:var(--amber);margin-top:14px;font-size:14px;font-weight:500}
+
+  .selground{position:absolute;inset:0;
+    background:radial-gradient(circle at 50% 42%,#14171C 0%,#0A0B0D 55%,#000 100%)}
+  .ringwrap{position:absolute;inset:0;transition:transform .35s cubic-bezier(.3,0,.2,1)}
+  .slot{position:absolute;left:50%;top:50%;width:0;height:0}
+  .slot i{position:absolute;left:50%;top:50%;width:38px;height:38px;display:flex;
+    align-items:center;justify-content:center;transition:transform .35s cubic-bezier(.3,0,.2,1)}
+  .slot svg{width:100%;height:100%}
+  .slot svg *{stroke:rgba(255,255,255,.5);fill:none}
+  .slot.sel svg *{stroke:#EAFFF1}
+  .marker{position:absolute;left:50%;top:19px;transform:translateX(-50%);
+    width:30px;height:14px}
+  .marker::before,.marker::after{content:"";position:absolute;top:0;
+    width:2px;height:14px;background:var(--green-lit);border-radius:999px;opacity:.95}
+  .marker::before{left:0}.marker::after{right:0}
+  .selarc{position:absolute;inset:9px;border-radius:50%;
+    background:conic-gradient(from -17deg,var(--green-lit) 0 34deg,transparent 34deg);
+    -webkit-mask:radial-gradient(farthest-side,transparent calc(100% - 4px),#000 calc(100% - 4px));
+            mask:radial-gradient(farthest-side,transparent calc(100% - 4px),#000 calc(100% - 4px));
+    filter:drop-shadow(0 0 10px rgba(63,224,122,.55))}
+  .hero{position:absolute;inset:0;display:flex;flex-direction:column;
+    align-items:center;justify-content:center;gap:13px;pointer-events:none}
+  .hero svg{width:56px;height:56px;filter:drop-shadow(0 0 16px rgba(63,224,122,.4))}
+  .hero svg *{stroke:#EAFFF1;fill:none}
+  .hero span{font-family:var(--display);font-size:17px;color:#fff}
+  .hero em{font-family:var(--ui);font-style:normal;font-size:10px;
+    font-weight:600;letter-spacing:.22em;color:rgba(255,255,255,.32)}
+
+  .setttl{position:absolute;left:0;right:0;top:40px;text-align:center;
+    font-family:var(--ui);font-size:11px;font-weight:600;
+    letter-spacing:.24em;color:rgba(255,255,255,.34)}
+  .slist{position:absolute;inset:0;display:flex;flex-direction:column;
+    align-items:center;justify-content:center;gap:5px}
+  .srow{font-family:var(--ui);font-weight:500;white-space:nowrap;
+    display:flex;align-items:baseline;gap:11px}
+  .srow.far{font-size:15px;color:rgba(255,255,255,.15)}
+  .srow.near{font-size:17px;color:rgba(255,255,255,.4)}
+  .srow.cur{font-family:var(--display);font-size:17px;color:#fff;
+    padding:10px 22px;border-radius:999px;
+    background:rgba(255,255,255,.09);border:1px solid rgba(255,255,255,.22);
+    margin:6px 0}
+  .srow v{font-family:var(--ui);font-size:13px;font-weight:600;
+    color:rgba(255,255,255,.45);letter-spacing:.06em}
+  .srow.cur v{color:var(--green-lit);font-size:12px}
+  .scrollarc{position:absolute;inset:11px;border-radius:50%;
+    background:conic-gradient(from 66deg,rgba(255,255,255,.34) 0 48deg,transparent 48deg);
+    -webkit-mask:radial-gradient(farthest-side,transparent calc(100% - 3px),#000 calc(100% - 3px));
+            mask:radial-gradient(farthest-side,transparent calc(100% - 3px),#000 calc(100% - 3px));
+    transition:transform .3s}
+  .action{position:absolute;left:50%;transform:translateX(-50%);
+    bottom:46px;padding:10px 22px;border-radius:999px;cursor:pointer;
+    font-family:var(--display);font-size:11px;
+    background:rgba(63,224,122,.2);border:1px solid var(--green-lit);color:#EAFFF1;
+    box-shadow:0 0 18px rgba(63,224,122,.35)}
+  .kv{position:absolute;left:0;right:0;top:50%;transform:translateY(-50%);
+    text-align:center;padding:0 46px}
+  .kv b{display:block;font-family:var(--display);font-size:18px;
+    color:#fff;margin-bottom:10px}
+  .kv s{display:block;text-decoration:none;font-family:var(--mono);
+    font-size:13px;color:rgba(255,255,255,.45);line-height:1.7}
+
+  /* config QR + join narration + wispr */
+  .qrbox{position:absolute;left:50%;top:50%;transform:translate(-50%,-54%);
+    width:138px;height:138px;background:#fff;border-radius:10px;
+    display:flex;align-items:center;justify-content:center}
+  .qrbox img,.qrbox canvas,.qrbox table{width:118px!important;height:118px!important}
+  .cfgaddr{position:absolute;left:0;right:0;top:50%;margin-top:72px;text-align:center;
+    font-family:var(--mono);font-size:12px;color:rgba(255,255,255,.55);
+    display:flex;justify-content:center;gap:16px}
+  .cfgring{position:absolute;inset:9px;border-radius:50%;
+    -webkit-mask:radial-gradient(farthest-side,transparent calc(100% - 4px),#000 calc(100% - 4px));
+            mask:radial-gradient(farthest-side,transparent calc(100% - 4px),#000 calc(100% - 4px));
+    filter:drop-shadow(0 0 10px rgba(245,206,107,.4))}
+  .action.amber{background:rgba(232,184,75,.2);border-color:var(--amber-lit);color:#FFF6E2;
+    box-shadow:0 0 18px rgba(245,206,107,.35)}
+  .joinlist{position:absolute;left:0;right:0;top:50%;transform:translateY(-50%);
+    display:flex;flex-direction:column;gap:9px;align-items:center}
+  .jrow{font-family:var(--ui);font-size:14px;font-weight:500;display:flex;gap:10px;
+    align-items:center;color:rgba(255,255,255,.35)}
+  .jrow.ok{color:#EAFFF1}
+  .jrow.fail{color:var(--amber-lit)}
+  .jrow i{font-style:normal;font-family:var(--mono);width:14px;text-align:center}
+  .jwhy{font-family:var(--ui);font-size:11px;color:var(--amber-lit);opacity:.85;
+    text-align:center;margin-top:-2px}
+  /* wispr screens 13 A / 13 B and the waggle overlay (screen 14) */
+  .starc{position:absolute;inset:8px;border-radius:50%;
+    -webkit-mask:radial-gradient(farthest-side,transparent calc(100% - 4px),#000 calc(100% - 4px));
+            mask:radial-gradient(farthest-side,transparent calc(100% - 4px),#000 calc(100% - 4px))}
+  .starc.r{background:conic-gradient(var(--live-lit) 0 360deg);
+    filter:drop-shadow(0 0 11px rgba(255,122,135,.55));
+    animation:breathe 2.6s ease-in-out infinite}
+  .starc.dim{background:rgba(255,255,255,.09)}
+  @keyframes breathe{0%,100%{opacity:1}50%{opacity:.5}}
+  @media (prefers-reduced-motion:reduce){.starc.r{animation:none}}
+  .mic{position:absolute;left:50%;top:112px;transform:translateX(-50%);
+    width:60px;height:60px}
+  .mic svg{width:100%;height:100%;fill:none;stroke:rgba(255,255,255,.3);
+    stroke-width:4.5;stroke-linecap:round}
+  .mic.live svg{stroke:var(--live-lit);
+    filter:drop-shadow(0 0 14px rgba(255,122,135,.55))}
+  .stcen{position:absolute;left:0;right:0;top:178px;transform:translateY(-50%);
+    text-align:center;padding:0 52px}
+  .stcen b{display:block;font-family:var(--display);font-size:23px;
+    color:#fff;line-height:1.2;font-weight:400}
+  .stcen s{display:block;text-decoration:none;font-family:var(--ui);font-weight:500;
+    font-size:13px;color:rgba(255,255,255,.42);margin-top:9px}
+  .elapsed{position:absolute;left:0;right:0;bottom:74px;text-align:center;
+    font-family:var(--mono);font-size:15px;color:rgba(255,255,255,.5);
+    font-variant-numeric:tabular-nums}
+  .hint{position:absolute;left:0;right:0;bottom:66px;text-align:center;
+    font-family:var(--ui);font-size:10px;font-weight:600;
+    letter-spacing:.2em;color:rgba(255,255,255,.26)}
+  #waggleol{position:absolute;inset:0;background:rgba(0,0,0,.82)}
+  #waggleol[hidden]{display:none}
+
+  /* ---------------- side panels ---------------- */
+  .panel{background:var(--panel);border:1px solid var(--rule);border-radius:12px;padding:18px 20px}
+  .panel h2{font-family:var(--cond);font-size:16px;font-weight:700;margin:0 0 12px;
+    display:flex;align-items:center;gap:10px}
+  .panel h2 .hint{font-family:var(--mono);font-size:10px;color:var(--ink-faint);
+    letter-spacing:.1em;font-weight:400;margin-left:auto}
+  .modes{display:flex;gap:8px}
+  .modes button{flex:1;padding:9px 0;border-radius:8px;border:1px solid var(--rule);
+    background:none;color:var(--ink-soft);font-family:var(--display);font-size:11px;
+    letter-spacing:.06em;cursor:pointer}
+  .modes button.on{background:var(--plinth);color:#EAFFF1;border-color:var(--plinth)}
+  #liveCard{margin-top:12px;font-size:13.5px;color:var(--ink-soft)}
+  #liveCard .cta{display:inline-block;margin-top:8px;padding:8px 16px;border-radius:999px;
+    border:1px solid var(--green);color:var(--green);font-family:var(--display);
+    font-size:11px;cursor:pointer;background:none}
+  #liveCard code{font-family:var(--mono);font-size:12px}
+
+  .statedl{margin:0;display:grid;grid-template-columns:auto 1fr;gap:6px 16px}
+  .statedl dt{font-family:var(--mono);font-size:10.5px;letter-spacing:.13em;
+    text-transform:uppercase;color:var(--ink-faint);padding-top:2px}
+  .statedl dd{margin:0;font-size:13.5px;font-variant-numeric:tabular-nums}
+  #hapt{display:inline-block;width:9px;height:9px;border-radius:50%;
+    background:var(--rule);vertical-align:1px;transition:background .05s,box-shadow .05s}
+  #hapt.tick{background:var(--brass-line);box-shadow:0 0 8px var(--brass-line)}
+  #hapt.tick.firm{background:var(--brass);box-shadow:0 0 14px var(--brass)}
+
+  .scen{display:flex;flex-wrap:wrap;gap:8px}
+  .scen button{padding:7px 13px;border-radius:999px;border:1px solid var(--rule);
+    background:none;color:var(--ink-soft);font-family:var(--mono);font-size:11.5px;cursor:pointer}
+  .scen button:hover{border-color:var(--brass-line);color:var(--ink)}
+
+  #log{font-family:var(--mono);font-size:11.5px;line-height:1.75;color:var(--ink-soft);
+    max-height:300px;overflow-y:auto;margin:0;white-space:pre-wrap;word-break:break-all}
+  #log .t{color:var(--ink-faint)}
+  #log .err{color:#C2410C}
+
+  footer{margin-top:60px;padding-top:24px;border-top:1px solid var(--rule);
+    color:var(--ink-faint);font-size:13px;max-width:72ch}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <p class="eyebrow">Radial · interactive simulator · rev A</p>
+  <h1>The whole device, working</h1>
+  <p class="lede">Every screen from <code>screens.html</code> wired together with the timing rules from BUILD.md §5 — the 2&nbsp;s dial overlay, the 5&nbsp;s controls return, the 4&nbsp;s selector timeout, and one debounced write 400&nbsp;ms after the last detent. Mock playback by default; Live mode drives your real Spotify through the Web API.</p>
+</header>
+
+<div class="stage">
+
+  <div class="figure">
+    <div class="plinth">
+      <div class="device" id="device">
+        <div id="bezel"><i></i></div>
+        <div class="screen">
+          <div id="screenRoot"></div>
+          <div id="waggleol" hidden></div>
+          <div id="dimmer"></div>
+          <div id="sleepveil"></div>
+        </div>
+      </div>
+    </div>
+    <p class="legend">
+      <span class="k">scroll</span> turn the dial &nbsp;·&nbsp;
+      <span class="k">click</span> tap &nbsp;·&nbsp;
+      <span class="k">hold</span> long-press<br>
+      keys: <b>←/→</b> dial · <b>Enter</b> tap · <b>L</b> long-press<br>
+      <b>waggle</b> — scroll down·up·down fast, from any app: dictation toggle
+    </p>
+  </div>
+
+  <div class="aside">
+
+    <div class="panel">
+      <h2>Playback source</h2>
+      <div class="modes">
+        <button id="btnMock" class="on">MOCK</button>
+        <button id="btnLive">LIVE SPOTIFY</button>
+      </div>
+      <div id="liveCard" hidden></div>
+    </div>
+
+    <div class="panel">
+      <h2>Device state <span class="hint">haptic <i id="hapt"></i></span></h2>
+      <dl class="statedl">
+        <dt>App</dt><dd id="stApp">—</dd>
+        <dt>Screen</dt><dd id="stScreen">—</dd>
+        <dt>Playing on</dt><dd id="stDev">—</dd>
+        <dt>Dial does</dt><dd id="stDial">—</dd>
+        <dt>Volume</dt><dd id="stVol">—</dd>
+        <dt>Position</dt><dd id="stPos">—</dd>
+        <dt>Next write</dt><dd id="stPending">—</dd>
+      </dl>
+    </div>
+
+    <div class="panel" id="scenPanel">
+      <h2>Things that happen to the device</h2>
+      <div class="scen">
+        <button data-scen="pause">Pause from the phone</button>
+        <button data-scen="phone">Playback moves to the phone</button>
+        <button data-scen="stop">Nothing playing (204)</button>
+        <button data-scen="resume">Playback resumes</button>
+        <button data-scen="join-ok">Phone saves Wi-Fi (good password)</button>
+        <button data-scen="join-fail">Phone saves Wi-Fi (wrong password)</button>
+        <button data-scen="expire">Token dies (invalid_grant)</button>
+        <button data-scen="reset">Reset</button>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h2>What the firmware would do <span class="hint">API calls</span></h2>
+      <pre id="log"></pre>
+    </div>
+
+  </div>
+</div>
+
+<footer>
+  <p>Interactions per BUILD.md §5. There is no knob press on this hardware — play/pause is the centre button on CONTROLS, two taps from the default screen. Volume is read from <code>device.supports_volume</code> on every poll and falls back to seek when refused, which the mock's phone does, faithfully. Live mode needs the page served by <code>tools/serve_sim.py</code> so the registered <code>127.0.0.1:8888/callback</code> redirect lands back here.</p>
+</footer>
+</div>
+
+<script>
+(function(){
+"use strict";
+
+/* ============================== utilities ============================== */
+
+var $ = function(id){ return document.getElementById(id); };
+function clamp(v,a,b){ return v<a?a:(v>b?b:v); }
+function fmtMs(ms){ ms=Math.max(0,ms|0); var s=Math.round(ms/1000);
+  return Math.floor(s/60)+":"+String(s%60).padStart(2,"0"); }
+function now(){ return Date.now(); }
+function esc(t){ return String(t).replace(/[&<>"]/g,function(c){
+  return {"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;"}[c]; }); }
+function store(k,v){ try{ localStorage.setItem(k,JSON.stringify(v)); }catch(e){} }
+function load(k,d){ try{ var v=localStorage.getItem(k); return v?JSON.parse(v):d; }catch(e){ return d; } }
+
+var logEl=$("log");
+function log(msg,err){
+  var t=new Date().toTimeString().slice(0,8);
+  var line=document.createElement("div");
+  line.innerHTML='<span class="t">'+t+"</span>  "+esc(msg);
+  if(err) line.className="err";
+  logEl.prepend(line);
+  while(logEl.childNodes.length>80) logEl.removeChild(logEl.lastChild);
+}
+
+/* ============================== bloom renderer ============================== */
+
+var GOLD=137.507764*Math.PI/180, M=300, RI=86, RO=170, CX=180, CY=180;
+var HUE={green:"63,224,122", amber:"245,206,107", white:"255,255,255"};
+function hash(i){ var v=Math.sin(i*12.9898)*43758.5453; return v-Math.floor(v); }
+function bloom(i,spin,div){
+  var r=Math.sqrt(RI*RI+(i/M)*(RO*RO-RI*RI));
+  var a=i*div+spin-Math.PI/2;
+  var t=(r-RI)/(RO-RI);
+  var len=(2.2+r*0.045)*(0.4+1.35*hash(i));
+  return {x:CX+Math.cos(a)*r,y:CY+Math.sin(a)*r,
+          dx:Math.cos(a)*len,dy:Math.sin(a)*len,t:t,a:a};
+}
+function stroke(ctx,s,f){ f=f||1;
+  ctx.beginPath(); ctx.moveTo(s.x-s.dx*f,s.y-s.dy*f); ctx.lineTo(s.x+s.dx*f,s.y+s.dy*f); ctx.stroke(); }
+
+function drawWedge(cv,pct,hue,band){
+  if(!cv) return;
+  var ctx=cv.getContext("2d"), lit=HUE[hue];
+  ctx.clearRect(0,0,360,360); ctx.lineCap="round";
+  var on=[];
+  for(var i=0;i<M;i++){
+    var s=bloom(i,0,GOLD);
+    if(s.t<band) continue;
+    var frac=(((s.a+Math.PI/2)%(Math.PI*2))+Math.PI*2)%(Math.PI*2)/(Math.PI*2);
+    if(frac<pct){ on.push(s); continue; }
+    ctx.strokeStyle="rgba(255,255,255,"+(band?0.16:(0.04+0.20*s.t)).toFixed(3)+")";
+    ctx.lineWidth=0.8+0.5*s.t;
+    stroke(ctx,s);
+  }
+  ctx.shadowColor="rgba("+lit+",0.8)"; ctx.shadowBlur=6;
+  on.forEach(function(s){
+    ctx.strokeStyle="rgba("+lit+","+(0.34+0.66*s.t).toFixed(3)+")";
+    ctx.lineWidth=1.1+0.9*s.t;
+    stroke(ctx,s);
+  });
+  ctx.shadowBlur=0;
+}
+function drawIdle(cv,rgb,s){
+  if(!cv) return;
+  var ctx=cv.getContext("2d");
+  var g=ctx.createRadialGradient(CX,CY,10,CX,CY,190);
+  g.addColorStop(0,"#0A0B0D"); g.addColorStop(1,"#000");
+  ctx.fillStyle=g; ctx.fillRect(0,0,360,360);
+  var div=GOLD+(0.07*Math.PI/180)*Math.sin(s/240*Math.PI*2);
+  var spin=s/600*Math.PI*2;
+  var swellPhase=s/34*Math.PI*2;
+  ctx.lineCap="round";
+  for(var i=0;i<M;i++){
+    var b=bloom(i,spin,div);
+    var swell=0.72+0.42*Math.sin(3*b.a+swellPhase);
+    ctx.strokeStyle="rgba("+rgb[0]+","+rgb[1]+","+rgb[2]+","+(0.05+0.26*b.t*swell).toFixed(3)+")";
+    ctx.lineWidth=0.8+0.5*b.t;
+    stroke(ctx,b,swell);
+  }
+}
+function hexRgb(h){ return [parseInt(h.slice(1,3),16),parseInt(h.slice(3,5),16),parseInt(h.slice(5,7),16)]; }
+
+/* ============================== mock engine ============================== */
+
+var TRACKS=[
+ {title:"Too Good, Too Bad",artist:"Jason Scott & The High Heat",dur:232000,
+  pal:["#E4572E","#F2B705","#2B3A67","#7A2E1E"]},
+ {title:"Glass Coast",artist:"Motorway Sons",dur:201000,
+  pal:["#1B9AAA","#06D6A0","#26547C","#0B3C49"]},
+ {title:"Night Bus",artist:"Lena Okafor",dur:274000,
+  pal:["#B14AED","#FF6392","#2E1760","#3D2B56"]},
+ {title:"Copper Sky",artist:"The Field Hands",dur:189000,
+  pal:["#D08C1D","#E8D33F","#7A3B2E","#5A2A1B"]},
+ {title:"Undertow",artist:"Marlowe Beck",dur:246000,
+  pal:["#4361EE","#4CC9F0","#7209B7","#1B1B3A"]}
+];
+
+function MockEngine(){
+  var devices=[
+    {id:"pc1",name:"PC1",type:"Computer",supportsVolume:true,volume:62},
+    {id:"pixel",name:"Pixel Ten",type:"Smartphone",supportsVolume:false,volume:null}
+  ];
+  var devIdx=0, trackIdx=0, playing=true, posMs=107000, posAt=now();
+  var stopped=false, expired=false;
+
+  function flush(){ if(playing){ posMs+=now()-posAt; } posAt=now();
+    var d=TRACKS[trackIdx].dur;
+    if(posMs>=d){ trackIdx=(trackIdx+1)%TRACKS.length; posMs=0; log("— track ended, mock advances —"); } }
+
+  return {
+    name:"mock",
+    getState:function(){
+      if(expired) return {ok:false,reason:"expired"};
+      if(stopped) return {ok:false,reason:"204"};
+      flush();
+      var t=TRACKS[trackIdx], d=devices[devIdx];
+      return {ok:true,playing:playing,isAd:false,trackId:"mock-"+trackIdx,
+        title:t.title,artist:t.artist,artUrl:null,pal:t.pal,
+        progressMs:posMs,durationMs:t.dur,fetchedAt:posAt,
+        volume:d.volume==null?0:d.volume,supportsVolume:d.supportsVolume,
+        deviceName:d.name,deviceType:d.type,deviceId:d.id};
+    },
+    playPause:function(){ flush(); playing=!playing;
+      log("PUT /me/player/"+(playing?"play":"pause")+"  → 200"); },
+    next:function(){ flush(); trackIdx=(trackIdx+1)%TRACKS.length; posMs=0;
+      log("POST /me/player/next  → 200"); },
+    prev:function(){ flush();
+      if(posMs>3000){ posMs=0; } else { trackIdx=(trackIdx+TRACKS.length-1)%TRACKS.length; posMs=0; }
+      log("POST /me/player/previous  → 200"); },
+    setVolume:function(p){ var d=devices[devIdx];
+      if(!d.supportsVolume){ log("PUT /me/player/volume?volume_percent="+p+"  → 403 VOLUME_CONTROL_DISALLOW",true); return; }
+      d.volume=p; log("PUT /me/player/volume?volume_percent="+p+"  → 204"); },
+    seek:function(ms){ flush(); posMs=clamp(ms,0,TRACKS[trackIdx].dur);
+      log("PUT /me/player/seek?position_ms="+Math.round(ms)+"  → 200"); },
+    transfer:function(){ devIdx=(devIdx+1)%devices.length; stopped=false;
+      log('PUT /me/player  {"device_ids":["'+devices[devIdx].id+'"]}  → 204 · now on '+devices[devIdx].name); },
+    scenario:function(k){
+      switch(k){
+        case "pause": flush(); playing=false; log("· phone paused playback — next poll shows it"); break;
+        case "phone": devIdx=1; stopped=false; log("· playback moved to Pixel Ten — supports_volume:false"); break;
+        case "stop": stopped=true; log("· all devices gone — GET /me/player → 204"); break;
+        case "resume": stopped=false; expired=false; playing=true; posAt=now(); log("· playback resumed"); break;
+        case "expire": expired=true; log("· token refresh → 400 invalid_grant. Permanent.",true); break;
+        case "reset": devIdx=0; trackIdx=0; playing=true; posMs=107000; posAt=now();
+          stopped=false; expired=false; log("· mock reset"); break;
+      }
+    }
+  };
+}
+
+/* ============================== real engine (PKCE + Web API) ============================== */
+
+var ACCOUNTS="https://accounts.spotify.com", API="https://api.spotify.com/v1";
+var SCOPES="user-read-playback-state user-modify-playback-state";
+
+function b64url(buf){ return btoa(String.fromCharCode.apply(null,new Uint8Array(buf)))
+  .replace(/\+/g,"-").replace(/\//g,"_").replace(/=+$/,""); }
+
+async function getClientId(){
+  var cid=load("sim_client_id",null);
+  if(cid) return cid;
+  try{ var r=await fetch("/api/client_id"); if(r.ok){ var j=await r.json();
+    if(j.client_id){ store("sim_client_id",j.client_id); return j.client_id; } } }catch(e){}
+  cid=window.prompt("Spotify Client ID (from the developer dashboard):");
+  if(cid){ cid=cid.trim(); store("sim_client_id",cid); }
+  return cid;
+}
+
+function tokenSave(t){ store("sim_token",t); }
+function tokenLoad(){
+  var t=load("sim_token",null);
+  if(!t){ try{ var v=sessionStorage.getItem("sim_token"); t=v?JSON.parse(v):null; }catch(e){} }
+  return t;
+}
+
+async function startAuth(){
+  var cid=await getClientId(); if(!cid) return;
+  var raw=new Uint8Array(64); crypto.getRandomValues(raw);
+  var verifier=b64url(raw.buffer);
+  var digest=await crypto.subtle.digest("SHA-256",new TextEncoder().encode(verifier));
+  try{ sessionStorage.setItem("pkce_verifier",verifier); }catch(e){}
+  var p=new URLSearchParams({client_id:cid,response_type:"code",
+    redirect_uri:location.origin+"/callback",scope:SCOPES,
+    code_challenge_method:"S256",code_challenge:b64url(digest)});
+  location.href=ACCOUNTS+"/authorize?"+p;
+}
+
+async function tokenRequest(body){
+  var r=await fetch(ACCOUNTS+"/api/token",{method:"POST",
+    headers:{"Content-Type":"application/x-www-form-urlencoded"},
+    body:new URLSearchParams(body)});
+  var j=await r.json();
+  if(!r.ok) throw Object.assign(new Error(j.error_description||j.error||("HTTP "+r.status)),{code:j.error});
+  return j;
+}
+
+function RealEngine(){
+  var tok=tokenLoad(), cb=null, timer=null, dead=false, last={ok:false,reason:"204"};
+  var self;
+
+  async function ensureToken(){
+    if(dead) throw new Error("token dead");
+    if(tok && tok.expiresAt-60000>now()) return;
+    var cid=load("sim_client_id",null);
+    try{
+      var j=await tokenRequest({grant_type:"refresh_token",refresh_token:tok.refresh,client_id:cid});
+      tok={access:j.access_token,refresh:j.refresh_token||tok.refresh,
+           expiresAt:now()+j.expires_in*1000};
+      tokenSave(tok); log("token refreshed, expires in "+j.expires_in+" s");
+    }catch(e){
+      if(e.code==="invalid_grant"){ dead=true; last={ok:false,reason:"expired"};
+        log("400 invalid_grant — refresh token is dead",true); return; }
+      throw e;
+    }
+  }
+
+  async function sfetch(path,opts){
+    opts=opts||{};
+    await ensureToken();
+    if(dead) return null;
+    var r=await fetch(API+path,Object.assign({},opts,{
+      headers:Object.assign({Authorization:"Bearer "+tok.access},opts.headers||{})}));
+    if(r.status===401&&!opts._r){ tok.expiresAt=0; return sfetch(path,Object.assign({},opts,{_r:1})); }
+    return r;
+  }
+
+  function normalize(j){
+    var item=j.item||{}, dev=j.device||{}, al=item.album||{}, imgs=al.images||[];
+    var art=null;
+    if(imgs.length){
+      var c=imgs.filter(function(i){return i.width>=300;})
+                .sort(function(a,b){return a.width-b.width;})[0]||imgs[0];
+      art=c.url;
+    }
+    var ad=j.currently_playing_type==="ad";
+    return {ok:true,playing:!!j.is_playing,isAd:ad,
+      trackId:item.id||j.currently_playing_type||"?",
+      title:ad?"Advert":(item.name||"—"),
+      artist:(item.artists||[]).map(function(a){return a.name;}).join(", "),
+      artUrl:art,pal:null,
+      progressMs:j.progress_ms||0,durationMs:item.duration_ms||0,fetchedAt:now(),
+      volume:dev.volume_percent==null?0:dev.volume_percent,
+      supportsVolume:!!dev.supports_volume,
+      deviceName:dev.name||"?",deviceType:dev.type||"",deviceId:dev.id};
+  }
+
+  function schedule(ms){ clearTimeout(timer); timer=setTimeout(poll,ms); }
+
+  async function poll(){
+    try{
+      var r=await sfetch("/me/player");
+      if(!r){ if(cb)cb(); return; }
+      if(r.status===204){ last={ok:false,reason:"204"}; if(cb)cb(); schedule(10000); return; }
+      if(r.status===429){ var ra=+(r.headers.get("Retry-After")||5);
+        log("429 — honouring Retry-After: "+ra+" s",true); schedule(ra*1000+500); return; }
+      var j=await r.json(); last=normalize(j); if(cb)cb();
+      schedule(last.playing?3000:10000);
+    }catch(e){ log("poll failed: "+e.message,true); schedule(10000); }
+  }
+
+  async function cmd(desc,fn){
+    try{ var r=await fn();
+      if(!r) return;
+      if(r.status>=400){
+        var msg=""; try{ var j=await r.json();
+          msg=(j.error&&(j.error.reason||j.error.message))||""; }catch(e){}
+        log(desc+"  → "+r.status+(msg?"  "+msg:""),true);
+        if(r.status===403&&/VOLUME/.test(msg)&&last.ok) last.supportsVolume=false;
+        if(r.status===404) log("· no active device — start playback somewhere first",true);
+      }else log(desc+"  → "+r.status);
+      schedule(400);
+    }catch(e){ log(desc+" failed: "+e.message,true); }
+  }
+
+  self={
+    name:"live",
+    hasToken:function(){ if(!tok) tok=tokenLoad(); return !!tok; },
+    start:function(fn){ cb=fn; if(tok) poll(); },
+    stop:function(){ clearTimeout(timer); cb=null; },
+    getState:function(){ return last; },
+    playPause:function(){
+      var p=last.ok&&last.playing;
+      if(last.ok) last.playing=!p;
+      cmd("PUT /me/player/"+(p?"pause":"play"),function(){
+        return sfetch("/me/player/"+(p?"pause":"play"),{method:"PUT"}); });
+    },
+    next:function(){ cmd("POST /me/player/next",function(){
+      return sfetch("/me/player/next",{method:"POST"}); }); },
+    prev:function(){ cmd("POST /me/player/previous",function(){
+      return sfetch("/me/player/previous",{method:"POST"}); }); },
+    setVolume:function(p){ cmd("PUT /me/player/volume?volume_percent="+p,function(){
+      return sfetch("/me/player/volume?volume_percent="+p,{method:"PUT"}); }); },
+    seek:function(ms){ ms=Math.round(ms);
+      cmd("PUT /me/player/seek?position_ms="+ms,function(){
+        return sfetch("/me/player/seek?position_ms="+ms,{method:"PUT"}); }); },
+    transfer:async function(){
+      try{
+        var r=await sfetch("/me/player/devices"); if(!r) return;
+        var j=await r.json(), ds=j.devices||[];
+        if(ds.length<2){ log("only "+ds.length+" device visible — nothing to transfer to",true); return; }
+        var i=ds.findIndex(function(d){return d.is_active;});
+        var target=ds[(i+1+ds.length)%ds.length];
+        cmd('PUT /me/player {"device_ids":["'+target.id+'"]} → '+target.name,function(){
+          return sfetch("/me/player",{method:"PUT",
+            headers:{"Content-Type":"application/json"},
+            body:JSON.stringify({device_ids:[target.id]})}); });
+      }catch(e){ log("transfer failed: "+e.message,true); }
+    },
+    scenario:function(){ log("scenarios are for mock mode — Live reacts to your real Spotify"); }
+  };
+  return self;
+}
+
+/* ============================== UI state machine ============================== */
+
+var MIC_SVG='<svg viewBox="0 0 64 64"><path stroke-width="4.5" stroke-linecap="round" d="M32 9a8 8 0 0 1 8 8v13a8 8 0 0 1-16 0V17a8 8 0 0 1 8-8z"/><path stroke-width="4.5" stroke-linecap="round" d="M18 28v2a14 14 0 0 0 28 0v-2"/><path stroke-width="4.5" stroke-linecap="round" d="M32 44v9"/></svg>';
+
+var APPS=[
+  {key:"spotify",name:"Spotify",
+   svg:'<svg viewBox="0 0 24 24"><path d="M9 18V6l10-2v12" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/><circle cx="6.5" cy="18" r="2.5" stroke-width="1.7"/><circle cx="16.5" cy="16" r="2.5" stroke-width="1.7"/></svg>'},
+  {key:"clock",name:"Clock",
+   svg:'<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" stroke-width="1.7"/><path d="M12 7v5.3l3.4 2" stroke-width="1.7" stroke-linecap="round"/></svg>'},
+  {key:"wispr",name:"Wispr Flow",svg:MIC_SVG},
+  {key:"settings",name:"Settings",
+   svg:'<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3" stroke-width="1.7"/><path stroke-width="1.7" stroke-linejoin="round" d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>'}
+];
+
+var SLEEP_OPTS=["5 min","10 min","20 min","60 min","never"];
+var HAPT_OPTS=["off","light","firm"];
+var STEP_OPTS=["2%","5%","10%"];
+
+var settings=Object.assign({bright:70,sleep:"20 min",haptics:"firm",step:"5%"},
+                           load("sim_settings",{}));
+function saveSettings(){ store("sim_settings",settings); }
+
+var S={
+  app:"spotify",           // spotify | clock | settings
+  screen:"now",            // spotify: now|dial|controls|idle|expired · settings: list|item|config · selector
+  itemKey:null,
+  dialMode:"volume",       // what the open dial overlay is showing
+  selIdx:0, setIdx:0,
+  selectorFrom:null,
+  asleep:false,
+  configUntil:0
+};
+S.assignment="volume";   /* seek is transient — reverts when now playing returns */
+
+var engine=MockEngine();
+var opt={};                 // optimistic values while turning
+var pendingWrite=null;      // {kind, timer, value}
+var bezelRot=0, lastInput=now(), lastSig="", bootAt=now();
+
+/* wispr / waggle / join-narration state */
+var wispr={believed:false,paired:true,onSince:0,run:0,runDir:0,lastTrigDir:0,lastTrigT:0};
+function setBelieved(v){ wispr.believed=v; wispr.onSince=v?now():0; }
+var dictConfirm=0, joinState=null;
+var wag={lastDir:0,revs:[]};
+
+var SETTING_ITEMS=[
+  {key:"bright", label:"Brightness", val:function(){return settings.bright+"%";}},
+  {key:"sleep",  label:"Sleep",      val:function(){return settings.sleep.toUpperCase();}},
+  {key:"haptics",label:"Haptics",    val:function(){return settings.haptics.toUpperCase();}},
+  {key:"step",   label:"Dial step",  val:function(){return settings.step;}},
+  {key:"wifi",   label:"Wi-Fi",      val:function(){return "ON";}},
+  {key:"spotify",label:"Spotify",    val:function(){return reauthDays()+" D";}},
+  {key:"dict",   label:"Dictation",  val:function(){return wispr.paired?"PAIRED":"—";}},
+  {key:"about",  label:"About",      val:function(){return "";}}
+];
+function reauthDays(){
+  var death=new Date("2027-02-27").getTime();
+  return Math.max(0,Math.round((death-now())/86400000));
+}
+
+function es(){ return engine.getState(); }
+function cur(){
+  var s=es(); if(!s.ok) return s;
+  var c=Object.assign({},s);
+  if(opt.volume!=null) c.volume=opt.volume;
+  if(opt.playing!=null) c.playing=opt.playing;
+  if(opt.progressMs!=null){ c.progressMs=opt.progressMs; c.fetchedAt=opt.progressAt; c.frozen=true; }
+  return c;
+}
+function progressNow(c){
+  if(!c.ok) return 0;
+  if(!c.playing||c.frozen) return c.progressMs;
+  return Math.min(c.durationMs,c.progressMs+(now()-c.fetchedAt));
+}
+function effectiveDial(){
+  var c=cur();
+  if(!c.ok) return null;
+  return (S.assignment==="volume"&&c.supportsVolume)?"volume":"seek";
+}
+
+/* ---------- timers ---------- */
+var timers={};
+function arm(name,ms,fn){ clearTimeout(timers[name]); timers[name]=setTimeout(fn,ms); }
+function disarm(name){ clearTimeout(timers[name]); }
+
+/* ---------- haptics ---------- */
+function haptic(strong){
+  if(settings.haptics==="off") return;
+  var h=$("hapt");
+  h.className="tick"+((strong||settings.haptics==="firm")?" firm":"");
+  setTimeout(function(){ h.className=""; },90);
+}
+
+/* ============================== renderers ============================== */
+
+var root=$("screenRoot");
+
+function palVars(pal){
+  pal=pal||TRACKS[0].pal;
+  function t(h){ var r=hexRgb(h); return "rgba("+r[0]+","+r[1]+","+r[2]+",0)"; }
+  return "--a1:"+pal[0]+";--a1t:"+t(pal[0])+";--a2:"+pal[1]+";--a2t:"+t(pal[1])+
+         ";--a3:"+pal[2]+";--a3t:"+t(pal[2])+";--a4:"+pal[3];
+}
+function artDiv(c,dimClass){
+  if(c.artUrl) return '<div class="art real '+dimClass+'"><img src="'+esc(c.artUrl)+'" alt=""></div>';
+  return '<div class="art '+dimClass+'" style="'+palVars(c.pal)+'"></div>';
+}
+var ICO={
+  prev:'<svg class="side" data-act="prev" viewBox="0 0 24 24"><path d="M19 5v14l-9-7 9-7zM8 5h2.6v14H8V5z"/></svg>',
+  next:'<svg class="side" data-act="next" viewBox="0 0 24 24"><path d="M5 5l9 7-9 7V5zm10.4 0H18v14h-2.6V5z"/></svg>',
+  pause:'<svg class="mid" data-act="play" viewBox="0 0 24 24"><rect x="5.4" y="4" width="4.4" height="16" rx="1.1"/><rect x="14.2" y="4" width="4.4" height="16" rx="1.1"/></svg>',
+  play:'<svg class="mid" data-act="play" viewBox="0 0 24 24"><path d="M7 4.5v15l13-7.5-13-7.5z"/></svg>',
+  computer:'<svg viewBox="0 0 24 24"><path d="M3 4h18v12H3V4zm0 14h18v2H3v-2z"/></svg>',
+  phone:'<svg viewBox="0 0 24 24"><path d="M7 2h10v20H7V2zm3 18h4v-1h-4v1z"/></svg>'
+};
+
+function renderNow(c){
+  var pct=c.durationMs?progressNow(c)/c.durationMs:0;
+  root.innerHTML=
+    artDiv(c,"")+'<div class="scrim"></div>'+
+    '<canvas class="dial" id="rim" width="360" height="360"></canvas>'+
+    '<div class="pchip" id="pchip"></div>'+
+    '<div class="midtext"><div class="marquee" id="mq"><p class="ttl">'+esc(c.title)+'</p></div>'+
+    '<p class="sub2">'+esc(c.artist)+"</p></div>";
+  drawWedge($("rim"),pct,"white",0.70);
+  $("pchip").style.transform="rotate("+(pct*360)+"deg)";
+  var mq=$("mq"), t=mq.firstChild;
+  if(t.scrollWidth>mq.clientWidth+2) mq.classList.add("roll");
+}
+function updateNow(c){
+  var pct=c.durationMs?progressNow(c)/c.durationMs:0;
+  drawWedge($("rim"),pct,"white",0.70);
+  var p=$("pchip"); if(p) p.style.transform="rotate("+(pct*360)+"deg)";
+}
+
+function renderDial(c){
+  var inner;
+  if(S.dialMode==="volume")
+    inner='<div class="bigval"><div class="v" id="dialval" style="color:var(--green-lit)">'+
+          c.volume+"<small>%</small></div></div>";
+  else
+    inner='<div class="bigval"><div class="v" id="dialval" style="color:var(--amber-lit)">'+
+          fmtMs(progressNow(c))+'</div><p class="u">of '+fmtMs(c.durationMs)+"</p></div>";
+  root.innerHTML=artDiv(c,"d94")+
+    '<canvas class="dial" id="wedge" width="360" height="360"></canvas>'+inner;
+  updateDial(c);
+}
+function updateDial(c){
+  var v=$("dialval"); if(!v) return;
+  if(S.dialMode==="volume"){
+    v.innerHTML=c.volume+"<small>%</small>";
+    drawWedge($("wedge"),c.volume/100,"green",0);
+  }else{
+    v.textContent=fmtMs(progressNow(c));
+    drawWedge($("wedge"),c.durationMs?progressNow(c)/c.durationMs:0,"amber",0);
+  }
+}
+
+function renderControls(c){
+  var ico=(c.deviceType||"").toLowerCase().indexOf("phone")>=0?ICO.phone:ICO.computer;
+  var volDead=!c.supportsVolume;
+  var volOn=S.assignment==="volume"&&!volDead;
+  root.innerHTML=artDiv(c,"d55")+
+    '<div class="devpill" data-act="pill">'+ico+esc(c.deviceName.toUpperCase())+"</div>"+
+    '<div class="row">'+ICO.prev+(c.playing?ICO.pause:ICO.play)+ICO.next+"</div>"+
+    '<div class="chips">'+
+    '<div class="mchip'+(volDead?" dead":(volOn?" on":""))+'" data-act="chipvol">VOLUME</div>'+
+    '<div class="mchip seek'+(!volOn?" on":"")+'" data-act="chipseek">SEEK</div></div>';
+}
+
+function renderIdle(c){
+  var tint=(c&&c.pal)?c.pal[0]:"#E4572E";
+  root.innerHTML='<canvas class="idlecanvas" id="idleCanvas" width="360" height="360" data-tint="'+tint+'"></canvas>'+
+    '<div class="bigval"><div class="v" id="clocktime" style="font-size:44px">'+clockText()+"</div></div>";
+}
+function clockText(){ var d=new Date();
+  return d.getHours()+":"+String(d.getMinutes()).padStart(2,"0"); }
+
+function renderExpired(){
+  root.innerHTML='<div class="bigval stack expired"><div class="v">Login<br>expired</div>'+
+    '<div class="addr">radial.local</div><p class="warn">Run reauth on your PC</p></div>';
+}
+
+/* apps sit on a fan segment around the marker, not spread over the compass */
+var SEL_SEG=36;
+function slotCls(i){
+  return "slot"+(i===S.selIdx?" sel":(Math.abs(i-S.selIdx)>1?" later":""));
+}
+function renderSelector(){
+  var n=APPS.length;
+  var slots=APPS.map(function(a,i){
+    var ang=i*SEL_SEG, ring=-S.selIdx*SEL_SEG;
+    return '<div class="'+slotCls(i)+'" data-slot="'+i+'" '+
+      'style="transform:rotate('+ang+'deg) translateY(-126px)">'+
+      '<i style="transform:translate(-50%,-50%) rotate('+(-(ang+ring))+'deg)">'+a.svg+"</i></div>";
+  }).join("");
+  var a=APPS[S.selIdx];
+  root.innerHTML='<div class="selground"></div><div class="selarc"></div><div class="marker"></div>'+
+    '<div class="ringwrap" id="ring" style="transform:rotate('+(-S.selIdx*SEL_SEG)+'deg)">'+slots+"</div>"+
+    '<div class="hero" id="selHero"><div id="selGlyph">'+a.svg+"</div><span>"+a.name+"</span>"+
+    "<em>"+(S.selIdx+1)+" OF "+n+"</em></div>";
+}
+function updateSelector(){
+  var ring=$("ring");
+  if(!ring){ renderSelector(); return; }
+  ring.style.transform="rotate("+(-S.selIdx*SEL_SEG)+"deg)";
+  var slots=ring.children;
+  for(var i=0;i<slots.length;i++){
+    slots[i].className=slotCls(i);
+    slots[i].firstChild.style.transform=
+      "translate(-50%,-50%) rotate("+(-(i*SEL_SEG-S.selIdx*SEL_SEG))+"deg)";
+  }
+  var a=APPS[S.selIdx], hero=$("selHero");
+  hero.innerHTML="<div>"+a.svg+"</div><span>"+a.name+"</span><em>"+(S.selIdx+1)+" OF "+APPS.length+"</em>";
+}
+
+function renderSettingsList(){
+  var rows="";
+  for(var i=S.setIdx-2;i<=S.setIdx+2;i++){
+    var cls=i===S.setIdx?"cur":(Math.abs(i-S.setIdx)===1?"near":"far");
+    if(i<0||i>=SETTING_ITEMS.length){ rows+='<div class="srow '+cls+'">&nbsp;</div>'; continue; }
+    var it=SETTING_ITEMS[i], v=it.val();
+    rows+='<div class="srow '+cls+'">'+it.label+(v?"<v>"+v+"</v>":"")+"</div>";
+  }
+  var arcRot=(S.setIdx/(SETTING_ITEMS.length-1))*250;
+  root.innerHTML='<div class="selground"></div>'+
+    '<div class="scrollarc" style="transform:rotate('+arcRot+'deg)"></div>'+
+    '<p class="setttl">SETTINGS</p><div class="slist">'+rows+"</div>";
+}
+
+function renderSettingsItem(){
+  var g='<div class="selground"></div>';
+  switch(S.itemKey){
+    case "bright":
+      root.innerHTML=g+'<canvas class="dial" id="wedge" width="360" height="360"></canvas>'+
+        '<div class="bigval"><div class="v" id="dialval">'+settings.bright+"<small>%</small></div></div>"+
+        '<p class="setttl" style="color:rgba(255,255,255,.5)">BRIGHTNESS</p>';
+      drawWedge($("wedge"),settings.bright/100,"white",0);
+      break;
+    case "sleep": renderEnum("SLEEP AFTER",SLEEP_OPTS,settings.sleep); break;
+    case "haptics": renderEnum("HAPTICS",HAPT_OPTS,settings.haptics); break;
+    case "step": renderEnum("DIAL STEP",STEP_OPTS,settings.step); break;
+    case "wifi":
+      root.innerHTML=g+'<p class="setttl">WI-FI</p>'+
+        '<div class="kv"><b>HomeNet</b><s>−52 dBm · good</s><s>192.168.1.42</s></div>'+
+        '<div class="action" data-act="openconfig">OPEN CONFIG</div>';
+      break;
+    case "spotify":
+      root.innerHTML=g+'<p class="setttl">SPOTIFY</p>'+
+        '<div class="kv"><b>'+reauthDays()+' days</b><s>until re-authorisation</s></div>'+
+        '<div class="action" data-act="reauth">RE-AUTH NOW</div>';
+      break;
+    case "dict":
+      var armErase=dictConfirm&&now()-dictConfirm<3000;
+      root.innerHTML=g+'<p class="setttl">DICTATION</p>'+
+        '<div class="kv">'+(wispr.paired?
+          '<b>DESKTOP-PC</b><s>BLE HID keyboard · bonded</s><s>reconnects on boot</s>':
+          '<b>Not paired</b><s>on the PC: Settings →</s><s>Bluetooth → add "Radial"</s>')+"</div>"+
+        (wispr.paired?
+          '<div class="action'+(armErase?" amber":"")+'" data-act="forget">'+
+            (armErase?"TAP AGAIN TO FORGET":"FORGET THIS PC")+"</div>":
+          '<div class="action" data-act="pair">START PAIRING</div>');
+      break;
+    case "about":
+      root.innerHTML=g+'<p class="setttl">ABOUT</p>'+
+        '<div class="kv"><b>radial.local</b><s>192.168.1.42</s>'+
+        '<s>fw 0.1-sim · up <span id="uptime">'+fmtUp()+"</span></s></div>";
+      break;
+  }
+}
+function renderEnum(title,opts,val){
+  var line=opts.map(function(o){
+    var short=o.replace(" min","");
+    return o===val?'<b style="color:#fff">'+short+"</b>":short;
+  }).join(" · ");
+  root.innerHTML='<div class="selground"></div><p class="setttl">'+title+"</p>"+
+    '<div class="bigval stack"><div class="v" style="font-size:40px">'+val+"</div>"+
+    '<p class="u">'+line+"</p></div>";
+}
+function fmtUp(){ var s=Math.floor((now()-bootAt)/1000);
+  return s<3600?Math.floor(s/60)+" min":(Math.floor(s/3600)+" h "+Math.floor(s%3600/60)+" min"); }
+
+function renderConfig(){
+  root.innerHTML='<div class="selground"></div>'+
+    '<div class="cfgring" id="cfgring"></div>'+
+    '<p class="setttl" style="color:var(--amber-lit)">CONFIG OPEN</p>'+
+    '<div class="qrbox" id="qrbox"></div>'+
+    '<div class="cfgaddr"><span>radial.local</span><span style="opacity:.5">192.168.1.42</span></div>'+
+    '<div class="action amber" id="cfgcount">CLOSES IN '+fmtMs(S.configUntil-now())+"</div>";
+  if(window.QRCode){
+    new QRCode($("qrbox"),{text:"http://192.168.1.42/",width:118,height:118,
+      colorDark:"#000000",colorLight:"#ffffff",correctLevel:QRCode.CorrectLevel.M});
+  }else{
+    $("qrbox").innerHTML='<span style="color:#000;font-family:var(--mono);font-size:10px">QR — needs the<br>CDN, offline</span>';
+  }
+  updateCfgRing();
+}
+function updateCfgRing(){
+  var cr=$("cfgring"); if(!cr) return;
+  var deg=clamp((S.configUntil-now())/120000,0,1)*360;
+  cr.style.background="conic-gradient(var(--amber-lit) 0 "+deg+"deg, rgba(255,255,255,.08) "+deg+"deg)";
+}
+
+function renderWispr(){
+  if(!wispr.paired){
+    root.innerHTML='<div class="selground"></div><div class="starc dim"></div>'+
+      '<div class="mic">'+MIC_SVG+"</div>"+
+      '<div class="stcen" style="top:228px"><b>Not paired</b><s>BLE HID keyboard</s></div>'+
+      '<p class="hint">PAIR IN SETTINGS ▸ DICTATION</p>';
+  }else if(wispr.believed){
+    /* 13 B — red, breathing, elapsed counted from the moment the combo went */
+    root.innerHTML='<div class="selground"></div><div class="starc r"></div>'+
+      '<div class="mic live">'+MIC_SVG+"</div>"+
+      '<div class="stcen" style="top:228px"><b style="color:var(--live-lit)">Live</b></div>'+
+      '<p class="elapsed" id="elapsed">'+fmtMs(wispr.onSince?now()-wispr.onSince:0)+"</p>";
+  }else{
+    /* 13 A */
+    root.innerHTML='<div class="selground"></div><div class="starc dim"></div>'+
+      '<div class="mic">'+MIC_SVG+"</div>"+
+      '<div class="stcen" style="top:228px"><b>Dictation</b></div>'+
+      '<p class="hint">TAP OR SPIN RIGHT TO START</p>';
+  }
+}
+
+var JOIN_LABELS=["Settings received","Network found","Joining","Got an address","Reaching Spotify"];
+function renderJoin(){
+  if(joinState&&joinState.done){
+    root.innerHTML='<div class="selground"></div>'+
+      '<div class="bigval"><div class="v" style="color:var(--green-lit);font-size:64px">✓</div></div>';
+    return;
+  }
+  var rows=JOIN_LABELS.map(function(l,i){
+    var st=joinState?joinState.steps[i]:0;
+    var cls=st===1?"ok":(st===2?"fail":"");
+    var glyph=st===1?"✓":(st===2?"✕":"·");
+    var extra=st===2?'<div class="jwhy">Wrong password — tap to retry</div>':"";
+    return '<div class="jrow '+cls+'"><i>'+glyph+"</i>"+l+"</div>"+extra;
+  }).join("");
+  root.innerHTML='<div class="selground"></div>'+
+    '<p class="setttl">JOINING HOMENET</p>'+
+    '<div class="joinlist">'+rows+"</div>";
+}
+
+/* ---------- render dispatch ---------- */
+
+function sig(){
+  var c=es();
+  return [S.asleep,S.app,S.screen,S.itemKey,S.selIdx,S.setIdx,S.assignment,S.dialMode,
+    settings.sleep,settings.haptics,settings.step,settings.bright,
+    wispr.believed,wispr.paired,
+    (S.screen==="join"&&joinState)?joinState.steps.join("")+(joinState.done?"D":""):"",
+    c.ok?[c.trackId,c.playing,c.deviceId,c.supportsVolume,c.isAd,c.artUrl].join("|"):c.reason
+  ].join("~");
+}
+
+function render(){
+  var c=cur();
+  $("sleepveil").className=S.asleep?"on":"";
+  $("dimmer").style.opacity=((100-settings.bright)*0.007).toFixed(3);
+  if(S.asleep){ lastSig=sig(); return; }
+
+  if(S.screen==="selector"){ renderSelector(); }
+  else if(S.app==="clock"){ renderIdle(c.ok?c:null); }
+  else if(S.app==="wispr"){ renderWispr(); }
+  else if(S.app==="settings"){
+    if(S.screen==="list") renderSettingsList();
+    else if(S.screen==="config") renderConfig();
+    else if(S.screen==="join") renderJoin();
+    else renderSettingsItem();
+  }
+  else{ /* spotify */
+    if(!c.ok){ if(c.reason==="expired") renderExpired(); else renderIdle(null); }
+    else if(S.screen==="dial") renderDial(c);
+    else if(S.screen==="controls") renderControls(c);
+    else renderNow(c);
+  }
+  lastSig=sig();
+}
+
+/* ============================== transitions ============================== */
+
+function backToNow(){ S.assignment="volume"; S.screen="now"; render(); }
+
+function goto_(app,screen,itemKey){
+  S.app=app; S.screen=screen; S.itemKey=itemKey||null;
+  disarm("auto");
+  if(screen==="controls") arm("auto",5000,function(){ if(S.screen==="controls") backToNow(); });
+  if(screen==="selector") arm("auto",4000,closeSelector);
+  render();
+}
+
+function openSelector(){
+  if(S.screen==="selector") return closeSelector();
+  S.selectorFrom={app:S.app,screen:S.screen,itemKey:S.itemKey};
+  S.selIdx=APPS.findIndex(function(a){return a.key===S.app;});
+  commitLeavingSetting();
+  goto_(S.app,"selector");
+}
+function closeSelector(){
+  var f=S.selectorFrom||{app:"spotify",screen:"now"};
+  goto_(f.app,f.screen,f.itemKey);
+}
+function enterApp(){
+  var a=APPS[S.selIdx].key;
+  if(a==="spotify") goto_("spotify","now");
+  else if(a==="clock") goto_("clock","clock");
+  else if(a==="wispr") goto_("wispr","wispr");
+  else { S.setIdx=0; goto_("settings","list"); }
+}
+
+function commitLeavingSetting(){
+  if(S.app==="settings"&&S.screen==="item"&&
+     ["bright","sleep","haptics","step"].indexOf(S.itemKey)>=0){
+    saveSettings();
+    log("· "+S.itemKey+" written to NVS");
+  }
+}
+
+/* ---------- dial routing ---------- */
+
+function onDial(dir){
+  if(feedWaggle(dir)) return;
+  var c=cur();
+  if(S.screen==="selector"){
+    /* fan segment: hard stops at the ends, no wrap */
+    var ni=clamp(S.selIdx+dir,0,APPS.length-1);
+    if(ni!==S.selIdx){ S.selIdx=ni; haptic(); updateSelector(); }
+    arm("auto",4000,closeSelector);
+    return;
+  }
+  if(S.app==="clock") return;
+  if(S.app==="wispr"){ wisprDial(dir); return; }
+  if(S.app==="settings"){ settingsDial(dir,c); return; }
+
+  /* spotify */
+  if(!c.ok) return;
+  var mode=effectiveDial();
+  if(S.screen!=="dial"||S.dialMode!==mode){ S.dialMode=mode; S.screen="dial"; render(); }
+  haptic();
+  if(mode==="volume"){
+    var step=parseInt(settings.step,10)||5;
+    var v=clamp((opt.volume!=null?opt.volume:c.volume)+dir*step,0,100);
+    opt.volume=v;
+    queueWrite("volume",v,function(){ engine.setVolume(v); });
+  }else{
+    var base=opt.progressMs!=null?opt.progressMs:progressNow(c);
+    var p=clamp(base+dir*10000,0,c.durationMs);
+    opt.progressMs=p; opt.progressAt=now();
+    queueWrite("seek",p,function(){ engine.seek(p); });
+  }
+  updateDial(cur());
+  arm("auto",2000,function(){
+    if(S.screen==="dial") backToNow();
+    setTimeout(function(){ opt={}; },600);
+  });
+}
+
+function queueWrite(kind,value,fn){
+  if(pendingWrite) clearTimeout(pendingWrite.timer);
+  pendingWrite={kind:kind,value:value,timer:setTimeout(function(){
+    pendingWrite=null; fn();
+  },400)};
+}
+
+function settingsDial(dir,c){
+  if(S.screen==="list"){
+    var n=clamp(S.setIdx+dir,0,SETTING_ITEMS.length-1);
+    if(n!==S.setIdx){ S.setIdx=n; haptic(); renderSettingsList(); }
+    return;
+  }
+  if(S.screen!=="item") return;
+  switch(S.itemKey){
+    case "bright":
+      settings.bright=clamp(settings.bright+dir*5,10,100);
+      haptic(); renderSettingsItem();
+      $("dimmer").style.opacity=((100-settings.bright)*0.007).toFixed(3);
+      break;
+    case "sleep": enumDial(SLEEP_OPTS,"sleep",dir); break;
+    case "haptics": enumDial(HAPT_OPTS,"haptics",dir); break;
+    case "step": enumDial(STEP_OPTS,"step",dir); break;
+  }
+}
+function enumDial(opts,key,dir){
+  var i=clamp(opts.indexOf(settings[key])+dir,0,opts.length-1);
+  if(opts[i]!==settings[key]){ settings[key]=opts[i]; haptic(); renderSettingsItem(); }
+}
+
+/* ---------- wispr: direction mapping, waggle, BLE combo ---------- */
+
+var lastComboT=0;
+function sendCombo(why){
+  /* the device just types a chord; hands-free is whatever Wispr binds it to.
+     Returns whether the chord was actually dispatched — belief must only
+     change when it was. */
+  if(now()-lastComboT<600){
+    log("· chord suppressed — <600 ms since the last ("+why+")",true);
+    return false;
+  }
+  lastComboT=now();
+  log('BLE HID ▸ Ctrl+Alt+F9 (bound to hands-free in Wispr) — '+why);
+  if(location.protocol!=="file:"){
+    fetch("/api/hotkey",{method:"POST"}).then(function(r){
+      if(r.ok) log("· chord typed on this PC — watch the Flow Bar");
+      else log("· /api/hotkey missing — restart tools/serve_sim.py",true);
+    }).catch(function(){ log("· hotkey bridge unreachable",true); });
+  }
+  return true;
+}
+
+function wisprDial(dir){
+  haptic();
+  if(dir!==wispr.runDir){ wispr.runDir=dir; wispr.run=0; }
+  wispr.run++;
+  if(wispr.run<3) return;                     /* three detents, never a knock */
+  wispr.run=0;
+  var want=dir>0;
+  var resync=wispr.lastTrigDir===dir&&now()-wispr.lastTrigT<2000;
+  wispr.lastTrigDir=dir; wispr.lastTrigT=now();
+  if(!wispr.paired){ log("· no BLE bond — spin ignored (Settings ▸ Dictation)",true); return; }
+  if(resync){ if(sendCombo("resync, forced")) setBelieved(want); }
+  else if(want!==wispr.believed){ if(sendCombo(want?"dictation on":"dictation off")) setBelieved(want); }
+  else log("· believed already "+(want?"ON":"OFF")+" — nothing sent (idempotent)");
+  render();
+}
+
+/* raw detents → gesture detector → debouncer → active app */
+function feedWaggle(dir){
+  var t=now();
+  if(wag.lastDir&&dir!==wag.lastDir){
+    wag.revs.push(t);
+    wag.revs=wag.revs.filter(function(x){return t-x<600;});
+    if(wag.revs.length>=3){ wag.revs=[]; wag.lastDir=dir; fireWaggle(); return true; }
+  }
+  wag.lastDir=dir;
+  return false;
+}
+
+function fireWaggle(){
+  if(pendingWrite){
+    clearTimeout(pendingWrite.timer);
+    log("· waggle — pending "+pendingWrite.kind+" write discarded, net zero");
+    pendingWrite=null;
+  }
+  opt={};
+  if(!wispr.paired){ log("· waggle recognised — no BLE bond, nothing sent",true); return; }
+  wispr.run=0; wispr.runDir=0;               /* don't let the waggle feed the spin counter */
+
+  if(S.app==="wispr"){
+    /* inside the app the waggle only dismisses: off if needed, then back.
+       Tap and directional spins own toggling here — no blind flip. */
+    if(wispr.believed&&!sendCombo("waggle, off")) return;
+    setBelieved(false);
+    haptic(true); setTimeout(function(){ haptic(true); },130);
+    var r=wispr.returnTo; wispr.returnTo=null;
+    if(r) goto_(r.app,r.screen,r.itemKey); else render();
+    waggleOverlay(false);
+    return;
+  }
+  if(!wispr.believed){
+    /* waggle on: jump into the Wispr app, remembering where we came from */
+    if(!sendCombo("waggle, on")) return;
+    setBelieved(true);
+    haptic(true); setTimeout(function(){ haptic(true); },130);
+    wispr.returnTo={app:S.app,
+      screen:(S.screen==="dial"||S.screen==="selector")?"now":S.screen,
+      itemKey:S.itemKey};
+    goto_("wispr","wispr");
+  }else{
+    /* believed on but we're elsewhere: waggle just turns it off in place */
+    if(!sendCombo("waggle, off")) return;
+    setBelieved(false);
+    haptic(true); setTimeout(function(){ haptic(true); },130);
+    wispr.returnTo=null;
+    render();
+    waggleOverlay(false);
+  }
+}
+/* screen 14: the waggle overlay over whatever was showing */
+function waggleOverlay(on){
+  var ol=$("waggleol");
+  ol.innerHTML=on?
+    '<div class="starc r"></div><div class="mic live">'+MIC_SVG+"</div>"+
+    '<div class="stcen" style="top:228px"><b style="color:var(--live-lit)">Live</b><s>Dictation on</s></div>':
+    '<div class="starc dim"></div><div class="mic">'+MIC_SVG+"</div>"+
+    '<div class="stcen" style="top:228px"><b>Off</b><s>Dictation off</s></div>';
+  ol.hidden=false;
+  clearTimeout(timers.waggle);
+  timers.waggle=setTimeout(function(){ ol.hidden=true; },2000);
+}
+
+/* ---------- join narration (screens 12 A–C) ---------- */
+
+function startJoin(fail){
+  S.asleep=false;
+  S.app="settings"; S.screen="join"; S.itemKey=null; disarm("auto");
+  joinState={steps:[0,0,0,0,0],fail:!!fail,done:false};
+  log("· phone POSTs the form — status frames over ws://192.168.1.42/ws");
+  render();
+  var i=0;
+  function step(){
+    if(S.screen!=="join") return;
+    if(joinState.fail&&i===2){
+      joinState.steps[2]=2; render();
+      log('ws {"step":3,"state":"fail","why":"bad_password"}',true);
+      return;
+    }
+    joinState.steps[i]=1; render();
+    log('ws {"step":'+(i+1)+',"state":"ok"}');
+    i++;
+    if(i>=5){
+      joinState.done=true; render(); haptic(true);
+      log("· joined — tick held 2 s, config closes, back to now playing");
+      setTimeout(function(){ if(S.screen==="join") goto_("spotify","now"); },2000);
+      return;
+    }
+    setTimeout(step,900);
+  }
+  setTimeout(step,700);
+}
+
+/* ---------- tap routing ---------- */
+
+function onAct(act){
+  var c=cur();
+  arm("auto",5000,function(){ if(S.screen==="controls") backToNow(); });
+  switch(act){
+    case "prev": engine.prev(); haptic(true); break;
+    case "next": engine.next(); haptic(true); break;
+    case "play": engine.playPause(); haptic(true);
+      if(c.ok) opt.playing=!(c.playing); render(); break;
+    case "pill": engine.transfer(); haptic(true); break;
+    case "chipvol":
+      if(c.ok&&!c.supportsVolume){ log("· VOLUME chip is dead — this device refuses volume"); return; }
+      S.assignment="volume"; render(); break;
+    case "chipseek":
+      S.assignment="seek"; render(); break;
+    case "openconfig":
+      S.configUntil=now()+120000; goto_("settings","config");
+      log("· esp_http_server up — config page live on the LAN for 120 s"); break;
+    case "reauth":
+      log("· re-auth requested — on hardware this waits for tools/reauth.py --push-to"); break;
+    case "forget":
+      if(dictConfirm&&now()-dictConfirm<3000){
+        dictConfirm=0; wispr.paired=false; setBelieved(false);
+        log("· BLE bond erased from NVS"); renderSettingsItem();
+      }else{
+        dictConfirm=now(); renderSettingsItem();
+        setTimeout(function(){
+          if(S.screen==="item"&&S.itemKey==="dict"&&dictConfirm){ dictConfirm=0; renderSettingsItem(); }
+        },3000);
+      }
+      break;
+    case "pair":
+      wispr.paired=true;
+      log("· bonded to DESKTOP-PC — stored in NVS, reconnects on boot");
+      renderSettingsItem(); break;
+  }
+}
+
+function onTap(){
+  if(S.screen==="selector"){ enterApp(); return; }
+  if(S.app==="clock") return;
+  if(S.app==="wispr"){
+    if(!wispr.paired){ log("· no BLE bond — tap ignored (Settings ▸ Dictation)",true); return; }
+    if(sendCombo(wispr.believed?"tap, off":"tap, on")) setBelieved(!wispr.believed);
+    haptic(true); render();
+    return;
+  }
+  if(S.app==="settings"){
+    if(S.screen==="list"){
+      var it=SETTING_ITEMS[S.setIdx];
+      goto_("settings","item",it.key);
+    }else if(S.screen==="config"){
+      goto_("settings","list");
+      log("· config closed by touch");
+    }else if(S.screen==="join"){
+      if(joinState&&joinState.steps.indexOf(2)>=0){
+        S.configUntil=now()+120000;
+        goto_("settings","config");
+        log("· retry — the window stays open, the phone keeps the form filled");
+      }else if(joinState&&joinState.done) goto_("spotify","now");
+    }else{
+      dictConfirm=0;
+      commitLeavingSetting();
+      goto_("settings","list");
+    }
+    return;
+  }
+  /* spotify */
+  var c=cur();
+  if(!c.ok) return;                    // idle 204 / expired: touch only wakes
+  if(S.screen==="now"||S.screen==="dial") goto_("spotify","controls");
+}
+
+/* ============================== input ============================== */
+
+var device=$("device"), wheelAcc=0, lpTimer=null, lpFired=false;
+
+function anyInput(){
+  lastInput=now();
+  if(S.asleep){ S.asleep=false; render(); log("· wake"); return true; }
+  return false;
+}
+
+device.addEventListener("wheel",function(e){
+  e.preventDefault();
+  if(anyInput()) return;
+  wheelAcc+=e.deltaY;
+  while(Math.abs(wheelAcc)>=40){
+    var dir=wheelAcc>0?1:-1; wheelAcc-=40*dir;
+    bezelRot+=dir*15;
+    $("bezel").style.transform="rotate("+bezelRot+"deg)";
+    onDial(dir);
+  }
+},{passive:false});
+
+device.addEventListener("pointerdown",function(){
+  lpFired=false;
+  lpTimer=setTimeout(function(){
+    lpFired=true;
+    if(!anyInput()){ haptic(true); openSelector(); }
+    else lpFired=false;
+  },550);
+});
+device.addEventListener("pointerup",function(){ clearTimeout(lpTimer); });
+device.addEventListener("pointerleave",function(){ clearTimeout(lpTimer); });
+
+device.addEventListener("click",function(e){
+  if(lpFired){ lpFired=false; return; }
+  if(anyInput()) return;
+  var sl=e.target.closest("[data-slot]");
+  if(sl&&S.screen==="selector"){
+    S.selIdx=+sl.getAttribute("data-slot");
+    haptic(); enterApp(); return;
+  }
+  var el=e.target.closest("[data-act]");
+  if(el) onAct(el.getAttribute("data-act"));
+  else onTap();
+});
+
+window.addEventListener("keydown",function(e){
+  if(e.key==="ArrowRight"||e.key==="ArrowDown"){ e.preventDefault();
+    if(!anyInput()) onDial(1); }
+  else if(e.key==="ArrowLeft"||e.key==="ArrowUp"){ e.preventDefault();
+    if(!anyInput()) onDial(-1); }
+  else if(e.key==="Enter"){ if(!anyInput()) onTap(); }
+  else if(e.key==="l"||e.key==="L"){ if(!anyInput()) openSelector(); }
+});
+
+/* ============================== scenarios & mode switch ============================== */
+
+$("scenPanel").addEventListener("click",function(e){
+  var b=e.target.closest("[data-scen]"); if(!b) return;
+  var k=b.getAttribute("data-scen");
+  if(k==="join-ok"||k==="join-fail"){ startJoin(k==="join-fail"); return; }
+  engine.scenario(k);
+  if((k==="resume")&&S.asleep){ S.asleep=false; }
+  if(k==="reset"){ S.app="spotify"; S.screen="now"; opt={}; }
+  render();
+});
+
+var live=null;
+function setMode(mode){
+  $("btnMock").className=mode==="mock"?"on":"";
+  $("btnLive").className=mode==="live"?"on":"";
+  var card=$("liveCard");
+  if(mode==="mock"){
+    if(live) live.stop();
+    engine=MockEngine(); opt={};
+    card.hidden=true; $("scenPanel").style.display="";
+    S.app="spotify"; S.screen="now"; render();
+    log("· mock engine active");
+    return;
+  }
+  card.hidden=false;
+  if(location.protocol==="file:"){
+    card.innerHTML="Live mode needs the page served over HTTP so the OAuth redirect can land. "+
+      "Run <code>python tools/serve_sim.py</code> and open <code>http://127.0.0.1:8888/simulator.html</code>.";
+    return;
+  }
+  live=live||RealEngine();
+  if(!live.hasToken()){
+    card.innerHTML="Authorise against your Spotify app (PKCE, scopes: playback read + modify). "+
+      "Uses the registered redirect <code>"+esc(location.origin)+"/callback</code>.<br>"+
+      '<button class="cta" id="btnConnect">CONNECT SPOTIFY</button>';
+    $("btnConnect").addEventListener("click",startAuth);
+    return;
+  }
+  card.innerHTML="Connected. Polling <code>GET /me/player</code> — 3 s playing, 10 s paused, +400 ms after a command.";
+  engine=live; opt={};
+  live.start(function(){ maybeRender(); });
+  S.app="spotify"; S.screen="now"; render();
+  log("· live engine active");
+}
+$("btnMock").addEventListener("click",function(){ setMode("mock"); });
+$("btnLive").addEventListener("click",function(){ setMode("live"); });
+
+/* ---- PKCE callback landing ---- */
+(function(){
+  var q=new URLSearchParams(location.search);
+  var code=q.get("code");
+  if(!code) { if(q.get("error")) log("Spotify auth error: "+q.get("error"),true); return; }
+  var verifier=null; try{ verifier=sessionStorage.getItem("pkce_verifier"); }catch(e){}
+  if(!verifier){ log("auth callback but no PKCE verifier in this tab",true); return; }
+  history.replaceState({},"","/simulator.html");
+  tokenRequest({grant_type:"authorization_code",code:code,
+    redirect_uri:location.origin+"/callback",
+    client_id:load("sim_client_id",""),code_verifier:verifier})
+  .then(function(j){
+    tokenSave({access:j.access_token,refresh:j.refresh_token,
+               expiresAt:now()+j.expires_in*1000});
+    log("· authorised — refresh token held for this tab session");
+    setMode("live");
+  })
+  .catch(function(e){ log("token exchange failed: "+e.message,true); });
+})();
+
+/* ============================== main loop ============================== */
+
+function maybeRender(){
+  if(sig()!==lastSig){
+    /* engine update may invalidate the current spotify sub-screen */
+    var c=es();
+    if(S.app==="spotify"&&c.ok&&(S.screen==="idle")) S.screen="now";
+    render();
+  }
+}
+
+var lastSlow=0;
+setInterval(function(){
+  var c=cur();
+  maybeRender();
+  if(!S.asleep){
+    if(S.app==="spotify"&&S.screen==="now"&&c.ok&&now()-lastSlow>1000){
+      lastSlow=now(); updateNow(c);
+    }
+    var ct=$("clocktime"); if(ct) ct.textContent=clockText();
+    var elp=$("elapsed"); if(elp&&wispr.onSince) elp.textContent=fmtMs(now()-wispr.onSince);
+    var up=$("uptime"); if(up) up.textContent=fmtUp();
+    var cc=$("cfgcount");
+    if(cc){
+      var left=S.configUntil-now();
+      if(left<=0){ goto_("settings","list"); log("· config window closed on the timer"); }
+      else{ cc.textContent="CLOSES IN "+fmtMs(left); updateCfgRing(); }
+    }
+  }
+  /* sleep */
+  if(!S.asleep&&settings.sleep!=="never"){
+    var mins=parseInt(settings.sleep,10);
+    if(now()-lastInput>mins*60000){ S.asleep=true; render(); log("· screen off ("+settings.sleep+" idle)"); }
+  }
+  if(S.asleep&&c.ok&&c.playing&&engine.name==="mock"){ /* playback resuming wakes */ }
+
+  /* status panel */
+  $("stApp").textContent=S.app;
+  $("stScreen").textContent=S.asleep?"asleep":(S.screen+(S.itemKey?":"+S.itemKey:""));
+  $("stDev").textContent=c.ok?(c.deviceName+(c.supportsVolume?" · volume ok":" · volume refused")):("— ("+c.reason+")");
+  $("stDial").textContent=c.ok?((effectiveDial()||"—")+(S.assignment!==effectiveDial()?" (fallback)":"")):"nothing";
+  $("stVol").textContent=c.ok&&c.supportsVolume?c.volume+"%":"—";
+  $("stPos").textContent=c.ok?fmtMs(progressNow(c))+" / "+fmtMs(c.durationMs):"—";
+  $("stPending").textContent=pendingWrite?(pendingWrite.kind+" → "+
+    (pendingWrite.kind==="seek"?fmtMs(pendingWrite.value):pendingWrite.value+"%")+" in 400 ms"):"—";
+},250);
+
+/* idle bloom animation */
+var reduce=window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+var t0=performance.now(), lastFrame=0;
+(function loop(t){
+  requestAnimationFrame(loop);
+  if(t-lastFrame<200) return;
+  lastFrame=t;
+  var cv=$("idleCanvas");
+  if(cv&&!S.asleep) drawIdle(cv,hexRgb(cv.dataset.tint||"#E4572E"),reduce?10:(t-t0)/1000);
+})(t0);
+
+/* boot */
+render();
+log("· simulator up — scroll the knob, click to tap, hold for the selector");
+if(location.protocol!=="file:"&&!new URLSearchParams(location.search).get("code")&&tokenLoad())
+  setMode("live");
+})();
+</script>
+</body>
+</html>

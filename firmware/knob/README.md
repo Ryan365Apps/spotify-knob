@@ -1,6 +1,6 @@
 # knob - dependency check
 
-Builds the full library set for Dial4Spotify without touching any hardware.
+Builds the full library set for Radial without touching any hardware.
 It is not the firmware; it exists to catch version clashes early.
 
 ```powershell

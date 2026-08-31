@@ -1,5 +1,5 @@
 /*
- * Dial4Spotify - dependency check only.
+ * Radial - dependency check only.
  *
  * This program deliberately does almost nothing. Its whole job is to prove that
  * every library the real firmware depends on downloads, compiles and links
