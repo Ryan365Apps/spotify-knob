@@ -1,0 +1,18 @@
+## Every library this project depends on.
+## Versions checked against the ESP Component Registry on 2026-08-31.
+dependencies:
+  idf: ">=5.4"
+
+  # graphics
+  lvgl/lvgl: "^9.2"
+  espressif/esp_lvgl_port: "^2.7"
+
+  # the round 360x360 panel and its touch layer
+  espressif/esp_lcd_st77916: "^1.0.1"
+  espressif/esp_lcd_touch_cst816s: "^1.1.2"
+
+  # the rotary encoder (no button on this board)
+  espressif/knob: "^1.1.0"
+
+  # album art
+  espressif/esp_jpeg: "^1.3"

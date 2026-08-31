@@ -122,15 +122,14 @@ The screen is driven by LVGL in C. There is no web browser for the ESP32, so HTM
 dependencies:
   idf: ">=5.4"
   lvgl/lvgl: "^9.2"
-  espressif/esp_lvgl_port: "^2.7"      # display + touch + encoder glue for LVGL
-  espressif/esp_lcd_st77916: "^1.0"    # QSPI panel driver
-  espressif/esp_lcd_touch_cst816s: "^1.0"
-  espressif/knob: "^0.1"               # required by esp_lvgl_port's encoder support
-  espressif/button: "^3.5"             # required for the encoder push
-  espressif/esp_jpeg: "^1.3"           # album art decode, supports 1/2 1/4 1/8 downscale
+  espressif/esp_lvgl_port: "^2.7"           # display + touch + encoder glue for LVGL
+  espressif/esp_lcd_st77916: "^1.0.1"       # QSPI panel driver
+  espressif/esp_lcd_touch_cst816s: "^1.1.2"
+  espressif/knob: "^1.1.0"                  # quadrature decoding for the encoder
+  espressif/esp_jpeg: "^1.3"                # album art decode
 ```
 
-Check the current version of each in the ESP Component Registry when you add it; the carets above reflect what was published at the time of writing.
+Versions checked against the ESP Component Registry on 2026-08-31. `espressif/button` is deliberately absent — this board has no button.
 
 Everything else is in-tree ESP-IDF: `esp_wifi`, `esp_http_client`, `cJSON`, `nvs_flash`, and the mbedTLS certificate bundle (`CONFIG_MBEDTLS_CERTIFICATE_BUNDLE=y`) which covers `accounts.spotify.com`, `api.spotify.com` and the `i.scdn.co` image CDN without you pinning any certificates.
 
@@ -163,15 +162,7 @@ Continuous control lives on the dial. Discrete control lives one tap away. Colou
 - **Dial → volume.** Turning it raises the feedback overlay below.
 - **Touch anywhere → CONTROLS.**
 
-**There is no knob press.** The schematic verification in section 3 found no push switch on this board, so play/pause has to be a touch gesture. Options, in order of preference:
-
-| Option | Cost |
-|---|---|
-| Play/pause is the centre button on CONTROLS | Two taps for the most common action |
-| Long-press the now-playing screen | One gesture, discoverable with a brief hint, ~400 ms to commit |
-| Double-tap the now-playing screen | One gesture, but undiscoverable and easy to trigger by accident |
-
-**Undecided.** Everything else in this section stands.
+**There is no knob press** — the schematic verification in section 3 found no push switch on this board. **Play/pause is therefore the centre button on CONTROLS**, two taps from the default screen. No hidden gestures: no double-tap, no long-press. Decided 2026-08-31.
 
 ### Dial feedback — transient, ~2 s
 
@@ -382,7 +373,7 @@ This screen is the recovery documentation. It should never be seen, and it must 
 |---|---|---|
 | Volume refused by the phone (**confirmed, Wave 0**) | R5 as originally written is unbuildable | Second dial mode is chosen at runtime: seek on the phone, volume on devices that allow it |
 | ~~Pin map wrong~~ | — | **Closed 2026-08-31** — verified against the schematic; see section 3 |
-| Component versions incompatible with IDF 6.0 | Half a day | Wave 1 pins 5.5.x; only move up if it compiles clean |
+| Component versions clash with each other or with IDF 5.5 | Half a day | `firmware/knob/` builds the full set with no hardware — run it before the board arrives |
 | Rate limit hit despite the budget | Screen goes stale intermittently | `Retry-After` handling plus interval doubling, Wave 7 |
 | Refresh token expiry at 6 months | Device dies silently | Wave 8 web config; calendar reminder as the interim |
 | Accidental skips from knocking the knob | Daily irritation | Burst collapsing + lockout in Wave 6; quarter-turn commit as fallback |
@@ -400,7 +391,17 @@ This screen is the recovery documentation. It should never be seen, and it must 
 
 **This wave needs the board.** It is written to be worked through in order the day it arrives.
 
-**In parallel, while waiting:** the screen designs are being settled visually and will land in section 5. That is design work, not a build step, so it is not a wave — but it should be agreed before Wave 4 starts drawing anything.
+**Do this part now, before the board arrives.** `firmware/knob/` is a project that pulls in every library the real firmware needs and does nothing else. It builds with no hardware attached, and passing it closes the last risk that can be closed early:
+
+```powershell
+cd firmware\knob
+idf.py set-target esp32s3
+idf.py build
+```
+
+"Project build complete" is the whole test. If a component fails to download, correct its version in `main/idf_component.yml` against components.espressif.com. If one fails to compile, note which and stop — that means a version constraint needs loosening, not that anything is wrong with the design.
+
+Everything from Checkpoint A onwards needs the board.
 
 **Approach:** four checkpoints, each verified before starting the next. Bringing up a QSPI display, an I2C touch controller and an encoder simultaneously and then asking "why is the screen black" is the slow way to do this.
 
