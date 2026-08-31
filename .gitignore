@@ -1,0 +1,7 @@
+spotify_tokens.json
+build/
+managed_components/
+sdkconfig
+sdkconfig.old
+dependencies.lock
+.vscode/
