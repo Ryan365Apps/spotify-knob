@@ -1,0 +1,299 @@
+<title>Six Ways to Idle</title>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans+Condensed:wght@600;700&family=IBM+Plex+Sans:wght@400;500&family=Michroma&display=swap">
+<style>
+  :root{
+    --ground:#EDEDE8;--plinth:#15181D;--rule:#CFCEC6;
+    --ink:#22252B;--ink-soft:#5D6270;--ink-faint:#8B8F9C;--brass:#8A6A1F;--brass-line:#B99436;
+    --sans:"IBM Plex Sans",system-ui,sans-serif;
+    --cond:"IBM Plex Sans Condensed","IBM Plex Sans",system-ui,sans-serif;
+    --mono:"IBM Plex Mono",ui-monospace,monospace;
+    --display:"Michroma",system-ui,sans-serif;
+  }
+  @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+    --ground:#0E1013;--plinth:#08090B;--rule:#2A2F37;
+    --ink:#DADDE4;--ink-soft:#99A1AF;--ink-faint:#6B7280;--brass:#D8B25A;--brass-line:#8A6E2C;
+  }}
+  :root[data-theme="dark"]{
+    --ground:#0E1013;--plinth:#08090B;--rule:#2A2F37;
+    --ink:#DADDE4;--ink-soft:#99A1AF;--ink-faint:#6B7280;--brass:#D8B25A;--brass-line:#8A6E2C;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--ground);color:var(--ink);font-family:var(--sans);
+    font-size:15px;line-height:1.55;-webkit-font-smoothing:antialiased}
+  .wrap{max-width:1180px;margin:0 auto;padding:56px 28px 96px}
+  header{border-bottom:1px solid var(--rule);padding-bottom:28px;margin-bottom:26px}
+  .eyebrow{font-family:var(--mono);font-size:11px;letter-spacing:.16em;text-transform:uppercase;
+    color:var(--brass);margin:0 0 14px}
+  h1{font-family:var(--cond);font-weight:700;font-size:clamp(32px,5vw,50px);line-height:1.04;
+    margin:0 0 16px;text-wrap:balance;letter-spacing:-.01em}
+  .lede{max-width:64ch;color:var(--ink-soft);margin:0}
+  .scalenote{font-family:var(--mono);font-size:12px;color:var(--brass);
+    border-left:2px solid var(--brass-line);padding-left:14px;margin:26px 0 40px;max-width:70ch}
+
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(380px,1fr));gap:52px 40px}
+  .card{display:flex;flex-direction:column;gap:18px}
+  .plinth{background:var(--plinth);border-radius:14px;padding:26px;display:flex;
+    align-items:center;justify-content:center;border:1px solid var(--rule)}
+  .screen{--dim:320px;--u:calc(var(--dim)/360);width:var(--dim);height:var(--dim);
+    border-radius:50%;position:relative;overflow:hidden;background:#000;flex:none;
+    box-shadow:0 0 0 calc(6*var(--u)) #23262C,0 calc(14*var(--u)) calc(34*var(--u)) rgba(0,0,0,.55)}
+  @media (max-width:440px){.screen{--dim:250px}}
+  canvas{position:absolute;inset:0;width:100%;height:100%}
+  .clock{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+    font-family:var(--display);font-size:calc(44*var(--u));color:#fff;
+    text-shadow:0 0 calc(24*var(--u)) rgba(0,0,0,.95),0 0 calc(8*var(--u)) rgba(0,0,0,.9)}
+
+  .cap h2{font-family:var(--cond);font-size:19px;font-weight:700;margin:0 0 4px}
+  .idx{font-family:var(--mono);font-size:11px;color:var(--brass);letter-spacing:.14em;margin:0 0 8px}
+  .cap p{margin:0 0 14px;color:var(--ink-soft);font-size:14px;max-width:46ch}
+  dl{margin:0;display:grid;grid-template-columns:auto 1fr;gap:7px 16px;
+    border-top:1px solid var(--rule);padding-top:13px}
+  dt{font-family:var(--mono);font-size:10.5px;letter-spacing:.13em;text-transform:uppercase;
+    color:var(--ink-faint);padding-top:2px}
+  dd{margin:0;font-size:13.5px;color:var(--ink)}
+  dd em{font-style:normal;color:var(--ink-faint)}
+  .cost{font-family:var(--mono);font-size:11px;letter-spacing:.06em}
+  .cheap{color:#3E9C5F}.mid{color:#B08328}.dear{color:#C2410C}
+  footer{margin-top:72px;padding-top:26px;border-top:1px solid var(--rule);
+    color:var(--ink-faint);font-size:13px;max-width:72ch}
+  footer strong{color:var(--ink-soft);font-weight:500}
+</style>
+
+<div class="wrap">
+<header>
+  <p class="eyebrow">Dial4Spotify · idle screen · six candidates</p>
+  <h1>What it does when<br>you're not listening</h1>
+  <p class="lede">The idle screen is what the device shows for most of the day, so it decides what the object feels like sitting on a desk. Six generative fields, each with one parameter drifting slowly enough that the figure reorganises rather than merely turns. All tinted from the last cover, all with the clock, none with a caption.</p>
+</header>
+
+<p class="scalenote">Drawn 1:1 at 360 px, animating live. The <span class="cheap">cost</span> figure is the number of primitives per frame — the practical ceiling on an ESP32-S3 is a few hundred at 2 fps, so treat anything marked <span class="dear">dear</span> as needing a pre-rendered buffer rather than a live redraw.</p>
+
+<div class="grid">
+
+  <div class="card">
+    <div class="plinth"><div class="screen">
+      <canvas width="360" height="360" data-p="wave"></canvas><div class="clock">14:32</div>
+    </div></div>
+    <div class="cap"><p class="idx">01 — wave field</p><h2>Contours</h2>
+      <p>Horizontal lines deformed by a travelling swell. The most restful of the six — it reads as landscape rather than machinery, and the clock sits in it naturally.</p>
+      <dl><dt>Drifting</dt><dd>Swell centres wander independently</dd>
+        <dt>Character</dt><dd>Calm, topographic, never busy</dd>
+        <dt>Cost</dt><dd class="cost cheap">~34 polylines · cheap</dd></dl></div>
+  </div>
+
+  <div class="card">
+    <div class="plinth"><div class="screen">
+      <canvas width="360" height="360" data-p="chaos"></canvas><div class="clock">14:32</div>
+    </div></div>
+    <div class="cap"><p class="idx">02 — chaos circles</p><h2>Scribble torus</h2>
+      <p>Sixty near-circles, each pushed off centre and out of round. Leaves the middle clear on its own, so the clock needs no scrim at all.</p>
+      <dl><dt>Drifting</dt><dd>Eccentricity grows and relaxes</dd>
+        <dt>Character</dt><dd>Restless, hand-drawn, closest to the reference</dd>
+        <dt>Cost</dt><dd class="cost mid">~60 polygons · moderate</dd></dl></div>
+  </div>
+
+  <div class="card">
+    <div class="plinth"><div class="screen">
+      <canvas width="360" height="360" data-p="mesh"></canvas><div class="clock">14:32</div>
+    </div></div>
+    <div class="cap"><p class="idx">03 — deformed mesh</p><h2>Warped grid</h2>
+      <p>A square lattice pulled about by two drifting attractors. The one pattern here that is legibly <em>being deformed</em> — you can see the force even though it is invisible.</p>
+      <dl><dt>Drifting</dt><dd>Attractors orbit at different rates</dd>
+        <dt>Character</dt><dd>Technical, gridded, quietly unsettling</dd>
+        <dt>Cost</dt><dd class="cost dear">~900 dots + links · dear</dd></dl></div>
+  </div>
+
+  <div class="card">
+    <div class="plinth"><div class="screen">
+      <canvas width="360" height="360" data-p="halftone"></canvas><div class="clock">14:32</div>
+    </div></div>
+    <div class="cap"><p class="idx">04 — halftone sphere</p><h2>Halftone</h2>
+      <p>Dot radius driven by a light source that drifts around behind the grid. The sphere appears to turn without anything actually rotating.</p>
+      <dl><dt>Drifting</dt><dd>Light position, slow orbit</dd>
+        <dt>Character</dt><dd>Print-like, solid, the least "screensaver"</dd>
+        <dt>Cost</dt><dd class="cost dear">~700 dots · dear</dd></dl></div>
+  </div>
+
+  <div class="card">
+    <div class="plinth"><div class="screen">
+      <canvas width="360" height="360" data-p="rings"></canvas><div class="clock">14:32</div>
+    </div></div>
+    <div class="cap"><p class="idx">05 — concentric noise rings</p><h2>Noise rings</h2>
+      <p>Forty rings sharing a noise field, each sampling it a little further along. Where they bunch they read as a surface; where they spread, as threads.</p>
+      <dl><dt>Drifting</dt><dd>Noise phase and lobe count together</dd>
+        <dt>Character</dt><dd>Fluid, contoured, handsome at small size</dd>
+        <dt>Cost</dt><dd class="cost mid">~40 polygons · moderate</dd></dl></div>
+  </div>
+
+  <div class="card">
+    <div class="plinth"><div class="screen">
+      <canvas width="360" height="360" data-p="phyllo"></canvas><div class="clock">14:32</div>
+    </div></div>
+    <div class="cap"><p class="idx">06 — phyllotaxis bloom</p><h2>Bloom</h2>
+      <p>Sunflower packing. The divergence angle drifts either side of the golden angle by a fraction of a degree, and the spiral arms reorganise completely — the strongest "detail actually changes" of the six.</p>
+      <dl><dt>Drifting</dt><dd>Divergence angle, ±0.4° around 137.5°</dd>
+        <dt>Character</dt><dd>Organic, mesmerising, hardest to look away from</dd>
+        <dt>Cost</dt><dd class="cost mid">~420 segments · moderate</dd></dl></div>
+  </div>
+
+</div>
+
+<footer>
+  <p><strong>How to choose.</strong> These are all handsome in isolation; the question is which one you want in your peripheral vision for hours. 01 and 05 disappear when you are not looking at them. 03 and 06 keep asking for attention, which is either the point or exactly wrong. 02 is the closest to the reference. 04 is the only one that does not read as a line drawing, so it sits oddly beside the ray fields on the dial screens.</p>
+  <p style="margin-top:14px">Tint is the placeholder cover's orange throughout. On the device it comes from the average of the last decoded cover, so the whole field shifts with the music.</p>
+</footer>
+</div>
+
+<script>
+(function(){
+  var TINT=[228,120,70];
+  var reduce=window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  function rgba(a){return "rgba("+TINT[0]+","+TINT[1]+","+TINT[2]+","+a.toFixed(3)+")";}
+
+  // cheap smooth field — sums of incommensurate sines, no library needed
+  function noise(x,y,t){
+    return Math.sin(x*0.9+t)*0.5 + Math.sin(y*1.3-t*0.7)*0.3
+         + Math.sin((x+y)*0.6+t*1.3)*0.2 + Math.sin((x-y)*1.7-t*0.5)*0.15;
+  }
+  function fadeCentre(ctx,r){
+    var g=ctx.createRadialGradient(180,180,0,180,180,r);
+    g.addColorStop(0,"rgba(0,0,0,0.95)");
+    g.addColorStop(0.62,"rgba(0,0,0,0.72)");
+    g.addColorStop(1,"rgba(0,0,0,0)");
+    ctx.fillStyle=g; ctx.fillRect(0,0,360,360);
+  }
+  function ground(ctx){
+    var g=ctx.createRadialGradient(180,180,10,180,180,190);
+    g.addColorStop(0,"#0A0B0D"); g.addColorStop(1,"#000");
+    ctx.fillStyle=g; ctx.fillRect(0,0,360,360);
+  }
+
+  var P={};
+
+  P.wave=function(ctx,s){
+    ground(ctx); ctx.lineWidth=1;
+    var ax=180+95*Math.sin(s/23), ay=150+60*Math.cos(s/31);
+    var bx=180+80*Math.cos(s/19), by=220+55*Math.sin(s/27);
+    for(var i=0;i<34;i++){
+      var y0=14+i*10;
+      ctx.strokeStyle=rgba(0.13+0.10*Math.sin(i*0.4+s/8));
+      ctx.beginPath();
+      for(var x=0;x<=360;x+=4){
+        var da=Math.hypot(x-ax,y0-ay), db=Math.hypot(x-bx,y0-by);
+        var y=y0 - 34*Math.exp(-da*da/9000) - 26*Math.exp(-db*db/7000)
+                 + 3*Math.sin(x/44+s/6);
+        x===0?ctx.moveTo(x,y):ctx.lineTo(x,y);
+      }
+      ctx.stroke();
+    }
+    fadeCentre(ctx,88);
+  };
+
+  P.chaos=function(ctx,s){
+    ground(ctx); ctx.lineWidth=0.9;
+    var ecc=6+9*(0.5+0.5*Math.sin(s/26));
+    for(var i=0;i<60;i++){
+      var r=76+i*1.5, a0=i*0.31+s/60;
+      ctx.strokeStyle=rgba(0.07+0.05*Math.sin(i*0.6));
+      ctx.beginPath();
+      for(var k=0;k<=64;k++){
+        var t=k/64*Math.PI*2;
+        var rr=r+ecc*Math.sin(3*t+i*0.5+s/7)+ecc*0.6*Math.sin(5*t-i*0.3-s/11);
+        var x=180+Math.cos(t+a0)*rr, y=180+Math.sin(t+a0)*rr*0.97;
+        k===0?ctx.moveTo(x,y):ctx.lineTo(x,y);
+      }
+      ctx.closePath(); ctx.stroke();
+    }
+  };
+
+  P.mesh=function(ctx,s){
+    ground(ctx);
+    var N=26, pts=[];
+    var ax=180+110*Math.cos(s/21), ay=180+110*Math.sin(s/29);
+    var bx=180+90*Math.cos(-s/17), by=180+90*Math.sin(-s/23);
+    for(var i=0;i<N;i++){ pts[i]=[];
+      for(var j=0;j<N;j++){
+        var x=18+i*(324/(N-1)), y=18+j*(324/(N-1));
+        var da=Math.hypot(x-ax,y-ay)+1, db=Math.hypot(x-bx,y-by)+1;
+        var px=x+900*(x-ax)/(da*da)-700*(x-bx)/(db*db);
+        var py=y+900*(y-ay)/(da*da)-700*(y-by)/(db*db);
+        pts[i][j]=[px,py];
+      }}
+    ctx.strokeStyle=rgba(0.10); ctx.lineWidth=0.7;
+    for(i=0;i<N;i++){ for(j=0;j<N;j++){
+      if(i<N-1){ctx.beginPath();ctx.moveTo(pts[i][j][0],pts[i][j][1]);
+        ctx.lineTo(pts[i+1][j][0],pts[i+1][j][1]);ctx.stroke();}
+      if(j<N-1){ctx.beginPath();ctx.moveTo(pts[i][j][0],pts[i][j][1]);
+        ctx.lineTo(pts[i][j+1][0],pts[i][j+1][1]);ctx.stroke();}
+    }}
+    ctx.fillStyle=rgba(0.30);
+    for(i=0;i<N;i++)for(j=0;j<N;j++){
+      ctx.beginPath();ctx.arc(pts[i][j][0],pts[i][j][1],1.1,0,6.2832);ctx.fill();}
+    fadeCentre(ctx,84);
+  };
+
+  P.halftone=function(ctx,s){
+    ground(ctx);
+    var lx=180+120*Math.cos(s/24), ly=180+120*Math.sin(s/33);
+    for(var x=16;x<=344;x+=11)for(var y=16;y<=344;y+=11){
+      if(Math.hypot(x-180,y-180)>172) continue;
+      var d=Math.hypot(x-lx,y-ly);
+      var v=Math.max(0,1-d/230);
+      var r=0.5+v*v*3.9;
+      ctx.fillStyle=rgba(0.10+0.42*v*v);
+      ctx.beginPath();ctx.arc(x,y,r,0,6.2832);ctx.fill();
+    }
+    fadeCentre(ctx,80);
+  };
+
+  P.rings=function(ctx,s){
+    ground(ctx); ctx.lineWidth=0.9;
+    var lobes=3+Math.round(3*(0.5+0.5*Math.sin(s/34)));
+    for(var i=0;i<40;i++){
+      var r=74+i*2.3, ph=i*0.16+s/13;
+      ctx.strokeStyle=rgba(0.09+0.09*Math.sin(i*0.3+s/9));
+      ctx.beginPath();
+      for(var k=0;k<=90;k++){
+        var t=k/90*Math.PI*2;
+        var rr=r+14*noise(Math.cos(t)*1.5+i*0.05,Math.sin(t)*1.5,ph)
+                +8*Math.sin(lobes*t+ph);
+        var x=180+Math.cos(t)*rr, y=180+Math.sin(t)*rr;
+        k===0?ctx.moveTo(x,y):ctx.lineTo(x,y);
+      }
+      ctx.closePath(); ctx.stroke();
+    }
+  };
+
+  P.phyllo=function(ctx,s){
+    ground(ctx); ctx.lineWidth=1.4; ctx.lineCap="round";
+    var div=(137.5+0.4*Math.sin(s/30))*Math.PI/180;
+    for(var i=1;i<=420;i++){
+      var a=i*div, r=8.4*Math.sqrt(i);
+      if(r>176) break;
+      var x=180+Math.cos(a)*r, y=180+Math.sin(a)*r;
+      var len=3+r*0.055;
+      ctx.strokeStyle=rgba(0.10+0.30*(r/176));
+      ctx.beginPath();
+      ctx.moveTo(x-Math.cos(a)*len,y-Math.sin(a)*len);
+      ctx.lineTo(x+Math.cos(a)*len,y+Math.sin(a)*len);
+      ctx.stroke();
+    }
+    fadeCentre(ctx,86);
+  };
+
+  var cvs=[].slice.call(document.querySelectorAll("canvas[data-p]")).map(function(c){
+    return {ctx:c.getContext("2d"), fn:P[c.dataset.p]};
+  });
+
+  if(reduce){ cvs.forEach(function(c){c.fn(c.ctx,12);}); return; }
+  var t0=performance.now(), last=0;
+  (function loop(now){
+    requestAnimationFrame(loop);
+    if(now-last<50) return;              // 20fps — ample for drifts this slow
+    last=now;
+    var s=(now-t0)/1000;
+    cvs.forEach(function(c){ c.fn(c.ctx,s); });
+  })(t0);
+})();
+</script>

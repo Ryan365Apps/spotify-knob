@@ -14,15 +14,27 @@ A permanently-powered desk device that removes the "wake phone → find Spotify 
 |---|---|
 | R1 | Show the currently playing track's album art, large, on the round 360×360 screen |
 | R2 | Show track title and artist |
-| R3 | Skip to next / previous track by spinning the dial |
+| R3 | Skip to next / previous track from on-screen buttons, one tap from the default screen |
 | R4 | Toggle play/pause from the screen (and from the knob press) |
-| R5 | Switch the dial into volume mode via an on-screen control, then spin to set volume |
+| R5 | The dial controls **volume** by default. Where the active device refuses volume it controls **track seek** instead, chosen at runtime (see the Wave 0 result below). The assignment can be switched by hand from the controls screen |
+| R8 | Move playback to the PC from the device, so the dial regains volume control without picking up the phone |
 | R6 | Work against playback on a phone or a Connect speaker — **not** the PC |
 | R7 | Boot on power-up, reconnect on its own, and require no interaction on a normal day |
 
 ### Explicit non-goals
 
 Playing audio on the device. Playlist browsing. Search. Library management. Controlling anything other than Spotify (that is a later project, and the architecture below does not block it).
+
+### Verified constraints
+
+**2026-08-31 — Wave 0 result.** Volume control was tested against two playback devices:
+
+| Device | `supports_volume` | Volume command |
+|---|---|---|
+| Android phone (primary listening device) | `false` | `403 VOLUME_CONTROL_DISALLOW` |
+| Windows desktop (Spotify desktop app) | `true` | `204` accepted |
+
+The phone's refusal is a Spotify-side restriction on that class of device — not a fault, and there is no workaround. Because at least one real device does accept volume, **both variants of the second dial mode are in scope** and the choice is made at runtime. Album art is available at 640×640 on both.
 
 ---
 
@@ -41,7 +53,7 @@ This is forced by R6. Because audio plays on a phone or a speaker, anything that
 - State is **polled, not pushed**. The screen lags reality by up to one poll interval when the track is changed on the phone.
 - The refresh token expires **6 months after authorisation**. Re-authorisation is a scheduled chore (see Wave 8).
 - TLS, JSON parsing and JPEG decoding all happen on the ESP32. This is the bulk of the firmware work.
-- Volume is the only control that the target playback device can refuse. See R5 and Wave 0.
+- Volume is the only control the target playback device can refuse, and one of the two devices in use does refuse it. The second dial mode must therefore be chosen at runtime from `device.supports_volume`, never assumed or compiled in.
 
 ---
 
@@ -58,21 +70,36 @@ This is forced by R6. Because audio plays on a phone or a speaker, anything that
 | Audio | PCM5100A I2S DAC, PDM mic, 3.5 mm jack — unused here |
 | Power | USB-C, plus PH1.25 Li-ion socket. Desk use = USB-C permanently |
 
-### Pin map (verify against the Waveshare schematic before writing driver init)
+### Pin map — **verified against the Waveshare schematic, 2026-08-31**
 
-| Function | GPIO |
-|---|---|
-| LCD CS | 14 |
-| LCD SCLK | 13 |
-| LCD D0–D3 | 15, 16, 17, 18 |
-| LCD RESET | 21 |
-| Backlight | 47 |
-| Touch SDA / SCL | 11 / 12 |
-| Touch INT / RST | 9 / 10 |
-| Encoder A / B | 8 / 7 |
-| Encoder push | 0 |
+Every line below is read off sheets 1, 2 and 4 of the official schematic. This is the reference; do not re-derive it from community sources.
 
-> These come from community ESPHome and Tasmota configurations for this board, cross-checked against the Waveshare wiki. Treat them as a strong starting hypothesis, confirm in Wave 1, and correct this table if any pin is wrong.
+| Function | GPIO | Signal name on the schematic |
+|---|---|---|
+| LCD QSPI SCLK | 13 | `LCD_QSPI_SCL` |
+| LCD QSPI CS | 14 | `LCD_QSPI_CS` |
+| LCD QSPI D0–D3 | 15, 16, 17, 18 | `LCD_QSPI_D0`…`D3` |
+| LCD reset | 21 | `LCD_RST` |
+| Backlight | 47 | `LCD_BLK`, PWM via an AO3400A |
+| Touch SDA / SCL | 11 / 12 | `TP_SDA` / `TP_SCL` |
+| Touch INT / RST | 9 / 10 | `TP_INT` / `TP_RST` |
+| Haptics, DRV2605 | 11 / 12 | **shares the touch I²C bus** |
+| Encoder A / B | 8 / 7 | `EC1_A` / `EC1_B` |
+| Battery sense | 1 | `BATT_ADC`, 10K/10K divider off 5V |
+| microSD, SDMMC | 2, 3, 4, 5, 6, 42 | `SDMMC_D3, CMD, SCK, D0, D1, D2` |
+| USB | 19 / 20 | `USB_DN` / `USB_DP` |
+| UART to second MCU | 48 / 38 | `ESP32S3_RX` / `ESP32S3_TX` |
+
+### Three corrections this verification produced
+
+1. **There is no knob button.** The encoder is a four-pin part — A, B and the frame. No push switch exists anywhere on the board, on either encoder. Every "knob press" in an earlier draft of section 5 was wrong.
+2. **GPIO0 is not the encoder button.** It carries `I2S_SWITCH_IN`, which selects whether the S3 or the second MCU drives the audio DAC. It remains the boot strapping pin and so still matters for flashing, but nothing user-facing sits on it.
+3. **`LCD_TE` is not connected to the S3.** Tearing-effect sync is unavailable; the panel driver must not be configured to expect it.
+
+Two further facts worth having before Wave 2:
+
+- **The haptic driver sits on the touch I²C bus.** One bus, two devices — initialise the CST816 and the DRV2605 on the same `i2c_master` handle rather than creating two. `HAPTIC_EN` is tied to 3V3 and `HAPTIC_TRIG` to ground, so the part is permanently enabled and driven entirely over I²C.
+- **The two microcontrollers are wired together** over UART on GPIO48/38, and the S3 can drive the audio DAC directly over I²S on GPIO39/40/41. Unused here, but it means audio output is available later without new hardware.
 
 ### Two gotchas that will cost you an hour each if you do not know them
 
@@ -86,6 +113,8 @@ This is forced by R6. Because audio plays on a phone or a speaker, anything that
 **ESP-IDF v5.5.x.** ESP-IDF v6.0 shipped in March 2026 and is fine in isolation, but the managed components this project leans on — and Waveshare's own board demos — are still written against the 5.x API surface. Wave 0 includes an explicit build check; if everything compiles clean on 6.0, use 6.0.
 
 Build system: `idf.py` directly. PlatformIO is not needed and adds a version-pinning layer between you and the components.
+
+The screen is driven by LVGL in C. There is no web browser for the ESP32, so HTML cannot render on the device's display — something must turn markup into pixels, and that something is a browser engine far larger than this chip can hold. HTML does appear in this project, but only in Wave 8, where the device serves a config page to a browser on your phone.
 
 `main/idf_component.yml`:
 
@@ -125,32 +154,54 @@ Partition table: custom, single 4 MB app partition (headroom for OTA later) plus
 
 ## 5. Interaction model
 
-Two modes. The screen is never more than one gesture from either.
+Continuous control lives on the dial. Discrete control lives one tap away. Colour carries meaning consistently: **white is progress, green is volume, yellow is seek.**
 
-**NOW PLAYING (default)**
+### NOW PLAYING — the default screen
 
-- Album art fills the circle, 320×320, centred.
-- Track title and artist on a translucent band across the lower third.
-- Small play/pause glyph, dimmed, top of screen.
-- **Dial spin → next / previous track.** Clockwise next, anticlockwise previous.
-- **Knob press → play/pause.**
-- **Tap anywhere → reveal the control ring** (play/pause button centre, volume chip below it). Auto-hides after 4 s.
+- Album art fills the circle. A thin white ring traces track progress around the bezel with a chip riding the current position — it earns its place on long podcast episodes even when it is redundant on a three-minute track. It belongs to this screen only; the dial screens replace it rather than layer over it.
+- Title and artist, centred, with the title scrolling as a slow marquee only when it overflows.
+- **Dial → volume.** Turning it raises the feedback overlay below.
+- **Touch anywhere → CONTROLS.**
 
-**VOLUME**
+**There is no knob press.** The schematic verification in section 3 found no push switch on this board, so play/pause has to be a touch gesture. Options, in order of preference:
 
-- Entered by tapping the volume chip.
-- Album art dims to ~30%, a thick arc traces the circle edge, large percentage in the middle.
-- **Dial spin → volume, 5% per detent.**
-- Auto-returns to NOW PLAYING after 4 s of no rotation.
+| Option | Cost |
+|---|---|
+| Play/pause is the centre button on CONTROLS | Two taps for the most common action |
+| Long-press the now-playing screen | One gesture, discoverable with a brief hint, ~400 ms to commit |
+| Double-tap the now-playing screen | One gesture, but undiscoverable and easy to trigger by accident |
+
+**Undecided.** Everything else in this section stands.
+
+### Dial feedback — transient, ~2 s
+
+Raised the moment the dial moves, gone two seconds after it stops. Artwork drops to near-black, a phyllotaxis bloom is cut by a wedge, and the value sits in the middle with no label — a percentage in green and a timestamp in amber cannot be mistaken for one another.
+
+- **Volume:** green, 0–100%, ±5% per detent.
+- **Seek:** amber, ±10 s per detent — the lit boundary is the playhead.
+
+The bloom is one 300-point field shared by both, and by the idle screen where nothing is lit. Pre-render it once at boot; the only live work is the segments currently on.
+
+Both write once, 400 ms after the last detent. Spin freely; the screen updates locally at every step.
+
+### CONTROLS — one tap from the default screen
+
+- **Transport across the middle:** previous, play/pause, next, at full thumb size. This is where skipping lives.
+- **Two chips below:** VOLUME and SEEK, assigning the dial. The choice persists.
+- **Device pill at the top:** shows where audio is playing. Tapping it transfers playback to the desktop via `PUT /me/player`.
+- Auto-returns to NOW PLAYING after 5 s.
 
 ### Behaviours that need deciding once and then holding
 
-- **Accidental skips.** One detent equals one skip is what you asked for, and it is the right default for a deliberate spin. It is also the most likely source of annoyance — a knocked knob skips a track. Mitigation built in from Wave 5: a 300 ms lockout after each skip, and detents arriving inside a single 400 ms burst collapse to **one** skip rather than five. If it still misfires in real use, the fallback is requiring a quarter-turn before the first skip commits.
-- **Volume writes are debounced.** Spin freely; the arc updates locally at once, and a single `PUT /me/player/volume` fires 400 ms after the last detent. This is what keeps you inside the rate limit.
-- **Haptics.** One short DRV2605 click per detent, a heavier one on skip commit. Cheap to add, and it is most of what makes the thing feel like a real control rather than a screen.
-- **Volume may not be available.** `GET /me/player` returns `device.supports_volume`. When false, the volume chip renders greyed with the device name — Spotify genuinely refuses volume control on some phone and web endpoints, and silently failing would be worse. Wave 0 tests this against your actual device before any firmware is written.
-- **Adverts.** `currently_playing_type == "ad"` — show "Advert", suppress skip. Not applicable on Premium, but it costs three lines and prevents a confusing state.
-- **Nothing playing.** `GET /me/player` returns HTTP 204. Show the last art heavily dimmed with a clock; dial and buttons do nothing until playback resumes somewhere.
+- **Volume availability is read, never assumed.** `GET /me/player` returns `device.supports_volume`, re-checked on every poll. When false — which is the case on the phone — the VOLUME chip greys out and the dial falls back to seek so the knob is never inert. Transferring playback to the desktop re-enables it within one poll.
+- **Transfer, not launch.** `PUT /me/player` moves playback to a device Spotify can already see, which requires the desktop app to be running. It cannot start or focus an application; nothing in the Web API can. Doing that would need a resident agent on the PC — deliberately out of scope, since this project currently runs no permanent background process on any machine.
+- **Writes are debounced.** A single call 400 ms after the last detent is what keeps the device inside the rate limit during a long volume sweep.
+- **Haptics.** One short DRV2605 click per detent, a heavier one on transport button presses. Cheap to add, and most of what makes the thing feel like a control rather than a screen.
+- **Adverts.** `currently_playing_type == "ad"` — show "Advert", suppress the transport buttons. Not applicable on Premium, but three lines that prevent a confusing state.
+- **Nothing playing.** `GET /me/player` returns HTTP 204. The screen shows the moiré ray field described in `design/screens.html`, tinted from the last cover's average colour, with the clock over it. The dial does nothing.
+- **Sleep.** After 20 minutes idle the backlight goes off entirely and the animation stops — a permanently-powered desk object should not be a permanently-lit one. It wakes on touch, on dial movement, or on playback resuming anywhere.
+
+Screen designs for all of the above live in `design/screens.html`.
 
 ---
 
@@ -191,18 +242,35 @@ That is roughly 20 requests per minute at worst — about 10 per rate-limit wind
 
 ### Token handling
 
-- `client_id` and `refresh_token` live in NVS, not in source, not in git.
+Three NVS keys: `client_id`, `refresh_token`, and `auth_date` — the date the refresh token was minted.
+
 - On boot: refresh immediately. Then refresh at T+55 min, and on any 401.
 - The refresh response **may or may not** include a new `refresh_token`. If it does, write it to NVS before using it; if it does not, keep the existing one. Getting this wrong is how the device dies silently three weeks later.
-- Two consecutive refresh failures → show a re-auth screen rather than an endless retry loop.
+
+**The 180-day expiry is a hard deadline, and it is predictable.** Spotify enforces a 6-month refresh token lifetime measured from the moment of the user's original authorization. Refreshing the access token does **not** reset or extend it. So the death date is simply `auth_date + 180 days`, which is why `auth_date` is stored — the device can warn before it happens rather than just stopping.
+
+Two failure modes, handled differently:
+
+| Response | Meaning | What the device does |
+|---|---|---|
+| Network error, timeout, 5xx | Wi-Fi or Spotify is having a moment | Retry with backoff. Keep showing the last known state. |
+| `400` with `{"error": "invalid_grant"}` | The refresh token is dead. Permanent. | **Stop retrying.** Discard the token and switch to the re-auth screen. |
+
+Retrying an `invalid_grant` is pointless — it will never succeed — and Spotify explicitly asks developers not to.
 
 ### Album art pipeline
 
-1. Compare the new `album.images[0].url` against the cached one. Same URL → do nothing. This is the single most important optimisation; most polls change nothing.
-2. Stream the 640×640 JPEG from `i.scdn.co` over HTTPS into a PSRAM buffer (typically 40–90 KB).
-3. Decode with `esp_jpeg` at **1/2 scale → 320×320 RGB565** (~205 KB in PSRAM). The S3 has no hardware JPEG unit, so budget 200–400 ms of CPU — hence the dedicated task.
-4. Swap into the LVGL image descriptor, keeping the previous buffer alive until the swap completes. Cross-fade over ~200 ms.
-5. Cache the last N covers keyed by URL in PSRAM if you want instant redraw on back-skip. Optional, Wave 6.
+**Use the 300×300 image, not the 640×640.** The screen is 360 px across and a text band covers the lower third of it. The larger file costs roughly three times the download, and more than that in decode time — `tjpgd` must Huffman-decode every block of the source regardless of the scale factor, so a 640² source is around 4.5× the work of a 300² one even when you throw half of it away. None of that buys a pixel anyone can see.
+
+1. Pick the image by size, not by array position. Choose the smallest entry whose width is ≥ 300, falling back to the largest available. The array is ordered largest-first and is usually 640/300/64, but that is convention rather than contract.
+2. Compare the chosen URL against the cached one. Same URL → do nothing. **This is the single most important optimisation** — most polls change nothing at all.
+3. Stream the JPEG from `i.scdn.co` over HTTPS into a PSRAM buffer. Typically 15–25 KB at this size.
+4. Decode with `esp_jpeg` at 1:1 → 300×300 RGB565, 180 KB in PSRAM. The S3 has no hardware JPEG unit, so this is CPU work — budget 80–150 ms, which is why it lives on its own task and not the UI thread.
+5. Let LVGL scale the image to fill the 360 px circle at draw time. A 1.2× upscale of a 300 px source is imperceptible at desk distance, and it happens once per track change rather than per frame.
+6. Swap into the LVGL image descriptor, keeping the previous buffer alive until the swap completes. Cross-fade over ~200 ms.
+7. Optional, Wave 6: cache the last few covers keyed by URL in PSRAM for instant redraw when skipping back.
+
+Pre-allocate the decode buffer once at a fixed 300×300×2 and reuse it. Allocating and freeing 180 KB on every track change is how PSRAM fragments and the device dies after six hours.
 
 ---
 
@@ -222,22 +290,18 @@ PKCE rather than the client-secret flow, deliberately: the device never holds a 
 
 Each wave has a done condition you can check rather than judge.
 
-### Wave 0 — Prove the Spotify side before touching the board *(30 min, do this first)*
+### Wave 0 — Prove the Spotify side — **COMPLETE (2026-08-31)**
 
-Nothing in this project is worth building if the API will not control your actual playback device.
+Result recorded in section 1 under Verified constraints. Volume works on the desktop, not on the phone; both variants of the second dial mode are in scope.
 
-- Create the Spotify app, run `tools/spotify_auth.py`.
-- Start playback on the phone/speaker you actually use, run the diagnostic.
-- **Done when:** the diagnostic prints a track, a 640×640 art URL, and `PASS` on the volume test. If volume returns `403 VOLUME_CONTROL_DISALLOW`, stop and re-scope R5 before writing firmware.
+### Wave 1 — Toolchain — **COMPLETE (2026-08-31)**
 
-### Wave 1 — Toolchain and flashing
+ESP-IDF v5.5.x installed and verified. Board schematic in the repo.
 
-- Install ESP-IDF v5.5.x, build and flash `hello_world` to the S3.
-- **Done when:** `idf.py monitor` shows the boot log, and you have found the USB-C orientation that reaches the S3 rather than the audio ESP32.
+### Wave 2 — Board bring-up
 
-### Wave 2 — Panel, touch, encoder
-
-- Bring up ST77916 over QSPI, CST816 over I2C, encoder via `espressif/knob`, all through `esp_lvgl_port`.
+- Flash `hello_world`, confirm the chip and PSRAM from the boot log.
+- Bring up ST77916 over QSPI, CST816 over I2C, and the encoder via `espressif/knob`, all through `esp_lvgl_port`.
 - Test UI: a number that increments on clockwise rotation, decrements anticlockwise, resets on knob press, and a button that changes colour on touch.
 - **Done when:** all four inputs are demonstrably correct and the pin map in section 3 has been confirmed or corrected in this document.
 
@@ -258,8 +322,8 @@ Nothing in this project is worth building if the API will not control your actua
 
 ### Wave 6 — Controls
 
-- Play/pause, dial-to-skip with burst collapsing and lockout, volume mode with debounced writes, haptics, `supports_volume` gating.
-- **Done when:** every control in section 5 works against the phone, a fast five-detent spin produces exactly one skip, and a 10-second volume sweep produces at most a handful of API calls (count them in the log).
+- Play/pause, dial-to-skip with burst collapsing and lockout, second dial mode with debounced writes, haptics, runtime selection between volume and seek from `supports_volume`.
+- **Done when:** every control in section 5 works against the phone, a fast five-detent spin produces exactly one skip, a 10-second dial sweep produces at most a handful of API calls (count them in the log), and moving playback to a device that supports volume switches the second mode from seek to volume within one poll.
 
 ### Wave 7 — Live-on-the-desk robustness
 
@@ -268,8 +332,47 @@ Nothing in this project is worth building if the API will not control your actua
 
 ### Wave 8 — Serviceability
 
-- Web config page on the device (paste a new refresh token, change Wi-Fi) and OTA update.
-- **Done when:** a new refresh token can be installed without a USB cable. This is what you will need in six months, and it is much less appealing to build then.
+Every 180 days the refresh token dies. That is Spotify policy, applies to every app, and cannot be engineered away. What *can* be engineered away is you having to notice.
+
+**The target experience:** on roughly day 170, a browser tab opens on your PC by itself showing the Spotify login page. You click Agree. The knob reboots working. You are never told a token expired, and you never see one.
+
+The expiry date is deterministic — 180 days from authorisation, and refreshing does not extend it — so this does not need monitoring, polling, or a background service. It needs a calendar entry.
+
+**Why the PC is in the loop.** Spotify permits plain-HTTP redirect URIs only on `127.0.0.1`, so the knob cannot receive the OAuth callback itself, and Spotify offers no device authorisation grant (the "enter this code at spotify.com/pair" pattern TVs use). The browser and the loopback listener must live on a real computer. Since the knob is a desk extension of that computer, this is not a compromise.
+
+Four parts:
+
+**1. Initiation — a Windows scheduled task.** `tools/reauth.py --install-schedule` runs `schtasks` once to create a task that fires 170 days out, with "run as soon as possible after a missed start" enabled so a week of the PC being off does not break it. Each successful run re-arms the task for another 170 days, so it maintains itself and there is nothing to remember.
+
+This is the whole initiation mechanism. No tray app, no service, no daemon, nothing running in the background.
+
+**2. `tools/reauth.py --push-to`.** An extension of the Wave 0 script. When the task fires, it:
+
+1. Starts the loopback listener on `127.0.0.1:8888`
+2. Opens the browser on Spotify's login page — the same screen as Wave 0
+3. Receives the code, completes the PKCE exchange
+4. `POST`s the new refresh token to `http://spotify-knob.local/api/token`
+5. Re-arms the scheduled task and exits
+
+The device is found by mDNS, which Windows resolves natively; `--device <ip>` overrides it. If the knob is unreachable it writes the token to `spotify_tokens.json` and retries on next boot rather than losing it.
+
+**3. A config endpoint on the device.** `esp_http_server` with two routes: `POST /api/token` (writes `refresh_token`, stamps `auth_date`, reboots) and `GET /` carrying Wi-Fi fields and OTA upload for the rarer jobs. HTML as a C string constant; reference implementation at https://randomnerdtutorials.com/esp-idf-esp32-web-server/, roughly 150 lines including Wi-Fi setup.
+
+Gate both routes on physical presence: the server only responds for 10 minutes after a knob long-press, except `POST /api/token` which is additionally accepted during the first 60 seconds after boot so the retry path works unattended.
+
+**4. A fallback screen.** If the schedule never ran — new PC, task deleted, six months of bad luck — the device must still be recoverable by someone who remembers nothing. On `invalid_grant` the display switches to:
+
+```
+      Spotify login expired
+
+   Run  reauth.bat  on your PC
+
+        spotify-knob.local
+```
+
+This screen is the recovery documentation. It should never be seen, and it must work when it is.
+
+- **Done when:** the scheduled task exists and re-arms itself, a forced run re-authorises the device end to end with one click in the browser, and unplugging the knob mid-flow does not lose the new token.
 
 ---
 
@@ -277,8 +380,8 @@ Nothing in this project is worth building if the API will not control your actua
 
 | Risk | Impact | Handling |
 |---|---|---|
-| Volume control refused on your playback device | R5 unbuildable | Tested in Wave 0, before any firmware |
-| Pin map wrong for one or more peripherals | Half a day | Wave 2 confirms each individually against the schematic |
+| Volume refused by the phone (**confirmed, Wave 0**) | R5 as originally written is unbuildable | Second dial mode is chosen at runtime: seek on the phone, volume on devices that allow it |
+| ~~Pin map wrong~~ | — | **Closed 2026-08-31** — verified against the schematic; see section 3 |
 | Component versions incompatible with IDF 6.0 | Half a day | Wave 1 pins 5.5.x; only move up if it compiles clean |
 | Rate limit hit despite the budget | Screen goes stale intermittently | `Retry-After` handling plus interval doubling, Wave 7 |
 | Refresh token expiry at 6 months | Device dies silently | Wave 8 web config; calendar reminder as the interim |
@@ -291,171 +394,138 @@ Nothing in this project is worth building if the API will not control your actua
 
 > This section always describes **only the wave being worked on right now**. When the wave is done, it is deleted and replaced with the next one. Nothing accumulates here.
 
-### Wave 0 — Prove the Spotify side
+### Wave 2 — Board bring-up
 
-**Goal:** find out, before spending any of your time on firmware, whether the Spotify Web API will actually control the device you listen on. Specifically whether it will let you change the volume.
+**Goal:** every piece of hardware this project touches — screen, touch, dial, knob press — proven working under LVGL.
 
-**You will not touch the knob hardware in this wave.** Do not plug it in. Everything happens on your PC and takes about half an hour.
+**This wave needs the board.** It is written to be worked through in order the day it arrives.
 
-**Why this is first:** Spotify refuses volume control on some playback devices. It returns a `403` and there is no workaround — it is a decision made on Spotify's side about that device. If your phone is one of them, requirement R5 has to change, and it is far better to discover that now than after Wave 6.
+**In parallel, while waiting:** the screen designs are being settled visually and will land in section 5. That is design work, not a build step, so it is not a wave — but it should be agreed before Wave 4 starts drawing anything.
 
----
+**Approach:** four checkpoints, each verified before starting the next. Bringing up a QSPI display, an I2C touch controller and an encoder simultaneously and then asking "why is the screen black" is the slow way to do this.
 
-#### Step 1 — Set up the repository
-
-Create the project folder and get this document into it.
-
-```bash
-mkdir spotify-knob
-cd spotify-knob
-git init
-mkdir tools firmware
-```
-
-Put `BUILD.md` in the root and `spotify_auth.py` in `tools/`. You should end up with:
-
-```
-spotify-knob/
-├── BUILD.md            <- this document
-├── .gitignore
-├── tools/
-│   └── spotify_auth.py
-└── firmware/           <- stays empty until Wave 1
-```
-
-Create `.gitignore` with exactly this content:
-
-```
-spotify_tokens.json
-build/
-managed_components/
-sdkconfig
-sdkconfig.old
-dependencies.lock
-.vscode/
-```
-
-That first line matters. The script writes your refresh token to `spotify_tokens.json`, and that token is a live credential to your Spotify account. It must never reach GitHub.
-
-```bash
-git add .
-git commit -m "Wave 0: build document and Spotify auth tooling"
-```
+Run every command from the **ESP-IDF 5.5 PowerShell** shortcut.
 
 ---
 
-#### Step 2 — Create a Spotify developer app
+#### Checkpoint A — Reach the right chip
 
-You are not publishing anything. This just gets you a Client ID so Spotify knows which app is asking.
+**A1.** Plug the board in with a USB-C cable you know carries data.
 
-1. Go to **https://developer.spotify.com/dashboard** and log in with the same Spotify account you actually listen on.
-2. Click **Create app**.
-3. Fill in the form:
-   - **App name:** `Spotify Knob` (any name works)
-   - **App description:** `Desk hardware controller` (any text works)
-   - **Redirect URI:** `http://127.0.0.1:8888/callback`
-     Type this **exactly**, then click **Add**. One wrong character and the login will fail later with `INVALID_CLIENT: Invalid redirect URI`. It must be `127.0.0.1`, not `localhost` — Spotify treats those as different.
-   - **Which API/SDKs are you planning to use:** tick **Web API** only.
-4. Accept the terms and click **Save**.
-5. On the app page click **Settings**. Copy the **Client ID** — a long string of letters and numbers.
+**A2.** Open Device Manager (Win+X, then M). Look under **Ports (COM & LPT)** and **Universal Serial Bus devices**:
 
-You do **not** need the Client Secret. This project deliberately avoids it so that the finished device never has to store one.
-
-Leave the app in the default **development mode**. It allows up to 25 users and needs no review from Spotify. You will never need more.
-
----
-
-#### Step 3 — Install the one Python dependency
-
-```bash
-pip install requests
-```
-
-Python 3.8 or newer. Everything else the script uses is in the standard library.
-
----
-
-#### Step 4 — Start music playing
-
-Before running the script, **start playing something on the device you actually listen on** — your phone, or the speaker. Not the PC.
-
-Leave it playing. The script needs live playback to inspect, and Spotify reports nothing at all when nothing is playing.
-
----
-
-#### Step 5 — Run the script
-
-```bash
-python tools/spotify_auth.py --client-id PASTE_YOUR_CLIENT_ID_HERE
-```
-
-What happens, in order:
-
-1. A browser tab opens on a Spotify login/consent page. It asks permission to read and control your playback. Click **Agree**.
-2. The tab redirects to a page saying "Done. Close this tab and return to the terminal." Close it. (If your browser shows a connection error instead, the redirect URI in step 2 does not match — go back and fix it.)
-3. The terminal prints a block containing `SPOTIFY_CLIENT_ID` and `SPOTIFY_REFRESH_TOKEN`. **Save these somewhere safe** — a password manager is ideal. They are what you will load onto the device in Wave 3.
-4. The script pauses and asks you to press Enter once music is playing. It already is, so press Enter.
-
----
-
-#### Step 6 — Read the diagnostic
-
-The script prints something like this:
-
-```
-Device          : Ryan's Phone (Smartphone)
-supports_volume : True
-volume_percent  : 62
-is_playing      : True
-Track           : Radiohead - Weird Fishes
-Album art sizes : 640x640, 300x300, 64x64
-Largest art URL : https://i.scdn.co/image/ab67616d0000b273...
-
-Disallowed actions on this device: ['resuming']
-
-Testing volume control ...
-PASS: volume control accepted (HTTP 204).
-```
-
-Check four things:
-
-| Line | What you need to see | If it is wrong |
+| What you see | Meaning | Action |
 |---|---|---|
-| `Device` | The phone or speaker you are listening on | You started playback in the wrong place — restart it on the right device and re-run |
-| `supports_volume` | `True` | R5 is at risk. Read the failure notes below. |
-| `Album art sizes` | Includes `640x640` | Note the largest size you do get; the art pipeline will be built around it |
-| Volume test | `PASS` | R5 is not buildable against this device. Read the failure notes below. |
+| `USB JTAG/serial debug unit` | You have the ESP32-S3. Correct. | Note the COM port, continue |
+| A CH340 or CP210x COM port | Probably the *second* microcontroller | **Unplug, flip the USB-C connector over, plug back in** |
+| Nothing | Charge-only cable, or no driver | Try a different cable first |
 
-`Disallowed actions` listing `resuming` while music plays is normal — you cannot resume something already playing.
+This board has two microcontrollers sharing one USB-C socket and the orientation decides which one you reach. If anything below fails to connect, flip the cable before debugging anything else.
+
+**A3.** Build and flash the stock example:
+
+```powershell
+cd D:\Projects\PROD\spotify-knob\firmware
+Copy-Item -Recurse "$env:IDF_PATH\examples\get-started\hello_world" .
+cd hello_world
+idf.py set-target esp32s3
+idf.py menuconfig
+```
+
+In menuconfig: **Component config** → **ESP PSRAM** → enable **Support for external, SPI-connected RAM** → **SPI RAM config** → **Mode of SPI RAM chip** → **Octal Mode PSRAM**. Press `Q` then `Y`.
+
+```powershell
+idf.py -p COM7 flash monitor
+```
+
+If it hangs on `Connecting......_____`, hold the knob in (it is wired to GPIO0, the boot pin), tap RESET, release.
+
+**Checkpoint A done when** the boot log contains both:
+
+```
+ESP-ROM:esp32s3-...
+I (xxx) esp_psram: Found 8MB PSRAM device
+```
+
+`Ctrl+]` exits the monitor. If PSRAM reports 2 MB or is missing, octal mode is not set or you are on the wrong chip.
 
 ---
 
-#### Step 7 — Record the result
+#### Checkpoint B — The screen lights up
 
-Add one line to the top of this document under section 1 stating the date you ran this and whether volume passed. Commit it. That single fact drives whether Wave 6 builds a volume mode at all.
+**B1.** Create the real project alongside it:
+
+```powershell
+cd D:\Projects\PROD\spotify-knob\firmware
+idf.py create-project knob
+cd knob
+idf.py set-target esp32s3
+```
+
+**B2.** Create `main/idf_component.yml` with the dependency list from section 4 of this document. Run `idf.py reconfigure` — it downloads them into `managed_components/`, which `.gitignore` already excludes.
+
+**B3.** Backlight first, because it is the simplest thing that proves you are talking to the board. Configure **GPIO47** as an LEDC PWM output and set it to 50%.
+
+**Do not skip to the panel.** If the backlight does not respond, nothing else will work and you have learned it in five lines instead of two hundred.
+
+**B4.** Now the panel. Using `esp_lcd_st77916`:
+
+- QSPI bus on SPI2: SCLK **13**, data lines **15, 16, 17, 18**
+- Panel CS **14**, reset **21**
+- 360×360, RGB565
+- The vendor config must set `flags.use_qspi_interface = 1` — this is the single most common reason an ST77916 stays black
+
+Fill the screen red, then green, then blue, two seconds apart.
+
+**Checkpoint B done when** the display cycles three solid colours cleanly, with no tearing, offset or missing edges. An offset image means the panel gap/offset values need adjusting; cross-check against Waveshare's own ESP-IDF demo for this board before inventing values.
+
+---
+
+#### Checkpoint C — LVGL and touch
+
+**C1.** Add `esp_lvgl_port`. Register the panel with `lvgl_port_add_disp()`. Use partial buffers — roughly 1/10 of the screen — allocated in internal DMA-capable RAM, not PSRAM.
+
+**C2.** Draw a centred label reading `hello`.
+
+**C3.** Add touch: `esp_lcd_touch_cst816s` on I2C — SDA **11**, SCL **12**, interrupt **9**, reset **10**, 400 kHz. Register it with `lvgl_port_add_touch()`.
+
+**C4.** Replace the label with an `lv_button` that changes colour when pressed.
+
+**Checkpoint C done when** the button responds to touch anywhere on its face and the touch coordinates are not mirrored or rotated. If pressing the top of the screen activates something at the bottom, the touch driver's swap/mirror flags need to match the panel's.
+
+---
+
+#### Checkpoint D — The dial
+
+**D1.** Add the `espressif/knob` component. Encoder A on **8**, B on **7**. There is no button, so `espressif/button` is not needed.
+
+**D2.** Register with `lvgl_port_add_encoder()`, passing a knob handle and no button handle.
+
+**D3.** Test UI: a large number in the centre. Clockwise increments, anticlockwise decrements.
+
+**Checkpoint D done when** both directions are correct and one physical detent produces exactly one step — not two, not none. If a single detent moves the number by two, the knob component needs its counting mode adjusted.
+
+---
+
+#### Checkpoint E — Haptics on the touch bus
+
+The DRV2605 shares I²C with the touch controller. Add it to the **same** bus handle and fire one click per detent.
+
+**Checkpoint E done when** turning the dial gives one crisp click per step and touch still works. If touch dies the moment haptics initialise, two bus handles have been created where there should be one.
 
 ---
 
 ### Done when
 
-All four of these are true:
-
-- [ ] `spotify_auth.py` printed a refresh token, and you have stored it somewhere you will still be able to find in six months
-- [ ] The diagnostic identified your real playback device by name
-- [ ] It printed a `640x640` (or largest available) album art URL
-- [ ] The volume test printed `PASS`
-
-Then, and only then, move to Wave 1 and plug in the board.
+- [ ] Boot log shows `esp32s3` and `Found 8MB PSRAM`
+- [ ] Screen cycles three solid colours with no offset
+- [ ] A touch button responds correctly across the whole screen
+- [ ] One detent of the dial moves the counter by exactly one, both directions
+- [ ] One haptic click per detent, with touch still working
+- [ ] Committed, with no `build/` or `managed_components/` in the commit
 
 ---
 
-### If the volume test fails
+### Notes for the next wave
 
-You will see `403` and a message containing `VOLUME_CONTROL_DISALLOW` or `Cannot control device volume`. This is Spotify refusing, not a bug in the script. Do not spend time debugging it.
-
-Try this in order:
-
-1. **Re-run against a different playback device.** Play on a Connect speaker instead of the phone, or vice versa. Support varies device by device — it is common for it to work on one and not the other.
-2. **Check `supports_volume` for each device you tried.** If it is `False`, that device will never accept volume commands.
-
-If no device you care about supports it, stop and change requirement R5 before writing firmware. The realistic replacement is that the dial's second mode seeks within the current track (scrub forward/back) rather than changing volume, which uses the always-available `seek` endpoint. Everything else in this document is unaffected.
+Wave 3 is Wi-Fi, TLS and the token refresh. Nothing to prepare — the credentials from Wave 0 are already in `spotify_tokens.json`.

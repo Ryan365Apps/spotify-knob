@@ -1,0 +1,414 @@
+<title>Dial4Spotify Screens</title>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans+Condensed:wght@600;700&family=IBM+Plex+Sans:wght@400;500&family=Michroma&family=Montserrat:wght@400;500;600&display=swap">
+<style>
+  :root{
+    --ground:#EDEDE8;--panel:#FFF;--plinth:#15181D;--rule:#CFCEC6;
+    --ink:#22252B;--ink-soft:#5D6270;--ink-faint:#8B8F9C;
+    --brass:#8A6A1F;--brass-line:#B99436;
+    --sans:"IBM Plex Sans",system-ui,sans-serif;
+    --cond:"IBM Plex Sans Condensed","IBM Plex Sans",system-ui,sans-serif;
+    --mono:"IBM Plex Mono",ui-monospace,monospace;
+    --display:"Michroma","Montserrat",system-ui,sans-serif;
+    --ui:"Montserrat",system-ui,sans-serif;
+    --green:#1DB954;--green-lit:#3FE07A;--amber:#E8B84B;--amber-lit:#F5CE6B;
+  }
+  @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+    --ground:#0E1013;--panel:#161920;--plinth:#08090B;--rule:#2A2F37;
+    --ink:#DADDE4;--ink-soft:#99A1AF;--ink-faint:#6B7280;
+    --brass:#D8B25A;--brass-line:#8A6E2C;
+  }}
+  :root[data-theme="dark"]{
+    --ground:#0E1013;--panel:#161920;--plinth:#08090B;--rule:#2A2F37;
+    --ink:#DADDE4;--ink-soft:#99A1AF;--ink-faint:#6B7280;
+    --brass:#D8B25A;--brass-line:#8A6E2C;
+  }
+
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--ground);color:var(--ink);
+    font-family:var(--sans);font-size:15px;line-height:1.55;-webkit-font-smoothing:antialiased}
+  .wrap{max-width:1180px;margin:0 auto;padding:56px 28px 96px}
+
+  header{border-bottom:1px solid var(--rule);padding-bottom:28px;margin-bottom:40px}
+  .eyebrow{font-family:var(--mono);font-size:11px;letter-spacing:.16em;text-transform:uppercase;
+    color:var(--brass);margin:0 0 14px}
+  h1{font-family:var(--cond);font-weight:700;font-size:clamp(32px,5vw,50px);line-height:1.04;
+    margin:0 0 16px;text-wrap:balance;letter-spacing:-.01em}
+  .lede{max-width:62ch;color:var(--ink-soft);margin:0}
+  .meta{display:flex;flex-wrap:wrap;gap:8px 28px;margin-top:22px;
+    font-family:var(--mono);font-size:12px;color:var(--ink-faint)}
+  .meta b{color:var(--ink-soft);font-weight:500}
+  .scalenote{font-family:var(--mono);font-size:12px;color:var(--brass);
+    border-left:2px solid var(--brass-line);padding-left:14px;margin:0 0 40px}
+
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(380px,1fr));gap:52px 40px}
+  .card{display:flex;flex-direction:column;gap:18px}
+  .plinth{background:var(--plinth);border-radius:14px;padding:26px;
+    display:flex;align-items:center;justify-content:center;border:1px solid var(--rule)}
+
+  .screen{--dim:320px;--u:calc(var(--dim)/360);
+    width:var(--dim);height:var(--dim);border-radius:50%;position:relative;overflow:hidden;
+    background:#000;color:#fff;font-family:var(--ui);flex:none;
+    box-shadow:0 0 0 calc(6*var(--u)) #23262C,0 calc(14*var(--u)) calc(34*var(--u)) rgba(0,0,0,.55)}
+  @media (max-width:440px){.screen{--dim:250px}}
+
+  .art{position:absolute;inset:0}
+  .art::before{content:"";position:absolute;inset:0;background:
+    radial-gradient(120% 90% at 22% 18%,#E4572E 0%,rgba(228,87,46,0) 58%),
+    radial-gradient(100% 100% at 84% 22%,#F2B705 0%,rgba(242,183,5,0) 52%),
+    radial-gradient(130% 110% at 60% 96%,#2B3A67 0%,rgba(43,58,103,0) 62%),
+    linear-gradient(160deg,#7A2E1E 0%,#241726 62%,#0E1018 100%)}
+  .art.d55::after{content:"";position:absolute;inset:0;background:rgba(0,0,0,.55)}
+  .art.d88::after{content:"";position:absolute;inset:0;background:rgba(0,0,0,.88)}
+  .art.d94::after{content:"";position:absolute;inset:0;background:rgba(0,0,0,.94)}
+  .scrim{position:absolute;inset:0;
+    background:radial-gradient(circle at 50% 50%,rgba(0,0,0,.62) 0%,rgba(0,0,0,.26) 60%,rgba(0,0,0,.55) 100%)}
+
+  /* progress ring + travelling chip */
+  .prog{position:absolute;inset:calc(9*var(--u));border-radius:50%;
+    -webkit-mask:radial-gradient(farthest-side,transparent calc(100% - 3px),#000 calc(100% - 3px));
+            mask:radial-gradient(farthest-side,transparent calc(100% - 3px),#000 calc(100% - 3px))}
+  .prog.bg{background:rgba(255,255,255,.18)}
+  .pchip{position:absolute;inset:calc(9*var(--u))}
+  .pchip::after{content:"";position:absolute;top:calc(-5*var(--u));left:50%;
+    width:calc(11*var(--u));height:calc(11*var(--u));border-radius:999px;background:#fff;
+    transform:translateX(-50%);box-shadow:0 0 calc(10*var(--u)) rgba(255,255,255,.85)}
+
+  .dial{position:absolute;inset:0;width:100%;height:100%}
+  .idlecanvas{position:absolute;inset:0;width:100%;height:100%}
+
+  .midtext{position:absolute;left:0;right:0;top:50%;transform:translateY(-50%);
+    padding:0 calc(22*var(--u));text-align:center;
+    text-shadow:0 calc(2*var(--u)) calc(18*var(--u)) rgba(0,0,0,.95)}
+  .ttl{font-family:var(--display);font-size:calc(27*var(--u));line-height:1.18;
+    margin:0 0 calc(12*var(--u))}
+  .sub2{font-family:var(--ui);font-size:calc(16*var(--u));font-weight:500;
+    color:rgba(255,255,255,.6);margin:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .marquee{overflow:hidden;position:relative;width:100%;
+    -webkit-mask:linear-gradient(90deg,transparent,#000 8%,#000 92%,transparent);
+            mask:linear-gradient(90deg,transparent,#000 8%,#000 92%,transparent)}
+  .marquee .ttl{display:inline-block;white-space:nowrap;margin-bottom:calc(12*var(--u));
+    animation:slide 6.5s cubic-bezier(.5,0,.5,1) infinite}
+  @keyframes slide{0%,12%{transform:translateX(0)}
+    50%,62%{transform:translateX(calc(-100% + 246px))}100%{transform:translateX(0)}}
+  @media (prefers-reduced-motion:reduce){.marquee .ttl{animation:none}}
+
+  .bigval{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+    text-align:center}
+  .bigval .v{font-family:var(--display);font-size:calc(54*var(--u));line-height:1;
+    letter-spacing:-.01em;font-variant-numeric:tabular-nums}
+  .bigval .v small{font-size:calc(23*var(--u));opacity:.5;margin-left:calc(4*var(--u))}
+  .bigval .u{position:absolute;left:0;right:0;top:58%;font-family:var(--ui);
+    font-size:calc(14*var(--u));font-weight:500;color:rgba(255,255,255,.4);margin:0}
+  .bigval.stack{flex-direction:column}
+  .bigval.stack .u{position:static;margin-top:calc(14*var(--u))}
+
+  .row{position:absolute;left:0;right:0;top:50%;transform:translateY(-50%);
+    display:flex;align-items:center;justify-content:center;gap:calc(40*var(--u))}
+  .row svg{fill:#fff;filter:drop-shadow(0 calc(2*var(--u)) calc(10*var(--u)) rgba(0,0,0,.9))}
+  .row .side{width:calc(40*var(--u));height:calc(40*var(--u));opacity:.85}
+  .row .mid{width:calc(58*var(--u));height:calc(58*var(--u))}
+
+  .chips{position:absolute;left:0;right:0;bottom:calc(46*var(--u));
+    display:flex;justify-content:center;gap:calc(12*var(--u))}
+  .mchip{padding:calc(10*var(--u)) calc(18*var(--u));border-radius:999px;
+    font-family:var(--display);font-size:calc(11*var(--u));letter-spacing:.02em;
+    background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.16);
+    color:rgba(255,255,255,.62)}
+  .mchip.on{background:rgba(29,185,84,.24);border-color:var(--green-lit);color:#EAFFF1;
+    box-shadow:0 0 calc(20*var(--u)) rgba(63,224,122,.45),inset 0 0 calc(16*var(--u)) rgba(63,224,122,.22)}
+  .mchip.on.seek{background:rgba(232,184,75,.24);border-color:var(--amber-lit);color:#FFF6E2;
+    box-shadow:0 0 calc(20*var(--u)) rgba(245,206,107,.45),inset 0 0 calc(16*var(--u)) rgba(245,206,107,.22)}
+  .mchip.dead{opacity:.26}
+
+  .devpill{position:absolute;left:50%;transform:translateX(-50%);top:calc(42*var(--u));
+    display:flex;align-items:center;gap:calc(8*var(--u));
+    padding:calc(8*var(--u)) calc(18*var(--u));border-radius:999px;
+    background:rgba(255,255,255,.11);border:1px solid rgba(255,255,255,.18);
+    font-family:var(--display);font-size:calc(10*var(--u));letter-spacing:.02em}
+  .devpill svg{width:calc(14*var(--u));height:calc(14*var(--u));fill:currentColor}
+
+  .expired .v{font-family:var(--display);font-size:calc(20*var(--u));line-height:1.5}
+  .addr{font-family:var(--mono);font-size:calc(18*var(--u));margin-top:calc(20*var(--u));
+    background:rgba(255,255,255,.1);padding:calc(9*var(--u)) calc(15*var(--u));border-radius:calc(8*var(--u))}
+  .warn{color:var(--amber);margin-top:calc(14*var(--u));font-size:calc(14*var(--u));font-weight:500}
+
+  .cap h2{font-family:var(--cond);font-size:19px;font-weight:700;margin:0 0 4px}
+  .idx{font-family:var(--mono);font-size:11px;color:var(--brass);letter-spacing:.14em;margin:0 0 8px}
+  .cap p{margin:0 0 14px;color:var(--ink-soft);font-size:14px;max-width:46ch}
+  dl{margin:0;display:grid;grid-template-columns:auto 1fr;gap:7px 16px;
+    border-top:1px solid var(--rule);padding-top:13px}
+  dt{font-family:var(--mono);font-size:10.5px;letter-spacing:.13em;text-transform:uppercase;
+    color:var(--ink-faint);padding-top:2px}
+  dd{margin:0;font-size:13.5px;color:var(--ink)}
+  dd em{font-style:normal;color:var(--ink-faint)}
+  .flag{border-left:2px solid #C2410C;padding-left:13px;margin:14px 0 0;font-size:13px;color:var(--ink-soft)}
+  .flag b{color:var(--ink);font-weight:600}
+  footer{margin-top:72px;padding-top:26px;border-top:1px solid var(--rule);
+    color:var(--ink-faint);font-size:13px;max-width:70ch}
+  footer strong{color:var(--ink-soft);font-weight:500}
+</style>
+
+<div class="wrap">
+<header>
+  <p class="eyebrow">Dial4Spotify · screen states · rev G</p>
+  <h1>The value is the label</h1>
+  <p class="lede">A percentage means volume. A timestamp means seek. Green and amber say the same thing again. Nothing on the dial screens needs a word on it — so the number gets the centre, and a phyllotaxis bloom, cut by a wedge, does the reading you do at a glance. The idle screen is the same bloom with nothing lit.</p>
+  <div class="meta">
+    <span><b>Panel</b> ST77916 · 360×360 · 1.8″ round</span>
+    <span><b>Display face</b> Michroma</span>
+    <span><b>UI face</b> Montserrat</span>
+  </div>
+</header>
+
+<p class="scalenote">Drawn 1:1 in pixels — the physical screen is ~46 mm across, so this reads about twice life size on a monitor.</p>
+
+<div class="grid">
+
+  <!-- 01 -->
+  <div class="card">
+    <div class="plinth"><div class="screen">
+      <div class="art"></div><div class="scrim"></div>
+      <canvas class="dial" width="360" height="360" data-pct="0.46" data-hue="white" data-band="0.70"></canvas>
+      <div class="pchip" style="transform:rotate(165.6deg)"></div>
+      <div class="midtext">
+        <div class="marquee"><p class="ttl">Too Good, Too Bad</p></div>
+        <p class="sub2">Jason Scott &amp; The High Heat</p>
+      </div>
+    </div></div>
+    <div class="cap">
+      <p class="idx">01 — default</p>
+      <h2>Now playing</h2>
+      <p>Title on the centre line in Michroma, artist beneath it. Progress is the outer rim of the same bloom, lit white, with a chip riding the exact position — the ragged edge is the point, and it ties this screen to the dial screens without repeating them.</p>
+      <dl>
+        <dt>Dial</dt><dd>Volume</dd>
+        <dt>Press</dt><dd>Play / pause</dd>
+        <dt>Touch</dt><dd>Controls <em>→ 03</em></dd>
+        <dt>Scroll</dt><dd>6.5 s round trip, eased at both ends</dd>
+      </dl>
+      <p class="flag"><b>Michroma is very wide.</b> About 13 characters fit before this title has to scroll — "Too Good, Too Bad" already does. Handsome, and it will scroll on most tracks. Worth seeing at true size before committing.</p>
+    </div>
+  </div>
+
+  <!-- 02 volume -->
+  <div class="card">
+    <div class="plinth"><div class="screen">
+      <div class="art d94"></div>
+      <canvas class="dial" width="360" height="360" data-pct="0.62" data-hue="green"></canvas>
+      <div class="bigval"><div class="v" style="color:var(--green-lit)">62<small>%</small></div></div>
+    </div></div>
+    <div class="cap">
+      <p class="idx">02 — while turning</p>
+      <h2>Volume</h2>
+      <p>A phyllotaxis bloom cut by a wedge. Segments thin and darken toward the centre and lengthen unevenly outward, so the field has grain rather than regularity. No label: a percentage in green cannot be mistaken for anything else.</p>
+      <dl>
+        <dt>Step</dt><dd>±5% per detent</dd>
+        <dt>Writes</dt><dd>One call, 400 ms after the last detent</dd>
+        <dt>Return</dt><dd>2 s idle <em>→ 01</em></dd>
+      </dl>
+    </div>
+  </div>
+
+  <!-- 02B seek -->
+  <div class="card">
+    <div class="plinth"><div class="screen">
+      <div class="art d94"></div>
+      <canvas class="dial" width="360" height="360" data-pct="0.46" data-hue="amber"></canvas>
+      <div class="bigval">
+        <div class="v" style="color:var(--amber-lit)">1:47</div>
+        <p class="u">of 3:52</p>
+      </div>
+    </div></div>
+    <div class="cap">
+      <p class="idx">02 B — while turning</p>
+      <h2>Seek</h2>
+      <p>Identical widget, amber, and a timestamp instead of a percentage. The lit boundary is literally the playhead — here the bloom <em>is</em> the progress ring, so the thin white one steps aside.</p>
+      <dl>
+        <dt>Step</dt><dd>±10 s per detent</dd>
+        <dt>Duration</dt><dd>The only line of supporting text on either screen</dd>
+        <dt>Return</dt><dd>2 s idle <em>→ 01</em></dd>
+      </dl>
+    </div>
+  </div>
+
+  <!-- 03 -->
+  <div class="card">
+    <div class="plinth"><div class="screen">
+      <div class="art d55"></div>
+      <div class="devpill"><svg viewBox="0 0 24 24"><path d="M3 4h18v12H3V4zm0 14h18v2H3v-2z"/></svg>PC1</div>
+      <div class="row">
+        <svg class="side" viewBox="0 0 24 24"><path d="M19 5v14l-9-7 9-7zM8 5h2.6v14H8V5z"/></svg>
+        <svg class="mid" viewBox="0 0 24 24"><rect x="5.4" y="4" width="4.4" height="16" rx="1.1"/><rect x="14.2" y="4" width="4.4" height="16" rx="1.1"/></svg>
+        <svg class="side" viewBox="0 0 24 24"><path d="M5 5l9 7-9 7V5zm10.4 0H18v14h-2.6V5z"/></svg>
+      </div>
+      <div class="chips"><div class="mchip on">VOLUME</div><div class="mchip seek">SEEK</div></div>
+    </div></div>
+    <div class="cap">
+      <p class="idx">03 — one tap from 01</p>
+      <h2>Controls</h2>
+      <p>Bare icons, no buttons drawn around them. The artwork stays visible behind, and the tap targets are still 40 px of glass whatever the icon looks like.</p>
+      <dl>
+        <dt>Transport</dt><dd>Previous · play/pause · next</dd>
+        <dt>Chips</dt><dd>Assign the dial — the choice persists</dd>
+        <dt>Device pill</dt><dd>Tap to move playback to the PC</dd>
+        <dt>Idle</dt><dd>5 s <em>→ 01</em></dd>
+      </dl>
+    </div>
+  </div>
+
+  <!-- 04 -->
+  <div class="card">
+    <div class="plinth"><div class="screen">
+      <div class="art d55"></div>
+      <div class="devpill"><svg viewBox="0 0 24 24"><path d="M7 2h10v20H7V2zm3 18h4v-1h-4v1z"/></svg>PIXEL TEN</div>
+      <div class="row">
+        <svg class="side" viewBox="0 0 24 24"><path d="M19 5v14l-9-7 9-7zM8 5h2.6v14H8V5z"/></svg>
+        <svg class="mid" viewBox="0 0 24 24"><rect x="5.4" y="4" width="4.4" height="16" rx="1.1"/><rect x="14.2" y="4" width="4.4" height="16" rx="1.1"/></svg>
+        <svg class="side" viewBox="0 0 24 24"><path d="M5 5l9 7-9 7V5zm10.4 0H18v14h-2.6V5z"/></svg>
+      </div>
+      <div class="chips"><div class="mchip dead">VOLUME</div><div class="mchip on seek">SEEK</div></div>
+    </div></div>
+    <div class="cap">
+      <p class="idx">04 — the same screen, playing on the phone</p>
+      <h2>Volume unavailable</h2>
+      <p>Spotify refuses volume control on phones. The chip greys out and the dial falls back to seek on its own, so the knob is never inert — but on your usual listening device, the dial is not a volume control.</p>
+      <dl>
+        <dt>Read from</dt><dd><code>device.supports_volume</code>, every poll</dd>
+        <dt>Recovery</dt><dd>Tap the device pill to move playback to PC1</dd>
+        <dt>Then</dt><dd>Volume re-enables within one poll</dd>
+      </dl>
+    </div>
+  </div>
+
+  <!-- 05 -->
+  <div class="card">
+    <div class="plinth"><div class="screen">
+      <canvas class="idlecanvas" width="360" height="360" data-tint="#E4572E"></canvas>
+      <div class="bigval">
+        <div class="v" style="font-size:calc(44*var(--u))">14:32</div>
+      </div>
+    </div></div>
+    <div class="cap">
+      <p class="idx">05 — idle</p>
+      <h2>Nothing playing</h2>
+      <p>Spotify returns <code>204 No Content</code> when no device is active. The same bloom as the dial screens, none of it lit, with the divergence angle drifting either side of 137.5°. The spiral arms reorganise completely as it moves — the figure changes rather than turns.</p>
+      <dl>
+        <dt>Drifting</dt><dd>Divergence ±0.35° over 3 minutes; one full turn takes 10</dd>
+        <dt>Tint</dt><dd>Averaged from the last cover's pixels</dd>
+        <dt>Clock only</dt><dd>No caption — an unlit bloom needs no explaining</dd>
+        <dt>Sleep</dt><dd>Screen off after 20 minutes</dd>
+        <dt>Wake</dt><dd>Touch, knob, or playback resuming anywhere</dd>
+      </dl>
+      <p class="flag"><b>One field, three states.</b> Idle, volume and seek are now the same 300-point bloom — unlit, cut green, cut amber. Pre-render it once at boot and the live work is only whatever is currently lit.</p>
+    </div>
+  </div>
+
+  <!-- 06 -->
+  <div class="card">
+    <div class="plinth"><div class="screen expired">
+      <div class="bigval stack">
+        <div class="v">Login<br>expired</div>
+        <div class="addr">spotify-knob.local</div>
+        <p class="warn">Run reauth on your PC</p>
+      </div>
+    </div></div>
+    <div class="cap">
+      <p class="idx">06 — every 180 days, at most</p>
+      <h2>Login expired</h2>
+      <p>The refresh token dies six months after authorisation and Spotify offers no way around it. This screen is the entire recovery documentation — it should never be seen, and it has to work when it is.</p>
+      <dl>
+        <dt>Trigger</dt><dd><code>400 invalid_grant</code></dd>
+        <dt>Normally</dt><dd>A scheduled task re-auths at day 170, silently</dd>
+        <dt>Retry</dt><dd>None — the token is permanently dead</dd>
+      </dl>
+    </div>
+  </div>
+
+</div>
+
+<footer>
+  <p><strong>Still open.</strong> Michroma's width is the live question — see 01. If most titles scroll, the alternatives are a condensed face for the title only, or accepting the scroll as part of the device's character. And screen 04 remains the real one: a dial that does nothing on the phone, which is where you listen.</p>
+  <p style="margin-top:14px">Placeholder artwork throughout. Real covers arrive at 300 × 300 and are upscaled to fill the circle.</p>
+</footer>
+</div>
+
+<script>
+(function(){
+  var GOLD=137.507764*Math.PI/180, M=300, RI=86, RO=170, CX=180, CY=180;
+  var HUE={green:"63,224,122", amber:"245,206,107", white:"255,255,255"};
+
+  // one deterministic scatter, shared by every bloom on the page
+  function hash(i){ var v=Math.sin(i*12.9898)*43758.5453; return v-Math.floor(v); }
+
+  // geometry is identical for the dial and the idle screen; only lighting differs
+  function bloom(i, spin, divergence){
+    var r=Math.sqrt(RI*RI+(i/M)*(RO*RO-RI*RI));
+    var a=i*divergence+spin-Math.PI/2;
+    var t=(r-RI)/(RO-RI);
+    var len=(2.2+r*0.045)*(0.4+1.35*hash(i));   // uneven lengths give the field grain
+    return {x:CX+Math.cos(a)*r, y:CY+Math.sin(a)*r,
+            dx:Math.cos(a)*len, dy:Math.sin(a)*len, t:t, a:a};
+  }
+  function ground(ctx){
+    var g=ctx.createRadialGradient(CX,CY,10,CX,CY,190);
+    g.addColorStop(0,"#0A0B0D"); g.addColorStop(1,"#000");
+    ctx.fillStyle=g; ctx.fillRect(0,0,360,360);
+  }
+  function stroke(ctx,s){
+    ctx.beginPath(); ctx.moveTo(s.x-s.dx,s.y-s.dy); ctx.lineTo(s.x+s.dx,s.y+s.dy); ctx.stroke();
+  }
+
+  // --- dial screens: wedge cut through the bloom ---
+  document.querySelectorAll("canvas.dial").forEach(function(cv){
+    var ctx=cv.getContext("2d"), pct=parseFloat(cv.dataset.pct), lit=HUE[cv.dataset.hue];
+    // data-band keeps only the outer rim of the bloom, so progress can sit over artwork
+    var band=cv.dataset.band?parseFloat(cv.dataset.band):0;
+    ctx.lineCap="round";
+    var on=[];
+    for(var i=0;i<M;i++){
+      var s=bloom(i,0,GOLD);
+      if(s.t<band) continue;
+      var frac=(((s.a+Math.PI/2)%(Math.PI*2))+Math.PI*2)%(Math.PI*2)/(Math.PI*2);
+      if(frac<pct){ on.push(s); continue; }
+      ctx.strokeStyle="rgba(255,255,255,"+(band?0.16:(0.04+0.20*s.t)).toFixed(3)+")";
+      ctx.lineWidth=0.8+0.5*s.t;
+      stroke(ctx,s);
+    }
+    ctx.shadowColor="rgba("+lit+",0.8)"; ctx.shadowBlur=6;
+    on.forEach(function(s){
+      ctx.strokeStyle="rgba("+lit+","+(0.34+0.66*s.t).toFixed(3)+")";
+      ctx.lineWidth=1.1+0.9*s.t;
+      stroke(ctx,s);
+    });
+    ctx.shadowBlur=0;
+  });
+
+  // --- idle screen: the same bloom, unlit, divergence drifting ---
+  var reduce=window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  var idles=[].slice.call(document.querySelectorAll("canvas.idlecanvas")).map(function(cv){
+    var rgb=[228,120,70], h=cv.dataset.tint;
+    if(h) rgb=[parseInt(h.slice(1,3),16),parseInt(h.slice(3,5),16),parseInt(h.slice(5,7),16)];
+    return {ctx:cv.getContext("2d"), rgb:rgb};
+  });
+  function drawIdle(c,s){
+    var ctx=c.ctx;
+    // a third of a degree either way is enough to rebuild every spiral arm
+    var div=GOLD+(0.35*Math.PI/180)*Math.sin(s/180*Math.PI*2);
+    var spin=s/600*Math.PI*2;
+    ground(ctx); ctx.lineCap="round";
+    for(var i=0;i<M;i++){
+      var b=bloom(i,spin,div);
+      ctx.strokeStyle="rgba("+c.rgb[0]+","+c.rgb[1]+","+c.rgb[2]+","+(0.05+0.30*b.t).toFixed(3)+")";
+      ctx.lineWidth=0.8+0.6*b.t;
+      stroke(ctx,b);
+    }
+  }
+  if(reduce){ idles.forEach(function(c){drawIdle(c,10);}); return; }
+  var t0=performance.now(), last=0;
+  (function loop(now){
+    requestAnimationFrame(loop);
+    if(now-last<200) return;          // 5fps — the drift is slower than the eye tracks
+    last=now; idles.forEach(function(c){ drawIdle(c,(now-t0)/1000); });
+  })(t0);
+})();
+</script>
