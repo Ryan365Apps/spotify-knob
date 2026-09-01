@@ -86,18 +86,13 @@
   .slot svg{width:100%;height:100%}
   .slot svg *{stroke:rgba(255,255,255,.5);fill:none}
   .slot.sel svg *{stroke:#EAFFF1}
+  .slot.sel i{filter:drop-shadow(0 0 calc(10*var(--u)) rgba(63,224,122,.8))
+    drop-shadow(0 0 calc(22*var(--u)) rgba(63,224,122,.35))}
   .slot.later svg *{stroke:rgba(255,255,255,.16)}
-  .marker{position:absolute;left:50%;top:calc(19*var(--u));transform:translateX(-50%);
-    width:calc(30*var(--u));height:calc(14*var(--u))}
-  .marker::before,.marker::after{content:"";position:absolute;top:0;
-    width:calc(2*var(--u));height:calc(14*var(--u));background:var(--green-lit);
-    border-radius:999px;opacity:.95}
-  .marker::before{left:0}.marker::after{right:0}
-  .selarc{position:absolute;inset:calc(9*var(--u));border-radius:50%;
-    background:conic-gradient(from -17deg,var(--green-lit) 0 34deg,transparent 34deg);
-    -webkit-mask:radial-gradient(farthest-side,transparent calc(100% - 4px),#000 calc(100% - 4px));
-            mask:radial-gradient(farthest-side,transparent calc(100% - 4px),#000 calc(100% - 4px));
-    filter:drop-shadow(0 0 calc(10*var(--u)) rgba(63,224,122,.55))}
+  .marker{position:absolute;left:50%;top:calc(20*var(--u));transform:translateX(-50%);
+    width:calc(9*var(--u));height:calc(9*var(--u));border-radius:999px;
+    background:var(--green-lit);
+    box-shadow:0 0 calc(14*var(--u)) rgba(63,224,122,.9),0 0 calc(30*var(--u)) rgba(63,224,122,.35)}
   .hero{position:absolute;inset:0;display:flex;flex-direction:column;
     align-items:center;justify-content:center;gap:calc(13*var(--u))}
   .hero svg{width:calc(56*var(--u));height:calc(56*var(--u));
@@ -271,6 +266,13 @@
     filter:drop-shadow(0 0 calc(14*var(--u)) rgba(63,224,122,.6))}
 
 
+  .hero b{font-family:var(--display);font-size:calc(23*var(--u));
+    color:var(--green-lit);font-weight:400;letter-spacing:.01em}
+  .hero.set svg{width:calc(42*var(--u));height:calc(42*var(--u));
+    filter:drop-shadow(0 0 calc(14*var(--u)) rgba(63,224,122,.3))}
+  .hero.set{gap:calc(9*var(--u))}
+  .hero.set span{font-size:calc(14*var(--u));color:rgba(255,255,255,.62)}
+
   /* ---- wispr ---- */
   .starc.r{background:conic-gradient(var(--live-lit) 0 360deg);
     filter:drop-shadow(0 0 calc(11*var(--u)) rgba(255,122,135,.55));
@@ -290,6 +292,61 @@
   .hint{position:absolute;left:0;right:0;bottom:calc(66*var(--u));text-align:center;
     font-family:var(--ui);font-size:calc(10*var(--u));font-weight:600;
     letter-spacing:.2em;color:rgba(255,255,255,.26)}
+
+
+  /* ---- back affordance on every ring ---- */
+  .backch{position:absolute;left:50%;transform:translateX(-50%);
+    bottom:calc(38*var(--u));width:calc(22*var(--u));height:calc(22*var(--u))}
+  .backch svg{width:100%;height:100%;fill:none;stroke:rgba(255,255,255,.36);
+    stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
+  .backzone{position:absolute;left:0;right:0;bottom:0;height:calc(96*var(--u));
+    -webkit-mask:radial-gradient(circle at 50% -80%,#000 60%,transparent 60%)}
+
+  /* ---- desktop config panel ---- */
+  .dpanel{width:100%;max-width:560px;border-radius:16px;overflow:hidden;
+    background:radial-gradient(120% 80% at 50% 0%,#151A21 0%,#0A0C0F 60%,#060709 100%);
+    border:1px solid #2A2F37;color:#fff;font-family:var(--ui);
+    box-shadow:0 18px 40px rgba(0,0,0,.42)}
+  .dbar{height:30px;display:flex;align-items:center;padding:0 14px;gap:7px;
+    border-bottom:1px solid rgba(255,255,255,.07)}
+  .dbar i{width:8px;height:8px;border-radius:999px;background:rgba(255,255,255,.16)}
+  .dbar span{margin-left:8px;font-family:var(--mono);font-size:10px;
+    color:rgba(255,255,255,.3);letter-spacing:.08em}
+  .dbody{padding:22px 24px 24px}
+  .dmark{font-family:var(--display);font-size:14px;display:flex;align-items:center;
+    gap:8px;margin-bottom:3px}
+  .dmark em{font-style:normal;width:8px;height:8px;border-radius:999px;
+    background:var(--green-lit);box-shadow:0 0 9px rgba(63,224,122,.8)}
+  .dsub{font-size:10px;font-weight:600;letter-spacing:.16em;text-transform:uppercase;
+    color:rgba(255,255,255,.3);margin:0 0 18px}
+  .drow{display:grid;grid-template-columns:14px 34px 1fr 122px 20px;gap:10px;
+    align-items:center;padding:8px 0;border-top:1px solid rgba(255,255,255,.06)}
+  .drow.head{border-top:none;padding-bottom:6px}
+  .drow.head b{font-size:9.5px;font-weight:600;letter-spacing:.14em;
+    text-transform:uppercase;color:rgba(255,255,255,.26)}
+  .dgrip{color:rgba(255,255,255,.2);font-size:12px;line-height:1;letter-spacing:-1px}
+  .dglyph{width:34px;height:34px;border-radius:9px;background:rgba(255,255,255,.06);
+    border:1px solid rgba(255,255,255,.14);display:flex;align-items:center;
+    justify-content:center;position:relative}
+  .dglyph svg{width:18px;height:18px;fill:none;stroke:rgba(255,255,255,.8);stroke-width:1.7}
+  .dglyph::after{content:"";position:absolute;right:3px;bottom:3px;width:0;height:0;
+    border-left:4px solid transparent;border-top:4px solid rgba(255,255,255,.3)}
+  .dtext{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.12);
+    border-radius:8px;padding:8px 10px;font-size:13px;color:#fff}
+  .dsel{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.12);
+    border-radius:8px;padding:8px 10px;font-family:var(--mono);font-size:11.5px;
+    color:rgba(255,255,255,.72);display:flex;align-items:center;justify-content:space-between}
+  .dsel s{text-decoration:none;opacity:.4}
+  .dx{text-align:center;color:rgba(255,255,255,.22);font-size:15px;line-height:1}
+  .dadd{margin-top:14px;display:flex;align-items:center;gap:12px}
+  .dbtn{padding:9px 16px;border-radius:9px;font-family:var(--display);font-size:11px;
+    background:rgba(63,224,122,.16);border:1px solid rgba(63,224,122,.5);color:#EAFFF1}
+  .dbtn.off{background:rgba(255,255,255,.03);border-color:rgba(255,255,255,.1);
+    color:rgba(255,255,255,.22)}
+  .dcount{font-family:var(--mono);font-size:11px;color:rgba(255,255,255,.3)}
+  .dnote{margin-top:16px;padding-top:14px;border-top:1px solid rgba(255,255,255,.06);
+    font-size:11.5px;line-height:1.6;color:rgba(255,255,255,.34)}
+  .dnote b{color:rgba(255,255,255,.6);font-weight:600}
 
   /* ---- phone mockups ---- */
   .phsec{margin-top:78px;border-top:1px solid var(--rule);padding-top:44px}
@@ -382,7 +439,7 @@
 
 <div class="wrap">
 <header>
-  <p class="eyebrow">Radial · screen states · rev S</p>
+  <p class="eyebrow">Radial · screen states · rev W</p>
   <h1>The value is the label</h1>
   <p class="lede">A percentage means volume. A timestamp means seek. Green and amber say the same thing again. Nothing on the dial screens needs a word on it — so the number gets the centre, and a phyllotaxis bloom, cut by a wedge, does the reading you do at a glance. The idle screen is the same bloom with nothing lit.</p>
   <div class="meta">
@@ -392,7 +449,7 @@
   </div>
 </header>
 
-<p class="scalenote">Drawn 1:1 in pixels — the physical screen is ~46 mm across, so this reads about twice life size on a monitor.</p>
+<p class="scalenote">Rings read outward from one green dot at twelve: the glyph beneath it is lit, and every other glyph fades with angular distance. The arc and the twin ticks are gone &mdash; three marks for one selection was two too many. Drawn 1:1 in pixels — the physical screen is ~46 mm across, so this reads about twice life size on a monitor.</p>
 
 <div class="grid">
 
@@ -516,19 +573,20 @@
   <div class="card">
     <div class="plinth"><div class="screen">
       <div class="selground"></div>
-      <div class="selarc"></div>
       <div class="marker"></div>
       <div class="ringwrap">
-        <div class="slot sel" style="transform:rotate(0deg) translateY(calc(-126*var(--u)))"><i style="transform:translate(-50%,-50%) rotate(0deg)"><svg viewBox="0 0 24 24"><path d="M9 18V6l10-2v12" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/><circle cx="6.5" cy="18" r="2.5" stroke-width="1.7"/><circle cx="16.5" cy="16" r="2.5" stroke-width="1.7"/></svg></i></div>
-        <div class="slot " style="transform:rotate(90deg) translateY(calc(-126*var(--u)))"><i style="transform:translate(-50%,-50%) rotate(-90deg)"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" stroke-width="1.7"/><path d="M12 7v5.3l3.4 2" stroke-width="1.7" stroke-linecap="round"/></svg></i></div>
-        <div class="slot " style="transform:rotate(180deg) translateY(calc(-126*var(--u)))"><i style="transform:translate(-50%,-50%) rotate(-180deg)"><svg viewBox="0 0 24 24"><rect x="9" y="3" width="6" height="11" rx="3" stroke-width="1.7"/><path d="M5.5 11.5a6.5 6.5 0 0 0 13 0M12 18v3" stroke-width="1.7" stroke-linecap="round"/></svg></i></div>
-        <div class="slot " style="transform:rotate(270deg) translateY(calc(-126*var(--u)))"><i style="transform:translate(-50%,-50%) rotate(-270deg)"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3.2" stroke-width="1.7"/><path d="M12 2.8v2.4M12 18.8v2.4M4.5 4.5l1.7 1.7M17.8 17.8l1.7 1.7M2.8 12h2.4M18.8 12h2.4M4.5 19.5l1.7-1.7M17.8 6.2l1.7-1.7" stroke-width="1.7" stroke-linecap="round"/></svg></i></div>
+        <div class="slot sel" style="opacity:1.00;transform:rotate(0deg) translateY(calc(-126*var(--u)))"><i style="transform:translate(-50%,-50%) rotate(-0deg)"><svg viewBox="0 0 24 24"><path d="M9 18V6l10-2v12" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/><circle cx="6.5" cy="18" r="2.5" stroke-width="1.7"/><circle cx="16.5" cy="16" r="2.5" stroke-width="1.7"/></svg></i></div>
+        <div class="slot " style="opacity:0.51;transform:rotate(72deg) translateY(calc(-126*var(--u)))"><i style="transform:translate(-50%,-50%) rotate(-72deg)"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" stroke-width="1.7"/><path d="M12 7v5.3l3.4 2" stroke-width="1.7" stroke-linecap="round"/></svg></i></div>
+        <div class="slot " style="opacity:0.19;transform:rotate(144deg) translateY(calc(-126*var(--u)))"><i style="transform:translate(-50%,-50%) rotate(-144deg)"><svg viewBox="0 0 24 24"><rect x="9" y="3" width="6" height="11" rx="3" stroke-width="1.7"/><path d="M5.5 11.5a6.5 6.5 0 0 0 13 0M12 18v3" stroke-width="1.7" stroke-linecap="round"/></svg></i></div>
+        <div class="slot " style="opacity:0.19;transform:rotate(216deg) translateY(calc(-126*var(--u)))"><i style="transform:translate(-50%,-50%) rotate(-216deg)"><svg viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="7" height="7" rx="1.6" stroke-width="1.7"/><rect x="13.5" y="3.5" width="7" height="7" rx="1.6" stroke-width="1.7"/><rect x="3.5" y="13.5" width="7" height="7" rx="1.6" stroke-width="1.7"/><rect x="13.5" y="13.5" width="7" height="7" rx="1.6" stroke-width="1.7"/></svg></i></div>
+        <div class="slot " style="opacity:0.51;transform:rotate(288deg) translateY(calc(-126*var(--u)))"><i style="transform:translate(-50%,-50%) rotate(-288deg)"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3.2" stroke-width="1.7"/><path d="M12 2.8v2.4M12 18.8v2.4M4.5 4.5l1.7 1.7M17.8 17.8l1.7 1.7M2.8 12h2.4M18.8 12h2.4M4.5 19.5l1.7-1.7M17.8 6.2l1.7-1.7" stroke-width="1.7" stroke-linecap="round"/></svg></i></div>
       </div>
       <div class="hero">
         <svg viewBox="0 0 24 24"><path d="M9 18V6l10-2v12" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/><circle cx="6.5" cy="18" r="2.5" stroke-width="1.7"/><circle cx="16.5" cy="16" r="2.5" stroke-width="1.7"/></svg>
         <span>Spotify</span>
-        <em>1 OF 4</em>
+        <em>1 OF 5</em>
       </div>
+      <div class="backzone"></div><div class="backch"><svg viewBox="0 0 24 24"><path d="M14.5 5 8 12l6.5 7"/></svg></div>
     </div></div>
     <div class="cap">
       <p class="idx">05 — long-press from any app</p>
@@ -536,11 +594,13 @@
       <p>The Galaxy Watch bezel, which is what a round screen and a rotary encoder are for. The ring turns under a fixed marker at twelve rather than the marker chasing the ring, so the selected app is always in the same place.</p>
       <dl>
         <dt>Dial</dt><dd>One app per detent, one haptic click each</dd>
+        <dt>Selection</dt><dd>A green dot above twelve, and the glyph under it lit and glowing. Two signals, one meaning</dd>
+        <dt>Falloff</dt><dd>Glyphs dim with angular distance from the dot &mdash; full at twelve, barely there at six</dd>
         <dt>Tap</dt><dd>Enter the selected app</dd>
-        <dt>Back out</dt><dd>Long-press or 4 s idle → <em>the app you came from</em>, never app one</dd>
+        <dt>Back out</dt><dd>Tap the chevron, long-press, or 4 s idle → <em>the app you came from</em>, never app one</dd>
         <dt>Ground</dt><dd>Plain — the shell is chrome, not an app, and should not look like one</dd>
       </dl>
-      <p class="flag"><b>Four, all real: Spotify, Clock, Wispr, Settings.</b> Wispr is a microphone glyph and one keystroke over BLE; Settings is where brightness, Wi-Fi and the re-auth live. Neither is a feature of Spotify, which is the point of the shell existing at all.</p>
+      <p class="flag"><b>Five, all real: Spotify, Clock, Wispr, Launcher, Settings.</b> Three of them do nothing Spotify can see — which is the point of the shell existing at all. Five slots at 72° is close to the practical limit for a rim; a sixth app would want a different pattern, and that is the constraint R9 was written to expose.</p>
     </div>
   </div>
 
@@ -549,26 +609,37 @@
   <div class="card">
     <div class="plinth"><div class="screen">
       <div class="selground"></div>
-      <div class="scrollarc"></div>
-      <p class="setttl">SETTINGS</p>
-      <div class="slist">
-        <div class="srow far">Haptics <v>FIRM</v></div>
-        <div class="srow near">Sleep <v>20 MIN</v></div>
-        <div class="srow cur">Brightness <v>70%</v></div>
-        <div class="srow near">Dial step <v>5%</v></div>
-        <div class="srow far">Wi-Fi <v>ON</v></div>
+      <div class="marker"></div>
+      <div class="ringwrap">
+        <div class="slot sel" style="opacity:1.00;transform:rotate(0.0deg) translateY(calc(-126*var(--u)))"><i style="transform:translate(-50%,-50%) rotate(-0.0deg)"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="4" stroke-width="1.7"/><path d="M12 2.5v2.6M12 18.9v2.6M4.2 4.2l1.9 1.9M17.9 17.9l1.9 1.9M2.5 12h2.6M18.9 12h2.6M4.2 19.8l1.9-1.9M17.9 6.1l1.9-1.9" stroke-width="1.7" stroke-linecap="round"/></svg></i></div>
+        <div class="slot " style="opacity:0.68;transform:rotate(45.0deg) translateY(calc(-126*var(--u)))"><i style="transform:translate(-50%,-50%) rotate(-45.0deg)"><svg viewBox="0 0 24 24"><path d="M20 14.5A8.5 8.5 0 0 1 9.5 4a8.5 8.5 0 1 0 10.5 10.5z" stroke-width="1.7" stroke-linejoin="round"/></svg></i></div>
+        <div class="slot " style="opacity:0.41;transform:rotate(90.0deg) translateY(calc(-126*var(--u)))"><i style="transform:translate(-50%,-50%) rotate(-90.0deg)"><svg viewBox="0 0 24 24"><rect x="9.5" y="6" width="5" height="12" rx="2" stroke-width="1.7"/><path d="M5.5 9v6M3 10.5v3M18.5 9v6M21 10.5v3" stroke-width="1.7" stroke-linecap="round"/></svg></i></div>
+        <div class="slot " style="opacity:0.22;transform:rotate(135.0deg) translateY(calc(-126*var(--u)))"><i style="transform:translate(-50%,-50%) rotate(-135.0deg)"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="7" stroke-width="1.7"/><path d="M12 5.2v2.6" stroke-width="2" stroke-linecap="round"/><path d="M19 12h1.6M3.4 12H5M12 19v1.6" stroke-width="1.7" stroke-linecap="round"/></svg></i></div>
+        <div class="slot " style="opacity:0.12;transform:rotate(180.0deg) translateY(calc(-126*var(--u)))"><i style="transform:translate(-50%,-50%) rotate(-180.0deg)"><svg viewBox="0 0 24 24"><path d="M3 9.5a14 14 0 0 1 18 0M6.2 13a9.5 9.5 0 0 1 11.6 0M9.4 16.4a5 5 0 0 1 5.2 0" stroke-width="1.7" stroke-linecap="round"/><circle cx="12" cy="19.4" r="1.1" stroke-width="1.6"/></svg></i></div>
+        <div class="slot " style="opacity:0.22;transform:rotate(225.0deg) translateY(calc(-126*var(--u)))"><i style="transform:translate(-50%,-50%) rotate(-225.0deg)"><svg viewBox="0 0 24 24"><path d="M9 18V6l10-2v12" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/><circle cx="6.5" cy="18" r="2.5" stroke-width="1.7"/><circle cx="16.5" cy="16" r="2.5" stroke-width="1.7"/></svg></i></div>
+        <div class="slot " style="opacity:0.41;transform:rotate(270.0deg) translateY(calc(-126*var(--u)))"><i style="transform:translate(-50%,-50%) rotate(-270.0deg)"><svg viewBox="0 0 24 24"><rect x="9" y="3" width="6" height="11" rx="3" stroke-width="1.7"/><path d="M5.5 11.5a6.5 6.5 0 0 0 13 0M12 18v3" stroke-width="1.7" stroke-linecap="round"/></svg></i></div>
+        <div class="slot " style="opacity:0.68;transform:rotate(315.0deg) translateY(calc(-126*var(--u)))"><i style="transform:translate(-50%,-50%) rotate(-315.0deg)"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" stroke-width="1.7"/><path d="M12 11.2v5.8" stroke-width="1.7" stroke-linecap="round"/><circle cx="12" cy="7.6" r="1" stroke-width="1.5"/></svg></i></div>
       </div>
+      <div class="hero set">
+        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="4" stroke-width="1.7"/><path d="M12 2.5v2.6M12 18.9v2.6M4.2 4.2l1.9 1.9M17.9 17.9l1.9 1.9M2.5 12h2.6M18.9 12h2.6M4.2 19.8l1.9-1.9M17.9 6.1l1.9-1.9" stroke-width="1.7" stroke-linecap="round"/></svg>
+        <span>Brightness</span>
+        <b>70%</b>
+      </div>
+      <div class="backzone"></div><div class="backch"><svg viewBox="0 0 24 24"><path d="M14.5 5 8 12l6.5 7"/></svg></div>
     </div></div>
     <div class="cap">
-      <p class="idx">06 — inside Settings</p>
-      <h2>The list</h2>
-      <p>Seven items, three legible at once. The selected row sits on the circle's widest line, which is the only place a long label and its value both fit. Neighbours fade rather than clip.</p>
+      <p class="idx">06 &mdash; Settings</p>
+      <h2>The same bezel, one level down</h2>
+      <p>Eight settings on the rim, the selected one filling the centre with its current value. A vertical list on a round screen wastes both corners and fights the dial &mdash; the ring is the shape the hardware already is, and it is the shape the app selector taught you one gesture earlier.</p>
       <dl>
-        <dt>Dial</dt><dd>Move the selection, one item per detent</dd>
-        <dt>Tap</dt><dd>Open the selected item</dd>
-        <dt>Value on the right</dt><dd>Current setting, so the list doubles as a status page</dd>
-        <dt>Arc</dt><dd>Position in the list — seven items is past what fits</dd>
+        <dt>Dial</dt><dd>One setting per detent, ring turning under the green dot at twelve</dd>
+        <dt>Falloff</dt><dd>Glyphs fade with distance from the dot, so the bottom of the ring recedes and leaves the back chevron the only lit thing down there</dd>
+        <dt>Tap</dt><dd>Enter that setting &mdash; 07 for a continuous value, 08 for a fixed choice</dd>
+        <dt>Centre</dt><dd>Name above, value below. You are choosing what to change, so the name leads and the value confirms</dd>
+        <dt>Wraps</dt><dd>Continuously. There is no top or bottom of a ring, which is the other thing a list gets wrong here</dd>
+        <dt>Back</dt><dd>The chevron, or anywhere in the lower band. Long-press still works and is never the only way</dd>
       </dl>
+      <p class="flag"><b>What this costs.</b> A list showed every value at once; a ring shows one. Reading all eight now takes a full turn instead of a glance. That is the trade for legibility on a 46&nbsp;mm circle, and it is worth it because you come here to change one thing, not to audit eight.</p>
     </div>
   </div>
 
@@ -845,6 +916,88 @@
     </div>
   </div>
 
+  <!-- 15 A -->
+  <div class="card">
+    <div class="plinth"><div class="screen">
+      <div class="selground"></div>
+      <div class="marker"></div>
+      <div class="ringwrap">
+        <div class="slot sel" style="opacity:1.00;transform:rotate(0.0deg) translateY(calc(-126*var(--u)))"><i style="transform:translate(-50%,-50%) rotate(-0.0deg)"><svg viewBox="0 0 24 24"><path d="M8.6 7.5 4 12l4.6 4.5M15.4 7.5 20 12l-4.6 4.5" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/></svg></i></div>
+        <div class="slot " style="opacity:0.63;transform:rotate(51.4deg) translateY(calc(-126*var(--u)))"><i style="transform:translate(-50%,-50%) rotate(-51.4deg)"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" stroke-width="1.7"/><circle cx="12" cy="12" r="3.6" stroke-width="1.7"/><path d="M14.8 9.6H21M9.4 13.9 6.3 19.6M14.6 14 11.5 19.7" stroke-width="1.7" stroke-linecap="round"/></svg></i></div>
+        <div class="slot " style="opacity:0.35;transform:rotate(102.9deg) translateY(calc(-126*var(--u)))"><i style="transform:translate(-50%,-50%) rotate(-102.9deg)"><svg viewBox="0 0 24 24"><path d="M9 3.5 7.4 20.5M16.6 3.5 15 20.5M3.5 8.6h17M3.2 15.4h17" stroke-width="1.7" stroke-linecap="round"/></svg></i></div>
+        <div class="slot " style="opacity:0.16;transform:rotate(154.3deg) translateY(calc(-126*var(--u)))"><i style="transform:translate(-50%,-50%) rotate(-154.3deg)"><svg viewBox="0 0 24 24"><path d="M12 3 20 12l-8 9-8-9z" stroke-width="1.7" stroke-linejoin="round"/></svg></i></div>
+        <div class="slot " style="opacity:0.16;transform:rotate(205.7deg) translateY(calc(-126*var(--u)))"><i style="transform:translate(-50%,-50%) rotate(-205.7deg)"><svg viewBox="0 0 24 24"><rect x="5" y="3.5" width="14" height="17" rx="2.2" stroke-width="1.7"/><path d="M8.5 9h7M8.5 12.5h7M8.5 16h4" stroke-width="1.7" stroke-linecap="round"/></svg></i></div>
+        <div class="slot " style="opacity:0.35;transform:rotate(257.1deg) translateY(calc(-126*var(--u)))"><i style="transform:translate(-50%,-50%) rotate(-257.1deg)"><svg viewBox="0 0 24 24"><rect x="3" y="4.5" width="18" height="15" rx="2.2" stroke-width="1.7"/><path d="M7.5 10l2.8 2.3-2.8 2.3M12.8 15.4h4" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg></i></div>
+        <div class="slot " style="opacity:0.63;transform:rotate(308.6deg) translateY(calc(-126*var(--u)))"><i style="transform:translate(-50%,-50%) rotate(-308.6deg)"><svg viewBox="0 0 24 24"><path d="M9 18V6l10-2v12" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/><circle cx="6.5" cy="18" r="2.5" stroke-width="1.7"/><circle cx="16.5" cy="16" r="2.5" stroke-width="1.7"/></svg></i></div>
+      </div>
+      <div class="hero">
+        <svg viewBox="0 0 24 24"><path d="M8.6 7.5 4 12l4.6 4.5M15.4 7.5 20 12l-4.6 4.5" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <span>VS Code</span>
+        <em>1 OF 7</em>
+      </div>
+      <div class="backzone"></div><div class="backch"><svg viewBox="0 0 24 24"><path d="M14.5 5 8 12l6.5 7"/></svg></div>
+    </div></div>
+    <div class="cap">
+      <p class="idx">15 A &mdash; Launcher, mode 1</p>
+      <h2>The curated list</h2>
+      <p>Your applications on the rim, the selected one named in the centre. Identical mechanic to the app selector, one level down and pointed at the PC instead of at Radial &mdash; the dial does the same thing in both, which is the point of having a shell at all.</p>
+      <dl>
+        <dt>Chord</dt><dd><code>Win</code>+<code>1</code>&ndash;<code>9</code> for a pinned taskbar app, or <code>Ctrl</code>+<code>Alt</code>+key bound to a shortcut <code>.lnk</code></dd>
+        <dt>Prefer the second</dt><dd>A <code>.lnk</code> shortcut key follows the file. <code>Win</code>+<code>N</code> follows a taskbar position, which you will one day drag</dd>
+        <dt>Glyphs</dt><dd>Chosen per entry from a fixed set on the config page. Not the real application icons &mdash; those are bitmaps this device has nowhere to keep</dd>
+        <dt>Falloff</dt><dd>Same as every ring &mdash; bright at the dot, receding toward six</dd>
+        <dt>Labels</dt><dd>Free text, because a label is only ever drawn. The chord beside it is an enum. Nothing you type becomes a keystroke</dd>
+        <dt>Back</dt><dd>The chevron, or anywhere in the lower band &mdash; same as every other ring</dd>
+      </dl>
+      <p class="flag"><b>Seven or eight is the practical ceiling.</b> At ten, glyphs on a 126&nbsp;px radius start to crowd and the count in the centre stops being reassuring. If the list ever needs to be longer than that, it is not a ring any more &mdash; and the honest fix is a shorter list, not a denser one.</p>
+    </div>
+  </div>
+
+  <!-- 15 B -->
+  <div class="card">
+    <div class="plinth"><div class="screen">
+      <div class="selground"></div>
+      <div class="starc g" style="--p:360deg"></div>
+      <div class="stcen" style="top:calc(180*var(--u))"><b>Launching</b><s>VS Code</s></div>
+    </div></div>
+    <div class="cap">
+      <p class="idx">15 B &mdash; 1.5 s, then back to Spotify</p>
+      <h2>Launching, never launched</h2>
+      <p>The device has no idea whether the application started, was already running, or whether the chord landed on a lock screen. The word is chosen to claim exactly what is known: a keystroke was sent.</p>
+      <dl>
+        <dt>Holds</dt><dd>1.5&nbsp;s, then the app you came from</dd>
+        <dt>Verification</dt><dd>None available. Your monitor is the confirmation</dd>
+        <dt>Haptic</dt><dd>One click on send</dd>
+      </dl>
+      <p class="flag"><b>Open-loop by design.</b> Closing the loop needs a process running on the PC reporting back, which this project deliberately does not have. Everything the launcher says is scoped to what a keyboard can know, which is nothing.</p>
+    </div>
+  </div>
+
+  <!-- 15 C -->
+  <div class="card">
+    <div class="plinth"><div class="screen">
+      <div class="selground"></div>
+      <p class="setttl" style="color:var(--green-lit)">TASK VIEW</p>
+      <div class="step">
+        <p>DIAL<code class="dim">move</code></p>
+        <p>TAP<code class="dim">select</code></p>
+      </div>
+      <p class="hint">HOLD TO CANCEL</p>
+    </div></div>
+    <div class="cap">
+      <p class="idx">15 C &mdash; Launcher, mode 2</p>
+      <h2>A legend, not a display</h2>
+      <p>Here the device drives Windows&rsquo; own Task View and you are looking at the monitor, not at this. So the screen stops trying to be a window list and becomes a key to what the dial currently does.</p>
+      <dl>
+        <dt>Opens with</dt><dd><code>Win</code>+<code>Tab</code> &mdash; <b>not</b> <code>Alt</code>+<code>Tab</code>, which only stays open while Alt is held</dd>
+        <dt>Dial</dt><dd><code>Right</code> / <code>Left</code> arrow &middot; <b>Tap</b> <code>Enter</code></dd>
+        <dt>Exit</dt><dd>Long-press, or 5 s idle &rarr; <code>Esc</code></dd>
+        <dt>No counter</dt><dd>The device cannot know how many windows exist or which is lit. A position readout would be invented</dd>
+      </dl>
+      <p class="flag"><b>The idle timeout is not a nicety.</b> Without it, walking away leaves Task View open across the whole screen with no way back except the keyboard you were trying not to touch.</p>
+    </div>
+  </div>
+
 </div>
 
 <div class="phsec">
@@ -923,6 +1076,46 @@
   </div>
 
   <p class="flag" style="margin-top:30px;max-width:70ch"><b>The Spotify token is a third step, and it is not typed either.</b> <code>tools/spotify_auth.py</code> runs on the PC, opens the browser, takes the approval, and <code>POST</code>s the token straight to <code>radial.local</code>. Nothing about Spotify is ever copied by hand.</p>
+</div>
+
+<div class="phsec">
+  <p class="eyebrow">the part that was missing</p>
+  <h2>Where the launcher list comes from</h2>
+  <p class="lede">Wi-Fi setup is a phone job &mdash; you are standing at the device. Editing the launcher is not: you are at the PC, looking at the taskbar you are about to reference, and you want a real keyboard. Same server, same config window, a layout that assumes a desktop browser.</p>
+
+  <div style="display:flex;justify-content:center;margin-top:30px">
+  <div class="dpanel">
+    <div class="dbar"><i></i><i></i><i></i><span>radial.local/launcher</span></div>
+    <div class="dbody">
+      <div class="dmark"><em></em>RADIAL</div>
+      <p class="dsub">Launcher entries</p>
+      <div class="drow head"><b></b><b>Icon</b><b>Label</b><b>Chord</b><b></b></div>
+      <div class="drow"><span class="dgrip">&#8942;&#8942;</span><span class="dglyph"><svg viewBox="0 0 24 24"><path d="M8.6 7.5 4 12l4.6 4.5M15.4 7.5 20 12l-4.6 4.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span class="dtext">VS Code</span><span class="dsel">Ctrl+Alt+C<s>&#9662;</s></span><span class="dx">&times;</span></div>
+      <div class="drow"><span class="dgrip">&#8942;&#8942;</span><span class="dglyph"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="3.6"/><path d="M14.8 9.6H21M9.4 13.9 6.3 19.6M14.6 14 11.5 19.7" stroke-linecap="round"/></svg></span><span class="dtext">Chrome</span><span class="dsel">Ctrl+Alt+B<s>&#9662;</s></span><span class="dx">&times;</span></div>
+      <div class="drow"><span class="dgrip">&#8942;&#8942;</span><span class="dglyph"><svg viewBox="0 0 24 24"><path d="M9 3.5 7.4 20.5M16.6 3.5 15 20.5M3.5 8.6h17M3.2 15.4h17" stroke-linecap="round"/></svg></span><span class="dtext">Slack</span><span class="dsel">Ctrl+Alt+S<s>&#9662;</s></span><span class="dx">&times;</span></div>
+      <div class="drow"><span class="dgrip">&#8942;&#8942;</span><span class="dglyph"><svg viewBox="0 0 24 24"><path d="M12 3 20 12l-8 9-8-9z" stroke-linejoin="round"/></svg></span><span class="dtext">Obsidian</span><span class="dsel">Ctrl+Alt+O<s>&#9662;</s></span><span class="dx">&times;</span></div>
+      <div class="drow"><span class="dgrip">&#8942;&#8942;</span><span class="dglyph"><svg viewBox="0 0 24 24"><rect x="5" y="3.5" width="14" height="17" rx="2.2"/><path d="M8.5 9h7M8.5 12.5h7M8.5 16h4" stroke-linecap="round"/></svg></span><span class="dtext">Granola</span><span class="dsel">Win+4<s>&#9662;</s></span><span class="dx">&times;</span></div>
+      <div class="dadd">
+        <span class="dbtn">ADD ENTRY</span>
+        <span class="dcount">5 of 8</span>
+      </div>
+      <p class="dnote"><b>Chord is a dropdown, never a text field.</b> It offers <code>Win</code>+<code>1</code>&ndash;<code>9</code> and <code>Ctrl</code>+<code>Alt</code>+<code>A</code>&ndash;<code>Z</code> and nothing else. The label beside it is free text because a label is only ever drawn on a screen &mdash; no string on this page can become a keystroke.</p>
+    </div>
+  </div>
+  </div>
+
+  <div class="phrow" style="margin-top:36px">
+    <div class="cap" style="max-width:none">
+      <p class="idx">P4 &mdash; the editor</p>
+      <h2>Five controls, no more</h2>
+      <p>Drag to reorder, because order is the whole point &mdash; a fixed position is what lets your hand learn the list. Pick a glyph from a fixed set. Type a label. Choose a chord from a dropdown. Delete. There is deliberately no icon upload, no free-text command, and no import from the Start menu.</p>
+    </div>
+    <div class="cap" style="max-width:none">
+      <p class="idx">at the cap</p>
+      <h2>What happens at eight</h2>
+      <p><b>ADD ENTRY</b> greys out and the count turns amber. It does not paginate and it does not scroll, because a ninth entry does not make the launcher better &mdash; it makes every position one you have to read rather than know. If eight is genuinely not enough, the escape hatch is groups: a ring of categories, each opening a ring of apps. That is designed but not built, and it should stay unbuilt until eight has actually failed in use.</p>
+    </div>
+  </div>
 </div>
 
 <footer>

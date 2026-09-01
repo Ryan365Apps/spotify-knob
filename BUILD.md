@@ -221,10 +221,14 @@ Both write once, 400 ms after the last detent. Spin freely; the screen updates l
 
 The Galaxy Watch bezel model, which is what a round screen and a rotary encoder are for.
 
-- App glyphs sit on a **fan segment** — 36° per app around the fixed marker at twelve o'clock — not spread to the compass points. The selected app sits under the marker with its name filling the centre; its neighbours are one notch either side, and anything further is dimmed right down. Four apps span a quarter of the rim, and a fifth costs one more notch.
-- **Dial → one app per detent, with a haptic click on each.** The fan turns under the marker rather than the marker moving, and it has **hard stops at both ends** — a segment does not wrap.
-- **Tap the centre → enter the selected app. Tap a glyph → enter that app directly**, wherever it sits on the fan.
-- **Long-press again, or 4 s idle → return to the app you came from**, not to the first app. Backing out of the selector should never change what you were doing.
+- App glyphs sit around the rim, one per app at 72°, with the selected app under a fixed marker at twelve o'clock and its name filling the centre. Five slots at 72° is close to the practical limit for a rim; a sixth app would want a different pattern, and that is the constraint R9 was written to expose.
+- **Dial → one app per detent, with a haptic click on each.** The ring turns under the marker rather than the marker moving, and it **wraps** — a ring has no ends, so it never bumps.
+- **Selection is a green dot at twelve, and a glow on the glyph beneath it.** Two signals, one meaning. An earlier draft carried a dot, twin tick marks *and* a conic arc; three marks for one selection is two too many, and the extras read as decoration rather than state.
+- **Rim glyphs fade with angular distance from the dot** — full at twelve, about 12% at six. It puts the eye where the selection is, and it makes the foot of the circle recede so the back chevron is the only lit thing down there. The curve is `0.12 + 0.88 × (1 − d)^1.6`, with `d` the angular distance normalised so six o'clock is 1.
+- **Tap the centre → enter the selected app. Tap a glyph in the upper two thirds → enter that app directly.** Glyphs in the lower band are *not* tappable, because the back chevron owns that area and one region cannot mean two things. Their dimming is the honest signal that they are reachable by dial only — which is why the falloff and the back zone were designed together rather than one after the other.
+- **Back is visible on every ring.** A chevron sits at the foot of the screen, and the whole lower band of the circle is its hit target. Long-press still works and 4 s idle still returns you — but a gesture nobody can see is not an exit, it is a trick you have to be told, and this is the one place a first-time user gets stuck. Returning always goes to **the app you came from**, not to the first app.
+
+All of the above applies identically to the Settings ring and the Launcher ring. A ring that behaves differently at a different level is a second thing to learn.
 
 With two apps this is a toggle wearing a carousel's clothes. It is built now anyway, because the cost of adding it later is rewriting whichever app was built without it.
 
@@ -265,6 +269,7 @@ Inside the Wispr app the waggle never blindly toggles — it only **dismisses**:
 - **Transfer, not launch — over the API.** `PUT /me/player` moves playback to a device Spotify can already see, which requires the desktop app to already be running. Nothing in the Web API can start or focus an application. **The BLE HID keyboard added in Wave 10 can**, and this is the answer to the launch/focus question the Web API cannot solve: `Win`+`N` activates the Nth pinned taskbar item, launching Spotify if it is closed and focusing it if it is not. One chord, no resident agent, no companion process. It is optional, it belongs to Wave 10 rather than Wave 6, and it depends on the pin position holding — so the position is a Settings value, defaulting to off. See the HID section later in this section.
 - **Writes are debounced.** A single call 400 ms after the last detent is what keeps the device inside the rate limit during a long volume sweep.
 - **Haptics.** One short DRV2605 click per detent, a heavier one on transport button presses. Cheap to add, and most of what makes the thing feel like a control rather than a screen.
+- **End stops are felt, rings are not.** Where a value clamps — volume at 0 or 100, brightness at its floor, an enum at either end — the rejected detent produces a firm haptic and a small visual bump instead of silence. The three rings (selector, Settings, Launcher) wrap and never bump; only clamped values have ends.
 - **Adverts.** `currently_playing_type == "ad"` — show "Advert", suppress the transport buttons. Not applicable on Premium, but three lines that prevent a confusing state.
 - **Nothing playing.** `GET /me/player` returns HTTP 204. The screen shows the moiré ray field described in `design/screens.html`, tinted from the last cover's average colour, with the clock over it. The dial does nothing.
 - **Sleep.** After 20 minutes idle the backlight goes off entirely and the animation stops — a permanently-powered desk object should not be a permanently-lit one. It wakes on touch, on dial movement, or on playback resuming anywhere.
@@ -328,13 +333,35 @@ typedef struct {
 
 **App 4 — Launcher.** A short, ordered list of PC applications. The dial scrolls it, a tap sends one chord, and the device returns to Spotify. It has two modes.
 
-**Mode 1 — the curated list.** Up to ten entries, each a label, a glyph and a **chord chosen from a fixed set**: `Win`+`1`–`9` for pinned taskbar items, or `Ctrl`+`Alt`+*key* for anything bound to a Windows shortcut `.lnk`. Entries are configured on the config page. Note the split this preserves — the **label is free text because it is only ever drawn on the screen**, and the chord is an enum. Nothing typed by a human reaches the HID layer, which is the rule from later in this section holding under pressure rather than merely being restated.
+**Mode 1 — the curated list.** Up to eight entries, each a label, a glyph and a **chord chosen from a fixed set**: `Win`+`1`–`9` for pinned taskbar items, or `Ctrl`+`Alt`+*key* for anything bound to a Windows shortcut `.lnk`. Entries are configured on the config page. Note the split this preserves — the **label is free text because it is only ever drawn on the screen**, and the chord is an enum. Nothing typed by a human reaches the HID layer, which is the rule from later in this section holding under pressure rather than merely being restated.
 
-A list rather than the rim used by the app selector: the selector holds five familiar glyphs and needs no words, while this holds ten unfamiliar application icons and does. It reuses the Settings list mechanic exactly.
+**The rim, not a list.** Same mechanic as the app selector, one level down: entries on the ring, the selected one named in the centre, a fixed marker at twelve. A vertical list wastes both corners of a circle and imposes a top and a bottom on an input that has neither.
+
+Glyphs are chosen per entry from a fixed set on the config page. They are not the real application icons — those are bitmaps the device has nowhere to keep, and fetching them would mean knowing what is installed, which it cannot.
+
+**Eight entries is a hard cap, and the cap is the feature.** At a 126 px radius glyphs crowd past eight, but the real reason is that fixed positions are the entire value — a ninth entry makes every position one you read rather than one you know, and at that point the PC's own Start menu is better at this than Radial will ever be.
+
+At eight, **ADD ENTRY** greys out and the count turns amber. It does not paginate and it does not scroll. If eight is genuinely proven insufficient in use, the escape hatch is **groups** — a ring of categories, each opening a ring of apps, two taps deep. That is designed and deliberately not built: it should stay unbuilt until eight has actually failed, because adding it pre-emptively costs the flatness that makes the launcher fast.
+
+### The launcher editor
+
+Wi-Fi setup is a phone job — you are standing at the device. Editing the launcher is not: you are at the PC, looking at the taskbar you are about to reference, wanting a real keyboard. Same server, same config window, a layout that assumes a desktop browser. Drawn in `design/screens.html` as P4.
+
+Five controls and no more: drag to reorder, a glyph from a fixed set, a free-text label, a chord, delete.
+
+| Control | Why it is shaped this way |
+|---|---|
+| Reorder | Order is the point. A fixed position is what lets your hand learn the list, so reordering must be easy and must be the thing you do last |
+| Glyph | Picked from a fixed set. **No icon upload** — real application icons are bitmaps the device has nowhere to keep, and fetching them would mean knowing what is installed |
+| Label | Free text, because a label is only ever drawn on a screen |
+| Chord | **A dropdown, never a text field.** `Win`+`1`–`9` and `Ctrl`+`Alt`+`A`–`Z`, nothing else |
+| Delete | Immediate, no confirm. Re-adding costs four seconds |
+
+The chord dropdown is where the rule from later in this section becomes a UI decision rather than a principle: **no string on this page can become a keystroke.** A free-text chord field would be exactly the LAN-reachable remote execution path that must not exist, and it would look completely reasonable in a code review.
 
 **It cannot confirm anything.** The device has no idea whether the app launched, was already open, or whether the chord landed on a locked screen. So it shows "Launching Slack" for 1.5 s and returns. Anything more confident would be a claim it cannot support.
 
-**Mode 2 — drive Task View.** For the times you want the real window list rather than a list of apps.
+**Mode 2 — drive Task View.** For the times you want the real window list rather than a list of apps. It is entered like any launch: **Task View is the last entry on the ring**, with its own glyph.
 
 **Use `Win`+`Tab`, never `Alt`+`Tab`.** Alt+Tab only stays open while Alt is *held*, so driving it means keeping a modifier down for the whole interaction — the exact thing ruled out earlier, and it would make every click a modified click while you dialled. `Win`+`Tab` opens Task View persistently, survives the release, and takes arrow keys.
 
@@ -358,10 +385,13 @@ The idle timeout matters: without it, walking away leaves Task View open across 
 | Wi-Fi | **Status only** — SSID and signal — plus a "Config mode" action that opens the Wave 9 server and puts its QR on screen |
 | Spotify | Days until re-authorisation, plus "Re-auth now" |
 | Dictation | BLE pairing state, and **Forget this PC** — the only destructive action in Settings, so it confirms |
-| Launcher | Read-only here. The list is edited on the config page, because naming ten applications is typing |
 | About | IP address, firmware version, uptime |
 
-Screens for all of this are drawn in `design/screens.html` — the list (06), a continuous value (07), the pattern every fixed-choice setting uses (08), and both config modes (09 A and 09 B).
+There is no Launcher row — its entries are edited on the config page (naming applications is typing) and a read-only row would only restate that. Eight items keeps the ring at 45° per slot.
+
+Screens for all of this are drawn in `design/screens.html` — the settings ring (06), a continuous value (07), the pattern every fixed-choice setting uses (08), and both config modes (09 A and 09 B).
+
+**Settings is a ring too, for the same reasons.** Eight items on the rim, the selected one filling the centre with its current value, name above and value below — you are choosing what to change, so the name leads. It wraps continuously, because a ring has no ends. The cost is real and worth naming: a list showed all eight values at once and the ring shows one, so auditing every setting now takes a full turn instead of a glance. That trade is accepted because you come here to change one thing, not to read eight.
 
 ### The rule that shapes Settings: no text entry, ever
 
@@ -503,6 +533,28 @@ Three detents, not one, because this must never fire from a knock. Tap is the fa
 | Layout | HID sends **scancodes**, not characters; the PC maps them through the active keyboard layout. On a UK layout `@` and `"` are swapped relative to US, and `#`, `\` and `~` all move. Letters are safe, punctuation is not — which means paths, URLs and shell commands are exactly the fragile case |
 
 **So push the fragile part onto the PC.** Bind the action to a hotkey there and have Radial send only that chord. A Windows shortcut `.lnk` has a **Shortcut key** property giving `Ctrl`+`Alt`+*key* with nothing installed; AutoHotkey covers anything more involved. The wireless half stays one atomic report with no timing and no layout dependency, and the arbitrary half runs where it is deterministic and you can debug it. This is the recommended pattern for every action beyond the Wispr toggle and the taskbar pin.
+
+### Binding a chord on the PC
+
+Every Windows shortcut has a **Shortcut key** field: right-click the `.lnk` → Properties → **Shortcut** tab. Press a letter and Windows prefixes `Ctrl`+`Alt` automatically. That is the whole mechanism, and it needs nothing installed.
+
+**The detail that decides whether it works at all:** the shortcut must live on the **Desktop** or in the Start Menu. A `.lnk` in `D:\shortcuts\` accepts a shortcut key in its properties dialog and then silently does nothing. The right home is:
+
+```
+%APPDATA%\Microsoft\Windows\Start Menu\Programs
+```
+
+Registered, and invisible on the desktop — which is what you want for ten of them.
+
+| | |
+|---|---|
+| Behaviour | Same as clicking the shortcut: launches if closed, focuses the existing window if already running. Launch-or-focus comes free rather than needing logic |
+| Prefix | `Ctrl`+`Alt` only, so about 30 usable bindings. Check for collisions — some vendor utilities claim `Ctrl`+`Alt` combinations, Intel graphics historically taking the arrow keys |
+| First fire | Can lag a second or two while the shell resolves the target. Subsequent presses are instant |
+| Scope | Per-user, stored in your profile |
+| Escalation | AutoHotkey removes the `Ctrl`+`Alt` constraint and the startup lag, at the cost of a permanent background process. Start with `.lnk`; move only if it fails |
+
+**This is preparable now, without the board.** Create the shortcuts, assign the keys, and test each one from your own keyboard. That is the entire PC-side configuration, verified independently. When Radial later sends one of those chords it is sending something already proven to work, so any failure is in the BLE path and nowhere else.
 
 **The line this must not cross.** Radial will have two capabilities at once: an HTTP server reachable by anything on the LAN, and the ability to type arbitrary commands into the PC. **They must never be connected.** No endpoint — not on the config page, not on the status page, not "just for debugging" — may accept a string and send it as keystrokes. That endpoint is remote code execution on the PC for anyone on the network, and it is an easy thing to build by accident, because "let me POST a macro to the device" is the obvious next idea. The HID layer takes an enum of fixed, compile-time actions and nothing else. Configurable values (which taskbar pin, which Wispr chord) are indices and key codes chosen from a fixed set, never free text.
 
@@ -691,9 +743,9 @@ This screen is the recovery documentation. It should never be seen, and it must 
 
 ### Wave 11 — Launcher
 
-- Mode 1: the list, the config-page editor for it, and the fixed chord enum.
+- Mode 1: the ring, the P4 config-page editor, the fixed chord enum, and the eight-entry cap with its greyed-out add button.
 - Mode 2: Task View driving, including the 5 s idle `Esc`. Build this second — it is smaller, and it is worthless if mode 1 is not already proving the HID path.
-- **Done when:** every configured entry launches or focuses its application from cold; the list survives a power cycle; Task View mode returns the dial to Spotify after 5 s of no input with Task View closed on the PC; and a chord sent while the PC is locked changes nothing on the PC and does not wedge the device.
+- **Done when:** the chord field on the editor cannot accept free text; every configured entry launches or focuses its application from cold; the list survives a power cycle; Task View mode returns the dial to Spotify after 5 s of no input with Task View closed on the PC; and a chord sent while the PC is locked changes nothing on the PC and does not wedge the device.
 
 ---
 
@@ -866,3 +918,5 @@ The DRV2605 shares I²C with the touch controller. Add it to the **same** bus ha
 ### Notes for the next wave
 
 Wave 3 is Wi-Fi, TLS and the token refresh. Nothing to prepare — the credentials from Wave 0 are already in `spotify_tokens.json`.
+
+**Two things can be done on the PC at any time, with no board.** Bind the Wispr hands-free action to its own shortcut (section 6), and create the launcher `.lnk` shortcuts with their `Ctrl`+`Alt` keys. Both are verifiable from your own keyboard, and doing them early means Waves 10 and 11 only ever have to prove the BLE path.

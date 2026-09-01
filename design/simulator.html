@@ -155,10 +155,10 @@
 
   .selground{position:absolute;inset:0;
     background:radial-gradient(circle at 50% 42%,#14171C 0%,#0A0B0D 55%,#000 100%)}
-  .ringwrap{position:absolute;inset:0;transition:transform .35s cubic-bezier(.3,0,.2,1)}
+  .ringwrap{position:absolute;inset:0}
   .slot{position:absolute;left:50%;top:50%;width:0;height:0}
   .slot i{position:absolute;left:50%;top:50%;width:38px;height:38px;display:flex;
-    align-items:center;justify-content:center;transition:transform .35s cubic-bezier(.3,0,.2,1)}
+    align-items:center;justify-content:center}
   .slot svg{width:100%;height:100%}
   .slot svg *{stroke:rgba(255,255,255,.5);fill:none}
   .slot.sel svg *{stroke:#EAFFF1}
@@ -179,6 +179,14 @@
   .hero span{font-family:var(--display);font-size:17px;color:#fff}
   .hero em{font-family:var(--ui);font-style:normal;font-size:10px;
     font-weight:600;letter-spacing:.22em;color:rgba(255,255,255,.32)}
+  .hero b{font-family:var(--display);font-size:23px;
+    color:var(--green-lit);font-weight:400;letter-spacing:.01em}
+  .hero.set svg{width:42px;height:42px;
+    filter:drop-shadow(0 0 14px rgba(63,224,122,.3))}
+  .hero.set{gap:9px}
+  .hero.set span{font-size:14px;color:rgba(255,255,255,.62)}
+  @keyframes bumpk{0%{transform:rotate(0)}35%{transform:rotate(var(--bdir,2.5deg))}100%{transform:rotate(0)}}
+  #screenRoot.bump{animation:bumpk .18s ease-out}
 
   .setttl{position:absolute;left:0;right:0;top:40px;text-align:center;
     font-family:var(--ui);font-size:11px;font-weight:600;
@@ -244,6 +252,17 @@
     filter:drop-shadow(0 0 11px rgba(255,122,135,.55));
     animation:breathe 2.6s ease-in-out infinite}
   .starc.dim{background:rgba(255,255,255,.09)}
+  .starc.g{background:conic-gradient(var(--green-lit) 0 360deg);
+    filter:drop-shadow(0 0 9px rgba(63,224,122,.5))}
+  .step{position:absolute;left:0;right:0;top:50%;transform:translateY(-50%);
+    text-align:center;padding:0 40px}
+  .step p{margin:0 0 15px;font-family:var(--ui);font-size:11px;font-weight:600;
+    letter-spacing:.2em;color:rgba(255,255,255,.3)}
+  .step p:last-child{margin-bottom:0}
+  .step code{display:block;font-family:var(--mono);font-size:15px;color:#fff;
+    background:rgba(255,255,255,.09);border:1px solid rgba(255,255,255,.16);
+    border-radius:8px;padding:9px 6px;margin-top:6px}
+  .step code.dim{color:rgba(255,255,255,.5);font-size:13px}
   @keyframes breathe{0%,100%{opacity:1}50%{opacity:.5}}
   @media (prefers-reduced-motion:reduce){.starc.r{animation:none}}
   .mic{position:absolute;left:50%;top:112px;transform:translateX(-50%);
@@ -528,6 +547,9 @@ function MockEngine(){
       log("PUT /me/player/seek?position_ms="+Math.round(ms)+"  → 200"); },
     transfer:function(){ devIdx=(devIdx+1)%devices.length; stopped=false;
       log('PUT /me/player  {"device_ids":["'+devices[devIdx].id+'"]}  → 204 · now on '+devices[devIdx].name); },
+    wake:function(){ if(!stopped) return;
+      stopped=false; playing=true; posAt=now();
+      log('PUT /me/player  {"device_ids":["pc1"],"play":true}  → 204 · woke PC1'); },
     scenario:function(k){
       switch(k){
         case "pause": flush(); playing=false; log("· phone paused playback — next poll shows it"); break;
@@ -700,6 +722,25 @@ function RealEngine(){
             body:JSON.stringify({device_ids:[target.id]})}); });
       }catch(e){ log("transfer failed: "+e.message,true); }
     },
+    wake:async function(){
+      /* 204 does not have to be a dead end: any device with Spotify OPEN
+         (even idle) is in /devices, and a transfer with play:true starts it.
+         Only a closed app is unreachable — the API cannot launch one. */
+      try{
+        var r=await sfetch("/me/player/devices"); if(!r) return;
+        var j=await r.json(), ds=j.devices||[];
+        if(!ds.length){
+          log("· no Spotify app open on any device — the API cannot launch one",true);
+          return;
+        }
+        var d=ds[0];
+        cmd('PUT /me/player {"device_ids":["'+d.id+'"],"play":true} — wake '+d.name,function(){
+          return sfetch("/me/player",{method:"PUT",
+            headers:{"Content-Type":"application/json"},
+            body:JSON.stringify({device_ids:[d.id],play:true})});
+        });
+      }catch(e){ log("wake failed: "+e.message,true); }
+    },
     scenario:function(){ log("scenarios are for mock mode — Live reacts to your real Spotify"); }
   };
   return self;
@@ -712,9 +753,11 @@ var MIC_SVG='<svg viewBox="0 0 64 64"><path stroke-width="4.5" stroke-linecap="r
 var APPS=[
   {key:"spotify",name:"Spotify",
    svg:'<svg viewBox="0 0 24 24"><path d="M9 18V6l10-2v12" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/><circle cx="6.5" cy="18" r="2.5" stroke-width="1.7"/><circle cx="16.5" cy="16" r="2.5" stroke-width="1.7"/></svg>'},
+  {key:"wispr",name:"Wispr Flow",svg:MIC_SVG},
   {key:"clock",name:"Clock",
    svg:'<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" stroke-width="1.7"/><path d="M12 7v5.3l3.4 2" stroke-width="1.7" stroke-linecap="round"/></svg>'},
-  {key:"wispr",name:"Wispr Flow",svg:MIC_SVG},
+  {key:"launcher",name:"Launcher",
+   svg:'<svg viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="7" height="7" rx="1.6" stroke-width="1.7"/><rect x="13.5" y="3.5" width="7" height="7" rx="1.6" stroke-width="1.7"/><rect x="3.5" y="13.5" width="7" height="7" rx="1.6" stroke-width="1.7"/><rect x="13.5" y="13.5" width="7" height="7" rx="1.6" stroke-width="1.7"/></svg>'},
   {key:"settings",name:"Settings",
    svg:'<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3" stroke-width="1.7"/><path stroke-width="1.7" stroke-linejoin="round" d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>'}
 ];
@@ -750,16 +793,47 @@ function setBelieved(v){ wispr.believed=v; wispr.onSince=v?now():0; }
 var dictConfirm=0, joinState=null;
 var wag={lastDir:0,revs:[]};
 
-var SETTING_ITEMS=[
-  {key:"bright", label:"Brightness", val:function(){return settings.bright+"%";}},
-  {key:"sleep",  label:"Sleep",      val:function(){return settings.sleep.toUpperCase();}},
-  {key:"haptics",label:"Haptics",    val:function(){return settings.haptics.toUpperCase();}},
-  {key:"step",   label:"Dial step",  val:function(){return settings.step;}},
-  {key:"wifi",   label:"Wi-Fi",      val:function(){return "ON";}},
-  {key:"spotify",label:"Spotify",    val:function(){return reauthDays()+" D";}},
-  {key:"dict",   label:"Dictation",  val:function(){return wispr.paired?"PAIRED":"—";}},
-  {key:"about",  label:"About",      val:function(){return "";}}
+/* launcher (app 4): curated list + Task View legend. Labels are drawn,
+   chords are enums — nothing typed reaches the HID layer. */
+var LAUNCH_ITEMS=[
+  {label:"VS Code",chord:"Ctrl+Alt+V",
+   svg:'<svg viewBox="0 0 24 24"><path d="M8.6 7.5 4 12l4.6 4.5M15.4 7.5 20 12l-4.6 4.5" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/></svg>'},
+  {label:"Chrome",chord:"Ctrl+Alt+C",
+   svg:'<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" stroke-width="1.7"/><circle cx="12" cy="12" r="3.6" stroke-width="1.7"/><path d="M14.8 9.6H21M9.4 13.9 6.3 19.6M14.6 14 11.5 19.7" stroke-width="1.7" stroke-linecap="round"/></svg>'},
+  {label:"Slack",chord:"Ctrl+Alt+S",
+   svg:'<svg viewBox="0 0 24 24"><path d="M9 3.5 7.4 20.5M16.6 3.5 15 20.5M3.5 8.6h17M3.2 15.4h17" stroke-width="1.7" stroke-linecap="round"/></svg>'},
+  {label:"Obsidian",chord:"Ctrl+Alt+O",
+   svg:'<svg viewBox="0 0 24 24"><path d="M12 3 20 12l-8 9-8-9z" stroke-width="1.7" stroke-linejoin="round"/></svg>'},
+  {label:"Granola",chord:"Ctrl+Alt+G",
+   svg:'<svg viewBox="0 0 24 24"><rect x="5" y="3.5" width="14" height="17" rx="2.2" stroke-width="1.7"/><path d="M8.5 9h7M8.5 12.5h7M8.5 16h4" stroke-width="1.7" stroke-linecap="round"/></svg>'},
+  {label:"Terminal",chord:"Ctrl+Alt+T",
+   svg:'<svg viewBox="0 0 24 24"><rect x="3" y="4.5" width="18" height="15" rx="2.2" stroke-width="1.7"/><path d="M7.5 10l2.8 2.3-2.8 2.3M12.8 15.4h4" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>'},
+  {label:"Spotify",chord:"Win+1",
+   svg:'<svg viewBox="0 0 24 24"><path d="M9 18V6l10-2v12" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/><circle cx="6.5" cy="18" r="2.5" stroke-width="1.7"/><circle cx="16.5" cy="16" r="2.5" stroke-width="1.7"/></svg>'},
+  {label:"Task View",chord:"Win+Tab",task:true,
+   svg:'<svg viewBox="0 0 24 24"><rect x="3.5" y="7.5" width="12.5" height="12.5" rx="1.8" stroke-width="1.7"/><path d="M8 4.5h12.5V17" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>'}
 ];
+var LNCH_SEG=45, LNCH_ARC=37.8;
+var launcher={idx:0,from:null,target:""};
+
+var NOTE_SVG='<svg viewBox="0 0 24 24"><path d="M9 18V6l10-2v12" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/><circle cx="6.5" cy="18" r="2.5" stroke-width="1.7"/><circle cx="16.5" cy="16" r="2.5" stroke-width="1.7"/></svg>';
+var SETTING_ITEMS=[
+  {key:"bright", label:"Brightness", val:function(){return settings.bright+"%";},
+   svg:'<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="4" stroke-width="1.7"/><path d="M12 2.5v2.6M12 18.9v2.6M4.2 4.2l1.9 1.9M17.9 17.9l1.9 1.9M2.5 12h2.6M18.9 12h2.6M4.2 19.8l1.9-1.9M17.9 6.1l1.9-1.9" stroke-width="1.7" stroke-linecap="round"/></svg>'},
+  {key:"sleep",  label:"Sleep",      val:function(){return settings.sleep.toUpperCase();},
+   svg:'<svg viewBox="0 0 24 24"><path d="M20 14.5A8.5 8.5 0 0 1 9.5 4a8.5 8.5 0 1 0 10.5 10.5z" stroke-width="1.7" stroke-linejoin="round"/></svg>'},
+  {key:"haptics",label:"Haptics",    val:function(){return settings.haptics.toUpperCase();},
+   svg:'<svg viewBox="0 0 24 24"><rect x="9.5" y="6" width="5" height="12" rx="2" stroke-width="1.7"/><path d="M5.5 9v6M3 10.5v3M18.5 9v6M21 10.5v3" stroke-width="1.7" stroke-linecap="round"/></svg>'},
+  {key:"step",   label:"Dial step",  val:function(){return settings.step;},
+   svg:'<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="7" stroke-width="1.7"/><path d="M12 5.2v2.6" stroke-width="2" stroke-linecap="round"/><path d="M19 12h1.6M3.4 12H5M12 19v1.6" stroke-width="1.7" stroke-linecap="round"/></svg>'},
+  {key:"wifi",   label:"Wi-Fi",      val:function(){return "ON";},
+   svg:'<svg viewBox="0 0 24 24"><path d="M3 9.5a14 14 0 0 1 18 0M6.2 13a9.5 9.5 0 0 1 11.6 0M9.4 16.4a5 5 0 0 1 5.2 0" stroke-width="1.7" stroke-linecap="round"/><circle cx="12" cy="19.4" r="1.1" stroke-width="1.6"/></svg>'},
+  {key:"spotify",label:"Spotify",    val:function(){return reauthDays()+" D";},svg:NOTE_SVG},
+  {key:"dict",   label:"Dictation",  val:function(){return wispr.paired?"PAIRED":"—";},svg:MIC_SVG},
+  {key:"about",  label:"About",      val:function(){return "";},
+   svg:'<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" stroke-width="1.7"/><path d="M12 11.2v5.8" stroke-width="1.7" stroke-linecap="round"/><circle cx="12" cy="7.6" r="1" stroke-width="1.5"/></svg>'}
+];
+var SET_SEG=45, SET_ARC=37.8;
 function reauthDays(){
   var death=new Date("2027-02-27").getTime();
   return Math.max(0,Math.round((death-now())/86400000));
@@ -888,51 +962,81 @@ function renderExpired(){
     '<div class="addr">radial.local</div><p class="warn">Run reauth on your PC</p></div>';
 }
 
-/* apps sit on a fan segment around the marker, not spread over the compass */
-var SEL_SEG=36;
-function slotCls(i){
-  return "slot"+(i===S.selIdx?" sel":(Math.abs(i-S.selIdx)>1?" later":""));
-}
-function renderSelector(){
-  var n=APPS.length;
-  var slots=APPS.map(function(a,i){
-    var ang=i*SEL_SEG, ring=-S.selIdx*SEL_SEG;
-    return '<div class="'+slotCls(i)+'" data-slot="'+i+'" '+
-      'style="transform:rotate('+ang+'deg) translateY(-126px)">'+
-      '<i style="transform:translate(-50%,-50%) rotate('+(-(ang+ring))+'deg)">'+a.svg+"</i></div>";
+/* rev U: rings everywhere — full rim, wrapping, one mechanic three times over */
+function ringHtml(items,sel,spacing,arc){
+  var slots=items.map(function(it,i){
+    return '<div class="slot'+(i===sel?" sel":"")+'" data-slot="'+i+'" '+
+      'style="transform:rotate('+(i*spacing)+'deg) translateY(-126px)">'+
+      '<i style="transform:translate(-50%,-50%) rotate('+(-(i*spacing-sel*spacing))+'deg)">'+it.svg+"</i></div>";
   }).join("");
+  return '<div class="selground"></div>'+
+    '<div class="selarc" style="background:conic-gradient(from -'+(arc/2)+
+    'deg,var(--green-lit) 0 '+arc+'deg,transparent '+arc+'deg)"></div>'+
+    '<div class="marker"></div>'+
+    '<div class="ringwrap" id="ring" style="transform:rotate('+(-sel*spacing)+'deg)">'+slots+"</div>";
+}
+/* rot is cumulative so the ring keeps turning the way you scroll —
+   the index wraps underneath, the rotation never rewinds.
+   Motion is a critically-damped chase toward the target angle (the
+   crown/bezel pattern): starts instantly, settles gently, retargets
+   cleanly however fast the detents arrive. */
+var ringM={disp:0,target:0,spacing:0};
+function ringSet(spacing,rot,immediate){
+  ringM.spacing=spacing; ringM.target=rot;
+  if(immediate){ ringM.disp=rot; ringFrame(true); }
+}
+function ringClasses(sel){
+  var ring=$("ring"); if(!ring) return false;
+  var slots=ring.children;
+  for(var i=0;i<slots.length;i++)
+    slots[i].className="slot"+(i===sel?" sel":"");
+  return true;
+}
+function ringFrame(force){
+  var ring=$("ring"); if(!ring) return;
+  var d=ringM.target-ringM.disp;
+  if(!force&&Math.abs(d)<0.05){
+    if(ringM.disp===ringM.target) return;
+    ringM.disp=ringM.target;
+  }else if(!force) ringM.disp+=d*0.25;
+  ring.style.transform="rotate("+ringM.disp+"deg)";
+  var slots=ring.children;
+  for(var i=0;i<slots.length;i++)
+    slots[i].firstChild.style.transform=
+      "translate(-50%,-50%) rotate("+(-(i*ringM.spacing+ringM.disp))+"deg)";
+}
+
+var SEL_SEG=72, SEL_ARC=28;
+var selRot=0, setRot=0, lnchRot=0;
+function renderSelector(){
+  selRot=-S.selIdx*SEL_SEG;
   var a=APPS[S.selIdx];
-  root.innerHTML='<div class="selground"></div><div class="selarc"></div><div class="marker"></div>'+
-    '<div class="ringwrap" id="ring" style="transform:rotate('+(-S.selIdx*SEL_SEG)+'deg)">'+slots+"</div>"+
-    '<div class="hero" id="selHero"><div id="selGlyph">'+a.svg+"</div><span>"+a.name+"</span>"+
-    "<em>"+(S.selIdx+1)+" OF "+n+"</em></div>";
+  root.innerHTML=ringHtml(APPS,S.selIdx,SEL_SEG,SEL_ARC)+
+    '<div class="hero" id="selHero">'+a.svg+"<span>"+a.name+"</span>"+
+    "<em>"+(S.selIdx+1)+" OF "+APPS.length+"</em></div>";
+  ringSet(SEL_SEG,selRot,true);
 }
 function updateSelector(){
-  var ring=$("ring");
-  if(!ring){ renderSelector(); return; }
-  ring.style.transform="rotate("+(-S.selIdx*SEL_SEG)+"deg)";
-  var slots=ring.children;
-  for(var i=0;i<slots.length;i++){
-    slots[i].className=slotCls(i);
-    slots[i].firstChild.style.transform=
-      "translate(-50%,-50%) rotate("+(-(i*SEL_SEG-S.selIdx*SEL_SEG))+"deg)";
-  }
-  var a=APPS[S.selIdx], hero=$("selHero");
-  hero.innerHTML="<div>"+a.svg+"</div><span>"+a.name+"</span><em>"+(S.selIdx+1)+" OF "+APPS.length+"</em>";
+  if(!ringClasses(S.selIdx)){ renderSelector(); return; }
+  ringSet(SEL_SEG,selRot);
+  var a=APPS[S.selIdx];
+  $("selHero").innerHTML=a.svg+"<span>"+a.name+"</span><em>"+
+    (S.selIdx+1)+" OF "+APPS.length+"</em>";
 }
 
 function renderSettingsList(){
-  var rows="";
-  for(var i=S.setIdx-2;i<=S.setIdx+2;i++){
-    var cls=i===S.setIdx?"cur":(Math.abs(i-S.setIdx)===1?"near":"far");
-    if(i<0||i>=SETTING_ITEMS.length){ rows+='<div class="srow '+cls+'">&nbsp;</div>'; continue; }
-    var it=SETTING_ITEMS[i], v=it.val();
-    rows+='<div class="srow '+cls+'">'+it.label+(v?"<v>"+v+"</v>":"")+"</div>";
-  }
-  var arcRot=(S.setIdx/(SETTING_ITEMS.length-1))*250;
-  root.innerHTML='<div class="selground"></div>'+
-    '<div class="scrollarc" style="transform:rotate('+arcRot+'deg)"></div>'+
-    '<p class="setttl">SETTINGS</p><div class="slist">'+rows+"</div>";
+  setRot=-S.setIdx*SET_SEG;
+  var it=SETTING_ITEMS[S.setIdx], v=it.val();
+  root.innerHTML=ringHtml(SETTING_ITEMS,S.setIdx,SET_SEG,SET_ARC)+
+    '<div class="hero set" id="setHero">'+it.svg+"<span>"+it.label+"</span>"+
+    (v?"<b>"+v+"</b>":"")+"</div>";
+  ringSet(SET_SEG,setRot,true);
+}
+function updateSettingsRing(){
+  if(!ringClasses(S.setIdx)){ renderSettingsList(); return; }
+  ringSet(SET_SEG,setRot);
+  var it=SETTING_ITEMS[S.setIdx], v=it.val();
+  $("setHero").innerHTML=it.svg+"<span>"+it.label+"</span>"+(v?"<b>"+v+"</b>":"");
 }
 
 function renderSettingsItem(){
@@ -1048,13 +1152,49 @@ function renderJoin(){
     '<div class="joinlist">'+rows+"</div>";
 }
 
+/* launcher screens 15 A / 15 B / 15 C */
+function renderLauncherList(){
+  lnchRot=-launcher.idx*LNCH_SEG;
+  var it=LAUNCH_ITEMS[launcher.idx];
+  root.innerHTML=ringHtml(LAUNCH_ITEMS,launcher.idx,LNCH_SEG,LNCH_ARC)+
+    '<div class="hero" id="lnchHero">'+it.svg+"<span>"+esc(it.label)+"</span>"+
+    "<em>"+(launcher.idx+1)+" OF "+LAUNCH_ITEMS.length+"</em></div>";
+  ringSet(LNCH_SEG,lnchRot,true);
+}
+function updateLauncherRing(){
+  if(!ringClasses(launcher.idx)){ renderLauncherList(); return; }
+  ringSet(LNCH_SEG,lnchRot);
+  var it=LAUNCH_ITEMS[launcher.idx];
+  $("lnchHero").innerHTML=it.svg+"<span>"+esc(it.label)+"</span><em>"+
+    (launcher.idx+1)+" OF "+LAUNCH_ITEMS.length+"</em>";
+}
+function renderLaunching(){
+  /* "Launching", never "launched" — the device only knows a keystroke went */
+  root.innerHTML='<div class="selground"></div><div class="starc g"></div>'+
+    '<div class="stcen" style="top:180px"><b>Launching</b><s>'+esc(launcher.target)+"</s></div>";
+}
+function renderTaskview(){
+  /* a legend, not a display — you are looking at the monitor */
+  root.innerHTML='<div class="selground"></div>'+
+    '<p class="setttl" style="color:var(--green-lit)">TASK VIEW</p>'+
+    '<div class="step"><p>DIAL<code class="dim">move</code></p>'+
+    '<p>TAP<code class="dim">select</code></p></div>'+
+    '<p class="hint">HOLD TO CANCEL</p>';
+}
+function exitTaskview(){
+  if(!(S.app==="launcher"&&S.screen==="taskview")) return;
+  log("BLE HID ▸ Esc — Task View closed");
+  var f=launcher.from||{app:"spotify",screen:"now"};
+  goto_(f.app,f.screen,f.itemKey);
+}
+
 /* ---------- render dispatch ---------- */
 
 function sig(){
   var c=es();
   return [S.asleep,S.app,S.screen,S.itemKey,S.selIdx,S.setIdx,S.assignment,S.dialMode,
     settings.sleep,settings.haptics,settings.step,settings.bright,
-    wispr.believed,wispr.paired,
+    wispr.believed,wispr.paired,launcher.idx,
     (S.screen==="join"&&joinState)?joinState.steps.join("")+(joinState.done?"D":""):"",
     c.ok?[c.trackId,c.playing,c.deviceId,c.supportsVolume,c.isAd,c.artUrl].join("|"):c.reason
   ].join("~");
@@ -1069,6 +1209,11 @@ function render(){
   if(S.screen==="selector"){ renderSelector(); }
   else if(S.app==="clock"){ renderIdle(c.ok?c:null); }
   else if(S.app==="wispr"){ renderWispr(); }
+  else if(S.app==="launcher"){
+    if(S.screen==="launching") renderLaunching();
+    else if(S.screen==="taskview") renderTaskview();
+    else renderLauncherList();
+  }
   else if(S.app==="settings"){
     if(S.screen==="list") renderSettingsList();
     else if(S.screen==="config") renderConfig();
@@ -1097,6 +1242,7 @@ function goto_(app,screen,itemKey){
 }
 
 function openSelector(){
+  if(S.app==="launcher"&&S.screen==="taskview"){ exitTaskview(); return; }
   if(S.screen==="selector") return closeSelector();
   S.selectorFrom={app:S.app,screen:S.screen,itemKey:S.itemKey};
   S.selIdx=APPS.findIndex(function(a){return a.key===S.app;});
@@ -1112,6 +1258,13 @@ function enterApp(){
   if(a==="spotify") goto_("spotify","now");
   else if(a==="clock") goto_("clock","clock");
   else if(a==="wispr") goto_("wispr","wispr");
+  else if(a==="launcher"){
+    launcher.idx=0;
+    var f=(S.selectorFrom&&S.selectorFrom.app!=="launcher")?S.selectorFrom:{app:"spotify",screen:"now"};
+    launcher.from={app:f.app,
+      screen:(f.screen==="dial"||f.screen==="selector")?"now":f.screen,itemKey:f.itemKey};
+    goto_("launcher","list");
+  }
   else { S.setIdx=0; goto_("settings","list"); }
 }
 
@@ -1129,14 +1282,26 @@ function onDial(dir){
   if(feedWaggle(dir)) return;
   var c=cur();
   if(S.screen==="selector"){
-    /* fan segment: hard stops at the ends, no wrap */
-    var ni=clamp(S.selIdx+dir,0,APPS.length-1);
-    if(ni!==S.selIdx){ S.selIdx=ni; haptic(); updateSelector(); }
-    arm("auto",4000,closeSelector);
+    /* a ring has no ends — it wraps, and the rotation carries on forward */
+    S.selIdx=(S.selIdx+dir+APPS.length)%APPS.length;
+    selRot-=dir*SEL_SEG;
+    haptic(); updateSelector(); arm("auto",4000,closeSelector);
     return;
   }
   if(S.app==="clock") return;
   if(S.app==="wispr"){ wisprDial(dir); return; }
+  if(S.app==="launcher"){
+    if(S.screen==="list"){
+      launcher.idx=(launcher.idx+dir+LAUNCH_ITEMS.length)%LAUNCH_ITEMS.length;
+      lnchRot-=dir*LNCH_SEG;
+      haptic(); updateLauncherRing();
+    }else if(S.screen==="taskview"){
+      haptic();
+      log("BLE HID ▸ "+(dir>0?"Right":"Left")+" arrow — Task View");
+      arm("auto",5000,exitTaskview);
+    }
+    return;
+  }
   if(S.app==="settings"){ settingsDial(dir,c); return; }
 
   /* spotify */
@@ -1146,14 +1311,21 @@ function onDial(dir){
   haptic();
   if(mode==="volume"){
     var step=parseInt(settings.step,10)||5;
-    var v=clamp((opt.volume!=null?opt.volume:c.volume)+dir*step,0,100);
-    opt.volume=v;
-    queueWrite("volume",v,function(){ engine.setVolume(v); });
+    var v0=opt.volume!=null?opt.volume:c.volume;
+    var v=clamp(v0+dir*step,0,100);
+    if(v===v0){ bump(dir); }
+    else{
+      opt.volume=v;
+      queueWrite("volume",v,function(){ engine.setVolume(v); });
+    }
   }else{
     var base=opt.progressMs!=null?opt.progressMs:progressNow(c);
     var p=clamp(base+dir*10000,0,c.durationMs);
-    opt.progressMs=p; opt.progressAt=now();
-    queueWrite("seek",p,function(){ engine.seek(p); });
+    if(p===base){ bump(dir); }
+    else{
+      opt.progressMs=p; opt.progressAt=now();
+      queueWrite("seek",p,function(){ engine.seek(p); });
+    }
   }
   updateDial(cur());
   arm("auto",2000,function(){
@@ -1171,14 +1343,17 @@ function queueWrite(kind,value,fn){
 
 function settingsDial(dir,c){
   if(S.screen==="list"){
-    var n=clamp(S.setIdx+dir,0,SETTING_ITEMS.length-1);
-    if(n!==S.setIdx){ S.setIdx=n; haptic(); renderSettingsList(); }
+    S.setIdx=(S.setIdx+dir+SETTING_ITEMS.length)%SETTING_ITEMS.length;
+    setRot-=dir*SET_SEG;
+    haptic(); updateSettingsRing();
     return;
   }
   if(S.screen!=="item") return;
   switch(S.itemKey){
     case "bright":
+      var b0=settings.bright;
       settings.bright=clamp(settings.bright+dir*5,10,100);
+      if(settings.bright===b0){ bump(dir); break; }
       haptic(); renderSettingsItem();
       $("dimmer").style.opacity=((100-settings.bright)*0.007).toFixed(3);
       break;
@@ -1190,6 +1365,16 @@ function settingsDial(dir,c){
 function enumDial(opts,key,dir){
   var i=clamp(opts.indexOf(settings[key])+dir,0,opts.length-1);
   if(opts[i]!==settings[key]){ settings[key]=opts[i]; haptic(); renderSettingsItem(); }
+  else bump(dir);   /* hard stop: the detent lands on nothing, and you feel it */
+}
+
+/* end-stop feedback: a small rotational shove plus a firm haptic */
+function bump(dir){
+  root.classList.remove("bump");
+  void root.offsetWidth;
+  root.style.setProperty("--bdir",(dir>0?2.5:-2.5)+"deg");
+  root.classList.add("bump");
+  haptic(true);
 }
 
 /* ---------- wispr: direction mapping, waggle, BLE combo ---------- */
@@ -1373,6 +1558,32 @@ function onTap(){
     haptic(true); render();
     return;
   }
+  if(S.app==="launcher"){
+    if(S.screen==="list"){
+      var li=LAUNCH_ITEMS[launcher.idx];
+      if(li.task){
+        log("BLE HID ▸ Win+Tab — Task View opens on the PC");
+        haptic(true);
+        goto_("launcher","taskview");
+        arm("auto",5000,exitTaskview);
+      }else{
+        launcher.target=li.label;
+        log("BLE HID ▸ "+li.chord+" — launch "+li.label+" (open-loop: sent, never confirmed)");
+        haptic(true);
+        goto_("launcher","launching");
+        arm("auto",1500,function(){
+          var f=launcher.from||{app:"spotify",screen:"now"};
+          goto_(f.app,f.screen,f.itemKey);
+        });
+      }
+    }else if(S.screen==="taskview"){
+      log("BLE HID ▸ Enter — window selected, Task View closes");
+      haptic(true);
+      var f=launcher.from||{app:"spotify",screen:"now"};
+      goto_(f.app,f.screen,f.itemKey);
+    }
+    return;
+  }
   if(S.app==="settings"){
     if(S.screen==="list"){
       var it=SETTING_ITEMS[S.setIdx];
@@ -1395,7 +1606,10 @@ function onTap(){
   }
   /* spotify */
   var c=cur();
-  if(!c.ok) return;                    // idle 204 / expired: touch only wakes
+  if(!c.ok){
+    if(c.reason==="204") engine.wake();   // start playback on any open device
+    return;                               // expired: nothing to tap
+  }
   if(S.screen==="now"||S.screen==="dial") goto_("spotify","controls");
 }
 
@@ -1412,7 +1626,7 @@ function anyInput(){
 device.addEventListener("wheel",function(e){
   e.preventDefault();
   if(anyInput()) return;
-  wheelAcc+=e.deltaY;
+  wheelAcc-=e.deltaY;   /* scroll forward = up/clockwise, back = down */
   while(Math.abs(wheelAcc)>=40){
     var dir=wheelAcc>0?1:-1; wheelAcc-=40*dir;
     bezelRot+=dir*15;
@@ -1436,9 +1650,11 @@ device.addEventListener("click",function(e){
   if(lpFired){ lpFired=false; return; }
   if(anyInput()) return;
   var sl=e.target.closest("[data-slot]");
-  if(sl&&S.screen==="selector"){
-    S.selIdx=+sl.getAttribute("data-slot");
-    haptic(); enterApp(); return;
+  if(sl){
+    var si=+sl.getAttribute("data-slot");
+    if(S.screen==="selector"){ S.selIdx=si; haptic(); enterApp(); return; }
+    if(S.app==="settings"&&S.screen==="list"){ S.setIdx=si; haptic(); onTap(); return; }
+    if(S.app==="launcher"&&S.screen==="list"){ launcher.idx=si; haptic(); onTap(); return; }
   }
   var el=e.target.closest("[data-act]");
   if(el) onAct(el.getAttribute("data-act"));
@@ -1574,6 +1790,7 @@ var reduce=window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 var t0=performance.now(), lastFrame=0;
 (function loop(t){
   requestAnimationFrame(loop);
+  if(!S.asleep) ringFrame();
   if(t-lastFrame<200) return;
   lastFrame=t;
   var cv=$("idleCanvas");
