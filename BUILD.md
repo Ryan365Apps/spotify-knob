@@ -84,7 +84,7 @@ This is forced by R6. Because audio plays on a phone or a speaker, anything that
 | Second MCU | ESP32-U4WDH, 4 MB flash. Provides **Classic Bluetooth (BR/EDR)**, which the S3 lacks — the S3 is BLE-only — and drives the audio subsystem. Unused here; UART link on GPIO48/38 |
 | Display | 1.8" round, 360×360, **ST77916** driver, QSPI bus |
 | Touch | **CST816** capacitive, I2C |
-| Encoder | Mechanical rotary, quadrature, **no push switch** |
+| Encoder | **Not quadrature** (corrected 2026-09-02, Wave 2 checkpoint D): two SSCM110100 bidirectional detector switches — one pulse line per direction of rotation. Read by the ported Waveshare driver `firmware/knob/main/bidi_knob.c`; the espressif/knob quadrature component cannot decode it. **No push switch** |
 | Haptics | DRV2605 over I2C — used for detent feedback |
 | Audio | PCM5100A I2S DAC, PDM mic, 3.5 mm jack — unused here |
 | Power | USB-C, plus PH1.25 Li-ion socket. Desk use = USB-C permanently |
@@ -221,7 +221,7 @@ Both write once, 400 ms after the last detent. Spin freely; the screen updates l
 
 The Galaxy Watch bezel model, which is what a round screen and a rotary encoder are for.
 
-- App glyphs sit around the rim, one per app at 72°, with the selected app under a fixed marker at twelve o'clock and its name filling the centre. Five slots at 72° is close to the practical limit for a rim; a sixth app would want a different pattern, and that is the constraint R9 was written to expose.
+- App glyphs sit around the rim, one per app at 72°. Selection is a single green dot above twelve o'clock with the glyph beneath it lit and glowing; every other glyph fades with angular distance — full at twelve, barely there at six. No arc, no ticks: one mark, one meaning. Five slots at 72° is close to the practical limit for a rim; a sixth app would want a different pattern, and that is the constraint R9 was written to expose.
 - **Dial → one app per detent, with a haptic click on each.** The ring turns under the marker rather than the marker moving, and it **wraps** — a ring has no ends, so it never bumps.
 - **Selection is a green dot at twelve, and a glow on the glyph beneath it.** Two signals, one meaning. An earlier draft carried a dot, twin tick marks *and* a conic arc; three marks for one selection is two too many, and the extras read as decoration rather than state.
 - **Rim glyphs fade with angular distance from the dot** — full at twelve, about 12% at six. It puts the eye where the selection is, and it makes the foot of the circle recede so the back chevron is the only lit thing down there. The curve is `0.12 + 0.88 × (1 − d)^1.6`, with `d` the angular distance normalised so six o'clock is 1.
@@ -765,7 +765,7 @@ This screen is the recovery documentation. It should never be seen, and it must 
 | Launcher chords go stale when the taskbar is reordered | Wrong app launches, silently | `Win`+`N` is inherently positional. Prefer `Ctrl`+`Alt` shortcut keys on `.lnk` files for anything you care about — those follow the file, not the position |
 | A chord fires while the PC is locked or asleep | Nothing happens, and the device cannot say why | Accepted, not solved. The launcher is open-loop by design, which is why the confirmation says "Launching" and never "Launched" |
 | A config-page endpoint that forwards text to the HID layer | Remote code execution on the PC from anywhere on the LAN | Architectural rule in section 6: the HID layer accepts a fixed action enum, never a string. Check for this in review, not at runtime |
-| Encoder emits phantom counts on fast reversal | Volume drifts on every correction, and the waggle's net-zero safety argument fails | Measured at Wave 2 checkpoint D4, before anything depends on it |
+| Encoder emits phantom counts on fast reversal (**confirmed, Wave 2 D4, 2026-09-02**: drift +2,+1,0,−2,0,+1,+1,+2,+3,+4 over ten fast waggles, clockwise bias, worst +4) | The waggle's net-zero safety argument is void as written; slow single detents count exactly, so ordinary corrections are barely exposed | Section 5 amendment required before Wave 10: the gesture detector must swallow a recognised waggle's detents rather than rely on cancellation; the leak case is a waggle that fails recognition. One driver-tuning experiment (poll/debounce in `bidi_knob.c`) also worth trying |
 | Waggle fires during a genuine volume correction | Dictation starts while you are turning the music down | Threshold is the gap between reversals, not their count; tuned on hardware against 200 real corrections in Wave 10 |
 | BLE HID reconnect after PC sleep | Dictation trigger dead until replug | Windows is unreliable here. If it proves bad, Classic BT HID on the second MCU (UART, GPIO48/38) is the fallback — more work, better reconnect |
 | BLE and Wi-Fi contending for one radio | Album art visibly slower | Measured in Wave 10; BLE can be scoped to the Wispr app if the numbers are bad |
@@ -779,139 +779,11 @@ This screen is the recovery documentation. It should never be seen, and it must 
 
 > This section always describes **only the wave being worked on right now**. When the wave is done, it is deleted and replaced with the next one. Nothing accumulates here.
 
-### Wave 2 — Board bring-up
+### Wave 2 — Board bring-up — in progress, see `WAVE-2.md`
 
-**Goal:** every piece of hardware this project touches — screen, touch, dial — proven working under LVGL.
+The wave is being worked at the bench and has grown step-level detail — code blocks, exact commands, a pass test per step — that this document does not need to keep. All of it lives in **`WAVE-2.md`** at the repo root. When the wave is done, its results (including the measured encoder drift from the reversal test, step D4) are written back here and that file is deleted.
 
-**This wave needs the board.** It is written to be worked through in order the day it arrives.
-
-**Dependency check — PASSED 2026-08-31.** `firmware/knob/` builds clean against ESP-IDF v5.5.5: all ten dependencies resolved, everything compiled and linked, `knob.bin` at 214 KB with 95% of the app partition free. The only failure it produced was a missing `espressif/button`, now fixed and explained in section 4.
-
-Everything from Checkpoint A onwards needs the board. Nothing else can be done before it arrives.
-
-**Approach:** four checkpoints, each verified before starting the next. Bringing up a QSPI display, an I2C touch controller and an encoder simultaneously and then asking "why is the screen black" is the slow way to do this.
-
-Run every command from the **ESP-IDF 5.5 PowerShell** shortcut.
-
----
-
-#### Checkpoint A — Reach the right chip
-
-**A1.** Plug the board in with a USB-C cable you know carries data.
-
-**A2.** Open Device Manager (Win+X, then M). Look under **Ports (COM & LPT)** and **Universal Serial Bus devices**:
-
-| What you see | Meaning | Action |
-|---|---|---|
-| `USB JTAG/serial debug unit` | You have the ESP32-S3. Correct. | Note the COM port, continue |
-| A CH340 or CP210x COM port | Probably the *second* microcontroller | **Unplug, flip the USB-C connector over, plug back in** |
-| Nothing | Charge-only cable, or no driver | Try a different cable first |
-
-This board has two microcontrollers sharing one USB-C socket and the orientation decides which one you reach. If anything below fails to connect, flip the cable before debugging anything else.
-
-**A3.** Build and flash the stock example:
-
-```powershell
-cd D:\Projects\PROD\spotify-knob\firmware
-Copy-Item -Recurse "$env:IDF_PATH\examples\get-started\hello_world" .
-cd hello_world
-idf.py set-target esp32s3
-idf.py menuconfig
-```
-
-In menuconfig: **Component config** → **ESP PSRAM** → enable **Support for external, SPI-connected RAM** → **SPI RAM config** → **Mode of SPI RAM chip** → **Octal Mode PSRAM**. Press `Q` then `Y`.
-
-```powershell
-idf.py -p COM7 flash monitor
-```
-
-If it hangs on `Connecting......_____`: **flip the USB-C connector.** There is no BOOT or RESET button on this board (see section 3), so there is no button sequence to fall back on — the S3's native USB handles download mode by itself when you are talking to the right chip. A hang almost always means you are talking to the other one.
-
-**Checkpoint A done when** the boot log contains both:
-
-```
-ESP-ROM:esp32s3-...
-I (xxx) esp_psram: Found 8MB PSRAM device
-```
-
-`Ctrl+]` exits the monitor. If PSRAM reports 2 MB or is missing, octal mode is not set or you are on the wrong chip.
-
----
-
-#### Checkpoint B — The screen lights up
-
-**B1.** Create the real project alongside it:
-
-```powershell
-cd D:\Projects\PROD\spotify-knob\firmware
-idf.py create-project knob
-cd knob
-idf.py set-target esp32s3
-```
-
-**B2.** Create `main/idf_component.yml` with the dependency list from section 4 of this document. Run `idf.py reconfigure` — it downloads them into `managed_components/`, which `.gitignore` already excludes.
-
-**B3.** Backlight first, because it is the simplest thing that proves you are talking to the board. Configure **GPIO47** as an LEDC PWM output and set it to 50%.
-
-**Do not skip to the panel.** If the backlight does not respond, nothing else will work and you have learned it in five lines instead of two hundred.
-
-**B4.** Now the panel. Using `esp_lcd_st77916`:
-
-- QSPI bus on SPI2: SCLK **13**, data lines **15, 16, 17, 18**
-- Panel CS **14**, reset **21**
-- 360×360, RGB565
-- The vendor config must set `flags.use_qspi_interface = 1` — this is the single most common reason an ST77916 stays black
-
-Fill the screen red, then green, then blue, two seconds apart.
-
-**Checkpoint B done when** the display cycles three solid colours cleanly, with no tearing, offset or missing edges. An offset image means the panel gap/offset values need adjusting; cross-check against Waveshare's own ESP-IDF demo for this board before inventing values.
-
----
-
-#### Checkpoint C — LVGL and touch
-
-**C1.** Add `esp_lvgl_port`. Register the panel with `lvgl_port_add_disp()`. Use partial buffers — roughly 1/10 of the screen — allocated in internal DMA-capable RAM, not PSRAM.
-
-**C2.** Draw a centred label reading `hello`.
-
-**C3.** Add touch: `esp_lcd_touch_cst816s` on I2C — SDA **11**, SCL **12**, interrupt **9**, reset **10**, 400 kHz. Register it with `lvgl_port_add_touch()`.
-
-**C4.** Replace the label with an `lv_button` that changes colour when pressed.
-
-**Checkpoint C done when** the button responds to touch anywhere on its face and the touch coordinates are not mirrored or rotated. If pressing the top of the screen activates something at the bottom, the touch driver's swap/mirror flags need to match the panel's.
-
----
-
-#### Checkpoint D — The dial
-
-**D1.** Encoder A on **8**, B on **7**. `espressif/button` is in the dependency list for compile reasons only — do not wire it to anything.
-
-**D2.** Register with `lvgl_port_add_encoder()`, passing a knob handle and no button handle.
-
-**D3.** Test UI: a large number in the centre. Clockwise increments, anticlockwise decrements.
-
-**Checkpoint D done when** both directions are correct and one physical detent produces exactly one step — not two, not none. If a single detent moves the number by two, the knob component needs its counting mode adjusted.
-
-**D4 — the reversal test.** Zero the counter, then waggle the dial fast left-right-left-right and stop. **The counter must return to zero.** Cheap encoders emit phantom counts when direction changes at speed, and if this one does, two things break at once: volume accuracy during any correction, and the waggle gesture in section 5 — whose entire safety argument is that a waggle nets to zero. Record the drift over ten waggles in this document. Anything other than zero is a finding, not a rounding error.
-
----
-
-#### Checkpoint E — Haptics on the touch bus
-
-The DRV2605 shares I²C with the touch controller. Add it to the **same** bus handle and fire one click per detent.
-
-**Checkpoint E done when** turning the dial gives one crisp click per step and touch still works. If touch dies the moment haptics initialise, two bus handles have been created where there should be one.
-
----
-
-### Done when
-
-- [ ] Boot log shows `esp32s3` and `Found 8MB PSRAM`
-- [ ] Screen cycles three solid colours with no offset
-- [ ] A touch button responds correctly across the whole screen
-- [ ] One detent of the dial moves the counter by exactly one, both directions
-- [ ] One haptic click per detent, with touch still working
-- [ ] Committed, with no `build/` or `managed_components/` in the commit
+**Status:** Checkpoint A (reach the right chip) passed 2026-09-02 — board on COM7, ESP32-S3 rev v0.2, 8 MB octal PSRAM verified. Checkpoint B (screen), C (LVGL and touch), D (dial) and E (haptics) remain.
 
 ---
 

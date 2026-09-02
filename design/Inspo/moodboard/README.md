@@ -11,6 +11,8 @@ What each reference contributes is captured in `../VISION.md` → "Aesthetic dir
 | `totem-steering-hub.jpg` | Totem GT Super — machined steering hub + gauges | Castellated/radial machining on a circular hub (→ top trim ring option) |
 | `totem-gt-super-rear.jpg` | Totem GT Super rear, deep blue over black ([source](https://www.carscoops.com/2025/03/totems-alfa-romeo-gt-super-restomod-has-a-twin-turbo-670-hp-v6/)) | Restomod attitude: dark mass, minimal graphics, circular red lamp rings = luminous accent on monochrome body |
 | `knurling-closeup.jpg`, `knurling-examples.jpg` | Knurling reference photos (Wikimedia Commons, free licence) | Diamond knurl pitch/depth reference for the knob's grip band |
+| `saab-900-restomod.png` | Matt-black Saab 900 turbo restomod render, front + rear ("ETW" watermark) | **The attitude anchor.** Matt black mass, minimal graphics, one continuous red light bar = the halo ring, wrapped into a circle |
+| `watch-chunky-bevel.png` | Skeleton watch, drilled chunky bezel, rose-gold dial accents | The wide 45° chamfer between texture and glass; drilled/castellated function-shapes; luminous warm accent on black |
 
 ## Still to drop in (originals not findable online — likely Instagram/AI renders)
 
@@ -19,6 +21,4 @@ What each reference contributes is captured in `../VISION.md` → "Aesthetic dir
 | `knurled-thumb-nut.jpg` | Knurled aluminium thread protector (Amazon listing) | The knob's diamond knurl — watch-bezel coarseness, grip without aggression |
 | `blue-spiral-puck.jpg` | Round-display desk gadget, blue anodise, spiral fluting | Proof of the round-screen-in-metal-ring form — and a warning: fluting + colour reads toy; we go knurl + monochrome |
 | `watch-knurled-bezel.jpg` | Skeleton watch, knurled/clous-de-Paris bezel | Bezel texture + rose-gold accents living against matt black |
-| `watch-chunky-bevel.jpg` | Skeleton watch, drilled chunky bezel | The wide 45° chamfer between texture and glass; castellated/drilled function-shapes |
 | `totem-alfa-central-lock.jpg` | Totem central-lock with Alfa badge (their Instagram) | Castellated radial machining; the exact "machined knob" hero shot |
-| `saab-900-restomod.jpg` | Matt-black Saab 900 turbo restomod render, full-width rear light bar ("ETW" watermark, likely Instagram) | Matt black mass + one continuous light bar = the halo ring |

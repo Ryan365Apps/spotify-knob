@@ -162,16 +162,16 @@
   .slot svg{width:100%;height:100%}
   .slot svg *{stroke:rgba(255,255,255,.5);fill:none}
   .slot.sel svg *{stroke:#EAFFF1}
-  .marker{position:absolute;left:50%;top:19px;transform:translateX(-50%);
-    width:30px;height:14px}
-  .marker::before,.marker::after{content:"";position:absolute;top:0;
-    width:2px;height:14px;background:var(--green-lit);border-radius:999px;opacity:.95}
-  .marker::before{left:0}.marker::after{right:0}
-  .selarc{position:absolute;inset:9px;border-radius:50%;
-    background:conic-gradient(from -17deg,var(--green-lit) 0 34deg,transparent 34deg);
-    -webkit-mask:radial-gradient(farthest-side,transparent calc(100% - 4px),#000 calc(100% - 4px));
-            mask:radial-gradient(farthest-side,transparent calc(100% - 4px),#000 calc(100% - 4px));
-    filter:drop-shadow(0 0 10px rgba(63,224,122,.55))}
+  .marker{position:absolute;left:50%;top:20px;transform:translateX(-50%);
+    width:9px;height:9px;border-radius:999px;background:var(--green-lit);
+    box-shadow:0 0 14px rgba(63,224,122,.9),0 0 30px rgba(63,224,122,.35)}
+  .slot.sel i{filter:drop-shadow(0 0 10px rgba(63,224,122,.8))
+    drop-shadow(0 0 22px rgba(63,224,122,.35))}
+  .backch{position:absolute;left:50%;transform:translateX(-50%);
+    bottom:38px;width:22px;height:22px;cursor:pointer}
+  .backch svg{width:100%;height:100%;fill:none;stroke:rgba(255,255,255,.36);
+    stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
+  .backzone{position:absolute;left:0;right:0;bottom:0;height:96px;cursor:pointer}
   .hero{position:absolute;inset:0;display:flex;flex-direction:column;
     align-items:center;justify-content:center;gap:13px;pointer-events:none}
   .hero svg{width:56px;height:56px;filter:drop-shadow(0 0 16px rgba(63,224,122,.4))}
@@ -813,7 +813,7 @@ var LAUNCH_ITEMS=[
   {label:"Task View",chord:"Win+Tab",task:true,
    svg:'<svg viewBox="0 0 24 24"><rect x="3.5" y="7.5" width="12.5" height="12.5" rx="1.8" stroke-width="1.7"/><path d="M8 4.5h12.5V17" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>'}
 ];
-var LNCH_SEG=45, LNCH_ARC=37.8;
+var LNCH_SEG=45;
 var launcher={idx:0,from:null,target:""};
 
 var NOTE_SVG='<svg viewBox="0 0 24 24"><path d="M9 18V6l10-2v12" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/><circle cx="6.5" cy="18" r="2.5" stroke-width="1.7"/><circle cx="16.5" cy="16" r="2.5" stroke-width="1.7"/></svg>';
@@ -833,7 +833,7 @@ var SETTING_ITEMS=[
   {key:"about",  label:"About",      val:function(){return "";},
    svg:'<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" stroke-width="1.7"/><path d="M12 11.2v5.8" stroke-width="1.7" stroke-linecap="round"/><circle cx="12" cy="7.6" r="1" stroke-width="1.5"/></svg>'}
 ];
-var SET_SEG=45, SET_ARC=37.8;
+var SET_SEG=45;
 function reauthDays(){
   var death=new Date("2027-02-27").getTime();
   return Math.max(0,Math.round((death-now())/86400000));
@@ -963,17 +963,23 @@ function renderExpired(){
 }
 
 /* rev U: rings everywhere — full rim, wrapping, one mechanic three times over */
-function ringHtml(items,sel,spacing,arc){
+/* rev W falloff: full at the dot, barely there opposite it */
+function slotOp(angleDeg){
+  var a=((angleDeg%360)+360)%360; if(a>180) a=360-a;
+  return (0.12+0.88*Math.pow(1-a/180,1.6)).toFixed(2);
+}
+function ringHtml(items,sel,spacing){
+  var rot=-sel*spacing;
   var slots=items.map(function(it,i){
     return '<div class="slot'+(i===sel?" sel":"")+'" data-slot="'+i+'" '+
-      'style="transform:rotate('+(i*spacing)+'deg) translateY(-126px)">'+
-      '<i style="transform:translate(-50%,-50%) rotate('+(-(i*spacing-sel*spacing))+'deg)">'+it.svg+"</i></div>";
+      'style="opacity:'+slotOp(i*spacing+rot)+';transform:rotate('+(i*spacing)+'deg) translateY(-126px)">'+
+      '<i style="transform:translate(-50%,-50%) rotate('+(-(i*spacing+rot))+'deg)">'+it.svg+"</i></div>";
   }).join("");
   return '<div class="selground"></div>'+
-    '<div class="selarc" style="background:conic-gradient(from -'+(arc/2)+
-    'deg,var(--green-lit) 0 '+arc+'deg,transparent '+arc+'deg)"></div>'+
     '<div class="marker"></div>'+
-    '<div class="ringwrap" id="ring" style="transform:rotate('+(-sel*spacing)+'deg)">'+slots+"</div>";
+    '<div class="ringwrap" id="ring" style="transform:rotate('+rot+'deg)">'+slots+"</div>"+
+    '<div class="backzone" data-act="back"></div>'+
+    '<div class="backch" data-act="back"><svg viewBox="0 0 24 24"><path d="M14.5 5 8 12l6.5 7"/></svg></div>';
 }
 /* rot is cumulative so the ring keeps turning the way you scroll —
    the index wraps underneath, the rotation never rewinds.
@@ -1001,17 +1007,19 @@ function ringFrame(force){
   }else if(!force) ringM.disp+=d*0.25;
   ring.style.transform="rotate("+ringM.disp+"deg)";
   var slots=ring.children;
-  for(var i=0;i<slots.length;i++)
+  for(var i=0;i<slots.length;i++){
+    slots[i].style.opacity=slotOp(i*ringM.spacing+ringM.disp);
     slots[i].firstChild.style.transform=
       "translate(-50%,-50%) rotate("+(-(i*ringM.spacing+ringM.disp))+"deg)";
+  }
 }
 
-var SEL_SEG=72, SEL_ARC=28;
+var SEL_SEG=72;
 var selRot=0, setRot=0, lnchRot=0;
 function renderSelector(){
   selRot=-S.selIdx*SEL_SEG;
   var a=APPS[S.selIdx];
-  root.innerHTML=ringHtml(APPS,S.selIdx,SEL_SEG,SEL_ARC)+
+  root.innerHTML=ringHtml(APPS,S.selIdx,SEL_SEG)+
     '<div class="hero" id="selHero">'+a.svg+"<span>"+a.name+"</span>"+
     "<em>"+(S.selIdx+1)+" OF "+APPS.length+"</em></div>";
   ringSet(SEL_SEG,selRot,true);
@@ -1027,7 +1035,7 @@ function updateSelector(){
 function renderSettingsList(){
   setRot=-S.setIdx*SET_SEG;
   var it=SETTING_ITEMS[S.setIdx], v=it.val();
-  root.innerHTML=ringHtml(SETTING_ITEMS,S.setIdx,SET_SEG,SET_ARC)+
+  root.innerHTML=ringHtml(SETTING_ITEMS,S.setIdx,SET_SEG)+
     '<div class="hero set" id="setHero">'+it.svg+"<span>"+it.label+"</span>"+
     (v?"<b>"+v+"</b>":"")+"</div>";
   ringSet(SET_SEG,setRot,true);
@@ -1156,7 +1164,7 @@ function renderJoin(){
 function renderLauncherList(){
   lnchRot=-launcher.idx*LNCH_SEG;
   var it=LAUNCH_ITEMS[launcher.idx];
-  root.innerHTML=ringHtml(LAUNCH_ITEMS,launcher.idx,LNCH_SEG,LNCH_ARC)+
+  root.innerHTML=ringHtml(LAUNCH_ITEMS,launcher.idx,LNCH_SEG)+
     '<div class="hero" id="lnchHero">'+it.svg+"<span>"+esc(it.label)+"</span>"+
     "<em>"+(launcher.idx+1)+" OF "+LAUNCH_ITEMS.length+"</em></div>";
   ringSet(LNCH_SEG,lnchRot,true);
@@ -1546,6 +1554,12 @@ function onAct(act){
       wispr.paired=true;
       log("· bonded to DESKTOP-PC — stored in NVS, reconnects on boot");
       renderSettingsItem(); break;
+    case "back":
+      /* the chevron: back out of the selector, or up to it from a ring */
+      haptic();
+      if(S.screen==="selector") closeSelector();
+      else openSelector();
+      break;
   }
 }
 

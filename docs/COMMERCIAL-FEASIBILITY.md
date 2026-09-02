@@ -84,25 +84,20 @@ A direct-to-consumer hardware product needs roughly **2.5–3× fully-loaded cos
 > **Pass:** landed cost per finished unit under £35 at 1,000 units.
 > **Fail:** over £50 — at which point no viable price point exists (Gate 2).
 
-### Gate 2 — The price must commit to one end of a barbell
+### Gate 2 — The price must commit to one end of a barbell — **RE-DERIVED 2026-09-01**
 
-The market is served at both ends and hollow in the middle:
+> **This gate was written for a mass-market accessory and concluded £120–160. The product has since become a limited premium run and the gate has been re-derived. The original reasoning is preserved below because it still holds for the market it described.**
 
-- **Commodity USB volume knobs**: $10–25 on Amazon, dozens of SKUs, plug-and-play, play/pause/skip/mute.
-- **Elgato Stream Deck+**: ~$160–200, four dials, touchscreen, plugin ecosystem including Spotify.
-- **Griffin PowerMate**, the iconic single-dial controller: discontinued.
+**Original conclusion (still true for a volume product):** the market is served at both ends and hollow in the middle — commodity USB knobs at £10–25, Stream Deck+ at £160–200. The £60–90 middle kills you: too dear to be an impulse buy, too cheap to read as a designed object, and beaten on features by something at £160. For a volume product the only reachable position was £120–160.
 
-**The £60–90 middle is where this dies.** Too expensive to be an impulse purchase, too cheap to read as a designed object, and beaten on features by something at £160.
+**The premium run does not sit on that barbell at all.** At 60 units it is not competing with Stream Deck; it is competing with the other things a person spends £450 on for their desk, which is a different comparison set and a different buyer. The relevant reference is a KEF LSX-class speaker pair, not a controller.
 
-That leaves two positions:
-
-- **Under ~£35.** Requires a BOM under £10 and volumes in the thousands. Unreachable with a round colour LCD. Rule it out.
-- **£120–160.** Reachable, but only if the object justifies it: album art on the round screen, a machined case, and no setup ritual. This is the only surviving position, and it is worth noting that it demands Architecture A specifically.
-
-> **Test:** does the BOM from Gate 1 support a £120–160 retail price at a 2.5–3× multiple, with the enclosure quality that price implies?
+> **Test, restated:** does £450 survive contact with a buyer who is comparing it to desk audio rather than to peripherals?
 >
-> **Pass:** yes, with £40+ gross margin per unit.
-> **Fail:** the answer requires pricing at £70–100.
+> **Pass:** deposits convert at the rate described in the drop model below.
+> **Fail:** interest is high and deposits are not. That is a price signal, not an audience signal.
+
+**Price rises through the run.** Early units carry real risk — no track record, no service history, no reviews — and should cost less for it. Kimera raised the EVO37 from €400k to €720k across 37 cars and early buyers felt clever rather than gouged. Publish the ladder up front so it reads as honesty about risk rather than a pressure tactic.
 
 ### Gate 3 — The differentiator must survive the architecture
 
@@ -138,27 +133,73 @@ Wi-Fi provisioning and OAuth on a screen with no keyboard reliably produce conta
 > **Pass:** 4 of 5, unaided, under five minutes.
 > **Fail:** anyone needs to be told anything not printed in the box.
 
-### Gate 5 — Volume must clear the fixed costs
+### Gate 5 — Volume must clear the fixed costs — **INVERTED 2026-09-01**
 
-Certification, tooling and setup do not scale down. **[estimate]** a first run below ~500 units cannot amortise them; 1,000–2,000 is where the numbers start working.
+> **This gate said a run below ~500 units "cannot amortise" tooling and certification, and that 1,000–2,000 is where the numbers work. At 60 units the logic reverses, and that reversal is the whole reason limited runs exist.**
 
-For a solo maker with no existing audience, a niche desk accessory on Crowd Supply, Kickstarter or Tindie plausibly moves **200–1,500 units [estimate]** on a first campaign. That straddles the amortisation threshold, which means **audience is a prerequisite, not a launch activity**. The realistic sequence is: build an audience around the object over months, then run the campaign — not campaign-first.
+**You do not amortise fixed costs across volume. You avoid incurring them.** CNC machining and 3D printing have essentially no setup charge and no minimum order quantity. Injection moulding does, which is why 300 moulded units is a worse business than 60 machined ones. The premium run is viable *because* it never orders a tool.
 
-> **Test:** a landing page showing the rendered screens (`design/screens.html` already exists — the asset is built), posted to two or three relevant communities. Measure email signups over two weeks.
+What survives from the original gate is the audience point, and it is still the hardest problem — but the threshold has moved by an order of magnitude.
+
+> **Test, restated:** a landing page showing the rendered screens and a recording of the dial, posted to two or three relevant communities. Measure genuine email signups over two weeks.
 >
-> **Pass:** 500+ genuine signups from organic posts. That predicts a fundable campaign.
-> **Fail:** under 150. Not a verdict on the product — a verdict on reaching the people who would buy it, which is the harder problem.
-
-### Gate 6 — Compliance must be budgeted, not discovered
-
-A product with a 2.4 GHz radio sold in the UK/EU needs UKCA/CE marking, EMC testing, and RED (Radio Equipment Directive) conformity; the US needs FCC. Using a **pre-certified module** — ESP32-S3-WROOM rather than a bare chip — removes the radio testing, which is the expensive half, but does **not** remove finished-product EMC testing. Add RoHS, WEEE registration and packaging regulations.
-
-**[estimate] £2–6k** for a product built on a pre-certified module. This is the line item that most often kills a maker project after the prototype works, because it arrives at the point where the money has already gone into tooling.
-
-> **Test:** one email to a UK test house describing the product and the module, asking for a ballpark. Free, one week.
+> **Pass:** 200–300 genuinely interested people. That is enough to sell 60 units at £450.
+> **Fail:** under 60. You cannot sell sixty things to fewer than sixty interested people.
 >
-> **Pass:** the figure is budgeted before tooling is ordered.
-> **Fail:** it is discovered after.
+> **Note the old threshold was 500 signups**, sized for a 1,000-unit campaign. Leaving it in place would mean reading a real success as a failure.
+
+### Gate 6 — Compliance must be budgeted, not discovered — **NOW THE DOMINANT COST**
+
+A product with a 2.4 GHz radio sold in the UK/EU needs UKCA/CE marking, electromagnetic compatibility testing, and radio conformity; the US needs FCC. Using a pre-certified radio module removes the radio testing — the expensive half — but does **not** remove finished-product testing. Add RoHS, WEEE registration and packaging rules.
+
+**[estimate] £2–6k.** At 1,000 units that is £2–6 each and irrelevant. **At 60 units it is £33–100 each**, against a landed cost of £130–165 — potentially the second-largest line item in the entire build, and large enough to move the price.
+
+This gate's own original wording warns that compliance "is the line item that most often kills a maker project after the prototype works, because it arrives at the point where the money has already gone into tooling." Shrinking the run made it four to twenty times worse per unit.
+
+> **Test:** one email to a UK test house describing the product and the module, asking for a ballpark at a 60-unit run. Free, one week.
+>
+> **This is now urgent rather than eventual.** At the old scale the answer was a rounding error and could wait. At this scale it is a pricing input, so it must be obtained before the price is published.
+>
+> **Pass:** the figure is budgeted, and covered by deposits (see the drop model).
+> **Fail:** it is discovered after CNC drawings are committed.
+
+### The drop model — 60 units
+
+**The number is 60, and it means something.** Sixty detent positions around the ring, sixty units. Scarcity that comes from a fact about the object rather than a marketing decision — the difference between Kimera's 37 (the Lancia 037) and a round number picked because it sounded right.
+
+| Element | Decision |
+|---|---|
+| Run size | **60 units.** Never exceeded, for any reason. |
+| Deposit | 20% at reservation — **£5,400 across the run**, which is approximately the compliance budget. Deposit money pays for the cost that otherwise kills projects at exactly this stage. |
+| Balance | On dispatch, not on order. |
+| Lead time | **Published on the buy button**, as a month. Option-O and Norbauer both do this; the wait becomes the status good rather than a service failure. |
+| Price | Rises through the run. Ladder published up front. |
+| Refunds | Deposit refundable up to the point the unit's parts are ordered, then not. Stated plainly. |
+
+**The discipline that separates this from the failures.** Radford took over a million dollars in deposits against manufacturing capacity it did not have. Charge Cars had an official licence, a beautiful prototype, years of favourable press, and delivered zero cars. Both ran Singer's playbook; the difference was capability, not strategy.
+
+> **No deposits are taken until one complete unit exists and works.** Not a bench rig, not a printed bezel — a finished object that could be handed to someone. The custom ring motor and the switchable magnetic detent are both still unproven, so this gate is a long way off, and taking money before it would be the most damaging thing available.
+
+### Launch checklist — removing the buyer's uncertainty
+
+The specification-confidence engine does not transfer directly, because there is no architect specifying and no client paying. What transfers is the mechanism underneath it: **eliminate the buyer's uncertainty before they commit.** Meljac publishes a full price list for bespoke work because the specifier's enemy is uncertainty, not cost.
+
+At £450 from a maker with no track record, the buyer has four questions. Each needs a published answer before the drop opens.
+
+| Question | Answer to publish |
+|---|---|
+| Will it work with my setup? | An honest compatibility page — which operating system, which applications, which audio path, and specifically what it will not do. |
+| Will it actually arrive? | A public build log with real dates, photographs and honestly recorded slips. Declared slowness beats discovered slowness. |
+| What if it breaks, or you stop? | Free lifetime service, published repair prices, and the firmware-release commitment — all visible **at the point of purchase**, not findable afterwards. |
+| Will it feel as good as it looks? | See below. This is the hard one. |
+
+**The thing being sold is the one thing that cannot be photographed.** Grand Seiko has the same problem and solves it with a dealer network that does not exist here. Three answers, in order of value:
+
+1. **Sound.** Detent feel cannot be photographed but it can be heard. A close, properly recorded clip of the ring turning — the clicks, and the mechanical change of character as the magnets retract — carries more than any render. The mode-change clunk is simultaneously a user-experience decision and the single best marketing asset available, so **design it to be recorded.**
+2. **Try and return.** Thirty days, full refund, buyer pays return shipping. At 60 units a few returns are affordable and it removes the largest objection outright. Returned units become the certified pre-owned channel, which lets the maker price-defend its own secondary market.
+3. **One travelling demo unit.** In enthusiast categories a handful of writers function exactly as specifiers do in architecture — people buy on their judgement. Getting one unit into the right hands is structurally the same move as a certified dealer channel, with a different actor. At this scale you need one or two, not a campaign.
+
+**Publish everything.** Price, lead time, box contents, compatibility, repair costs, the anti-goals list, what happens if the project ends. The premium-hardware norm is a beautiful page with no numbers on it; publishing all the numbers is itself the differentiator, and it costs nothing.
 
 ### Gate 7 — The product must have no brick date
 

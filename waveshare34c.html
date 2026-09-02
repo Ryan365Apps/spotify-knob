@@ -1,0 +1,1038 @@
+<!DOCTYPE html>
+<html class="client-nojs" lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8"/>
+<title>ESP32-P4-WIFI6-Touch-LCD-3.4C - Waveshare Wiki</title>
+<script>document.documentElement.className="client-js";RLCONF={"wgBreakFrames":!1,"wgSeparatorTransformTable":["",""],"wgDigitTransformTable":["",""],"wgDefaultDateFormat":"dmy","wgMonthNames":["","January","February","March","April","May","June","July","August","September","October","November","December"],"wgRequestId":"b2fb05f46a9d1297d9366301","wgCSPNonce":!1,"wgCanonicalNamespace":"","wgCanonicalSpecialPageName":!1,"wgNamespaceNumber":0,"wgPageName":"ESP32-P4-WIFI6-Touch-LCD-3.4C","wgTitle":"ESP32-P4-WIFI6-Touch-LCD-3.4C","wgCurRevisionId":110674,"wgRevisionId":110674,"wgArticleId":23613,"wgIsArticle":!0,"wgIsRedirect":!1,"wgAction":"view","wgUserName":null,"wgUserGroups":["*"],"wgCategories":["MIPI DSI interface","MIPI CSI interface","ETH interface"],"wgPageContentLanguage":"en","wgPageContentModel":"wikitext","wgRelevantPageName":"ESP32-P4-WIFI6-Touch-LCD-3.4C","wgRelevantArticleId":23613,"wgIsProbablyEditable":!1,"wgRelevantPageIsProbablyEditable":!1,
+"wgRestrictionEdit":[],"wgRestrictionMove":[]};RLSTATE={"ext.gadget.tabber":"ready","site.styles":"ready","noscript":"ready","user.styles":"ready","user":"ready","user.options":"loading","jquery.makeCollapsible.styles":"ready","mediawiki.toc.styles":"ready","skins.tweeki.styles":"ready","skins.tweeki.bootstraptheme.styles":"ready","skins.tweeki.externallinks.styles":"ready","skins.tweeki.awesome.styles":"ready"};RLPAGEMODULES=["site","mediawiki.page.startup","mediawiki.page.ready","jquery.makeCollapsible","mediawiki.toc","ext.FancyBoxThumbs","ext.HighlightjsIntegration","skins.tweeki.messages","skins.tweeki.scripts"];</script>
+<script>(RLQ=window.RLQ||[]).push(function(){mw.loader.implement("user.options@1hzgi",function($,jQuery,require,module){/*@nomin*/mw.user.tokens.set({"patrolToken":"+\\","watchToken":"+\\","csrfToken":"+\\"});
+});});</script>
+<link rel="stylesheet" href="/w/Uy8Yw0y/aAdkk0o.php?lang=en&amp;modules=jquery.makeCollapsible.styles%7Cmediawiki.toc.styles%7Cskins.tweeki.awesome.styles%7Cskins.tweeki.bootstraptheme.styles%7Cskins.tweeki.externallinks.styles%7Cskins.tweeki.styles&amp;only=styles&amp;skin=tweeki"/>
+<script async="" src="/w/Uy8Yw0y/aAdkk0o.php?lang=en&amp;modules=startup&amp;only=scripts&amp;raw=1&amp;skin=tweeki"></script>
+<meta name="ResourceLoaderDynamicStyles" content=""/>
+<link rel="stylesheet" href="/w/Uy8Yw0y/aAdkk0o.php?lang=en&amp;modules=ext.gadget.tabber&amp;only=styles&amp;skin=tweeki"/>
+<link rel="stylesheet" href="/w/Uy8Yw0y/aAdkk0o.php?lang=en&amp;modules=site.styles&amp;only=styles&amp;skin=tweeki"/>
+<meta name="generator" content="MediaWiki 1.35.5"/>
+<meta property="og:image" content="https://www.waveshare.com/w/upload/4/45/540px-ESP32-P4-WIFI6-Touch-LCD-3.4C_250523_01.jpg"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<link rel="shortcut icon" href="/w/favicon.ico"/>
+<link rel="search" type="application/opensearchdescription+xml" href="/w/opensearch_desc.php" title="Waveshare Wiki (en)"/>
+<link rel="EditURI" type="application/rsd+xml" href="https://www.waveshare.com/w/api.php?action=rsd"/>
+<link rel="alternate" type="application/atom+xml" title="Waveshare Wiki Atom feed" href="/w/index.php?title=Special:RecentChanges&amp;feed=atom"/>
+<!--[if lt IE 9]><script src="/w/resources/lib/html5shiv/html5shiv.js"></script><![endif]-->
+</head>
+<body class="mediawiki ltr sitedir-ltr mw-hide-empty-elt ns-0 ns-subject page-ESP32-P4-WIFI6-Touch-LCD-3_4C rootpage-ESP32-P4-WIFI6-Touch-LCD-3_4C skin-tweeki action-view tweeki-animateLayout tweeki-non-advanced tweeki-user-anon"><a href="https://www.waveshare.com/cdn-cgi/content?id=7TgsPB4MsYzDMpA3Hwpom_WmxkINuQMun5Er1Jxa0f8-1788349811.6479602-1.2.1.1-vNmqa9wKv2F7UI6ekaKixxfYeEcznrZsx7dkmik3qwlS0_JLtYCQpPo6XtaFZCrf" aria-hidden="true" rel="nofollow noopener" style="display: none !important; visibility: hidden !important"></a>			<!-- navbar -->
+			<div id="mw-navigation" class="navbar navbar-default navbar-fixed-top navbar-expand-lg fixed-top navbar-light bg-light" role="navigation">
+				<h2>Navigation menu</h2>
+				<div id="mw-head" class="navbar-inner">
+					<div class="container">
+
+						<div class="navbar-header">
+							<button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+								<span class="sr-only">Toggle navigation</span>
+								<span class="icon-bar"></span>
+								<span class="icon-bar"></span>
+								<span class="icon-bar"></span>
+							</button>
+
+							<a href="/wiki/Main_Page" class="navbar-brand"><img src="https://www.waveshare.com/w/upload/a/a7/Ws-watermark-en.svg" alt="Waveshare Wiki" /></a>
+						</div>
+
+						<div id="navbar" class="navbar-collapse collapse">
+													<ul class="nav navbar-nav">
+							<li class="nav"><a href="#" id="n-raspberry-pi" class="dropdown-toggle" data-toggle="dropdown">Raspberry Pi <b class="caret"></b></a><ul class="dropdown-menu " role="menu"><li id="n-main_page.2523rpi-boards"><a href="/wiki/Main_Page#RPi-Boards" tabindex="-1">Boards/Kits</a></li><li id="n-main_page.2523rpi-displays"><a href="/wiki/Main_Page#RPi-Displays" tabindex="-1">Displays</a></li><li id="n-main_page.2523rpi-cameras"><a href="/wiki/Main_Page#RPi-Cameras" tabindex="-1">Cameras</a></li><li id="n-main_page.2523rpi-expansions"><a href="/wiki/Main_Page#RPi-Expansions" tabindex="-1">Expansions</a></li><li id="n-main_page.2523rpi-laptops"><a href="/wiki/Main_Page#RPi-Laptops" tabindex="-1">All-in-one</a></li><li id="n-main_page.2523rpi-robots"><a href="/wiki/Main_Page#RPi-Robots" tabindex="-1">Robots</a></li><li id="n-main_page.2523rpi-games"><a href="/wiki/Main_Page#RPi-Games" tabindex="-1">Portable Gaming</a></li><li id="n-main_page.2523rpi-acces"><a href="/wiki/Main_Page#RPi-Acces" tabindex="-1">Accessories</a></li><li id="n-main_page.2523android-linux-boards"><a href="/wiki/Main_Page#Android-Linux-Boards" tabindex="-1">Other Android/Linux Boards</a></li></ul></li><li class="nav"><a href="#" id="n-ai" class="dropdown-toggle" data-toggle="dropdown">AI <b class="caret"></b></a><ul class="dropdown-menu " role="menu"><li id="n-main_page.2523jetson-ai-boards"><a href="/wiki/Main_Page#Jetson-AI-Boards" tabindex="-1">Boards/Kits</a></li><li id="n-main_page.2523jetson-ai-displays"><a href="/wiki/Main_Page#Jetson-AI-Displays" tabindex="-1">Displays</a></li><li id="n-main_page.2523jetson-ai-cameras"><a href="/wiki/Main_Page#Jetson-AI-Cameras" tabindex="-1">Cameras</a></li><li id="n-main_page.2523jetson-ai-hat"><a href="/wiki/Main_Page#Jetson-AI-HAT" tabindex="-1">Expansions</a></li><li id="n-main_page.2523jetson-ai-robots"><a href="/wiki/Main_Page#Jetson-AI-Robots" tabindex="-1">Robots</a></li></ul></li><li class="nav"><a href="#" id="n-displays" class="dropdown-toggle" data-toggle="dropdown">Displays <b class="caret"></b></a><ul class="dropdown-menu " role="menu"><li id="n-main_page.2523display-lcd-oleds"><a href="/wiki/Main_Page#Display-LCD-OLEDs" tabindex="-1">LCD/OLED</a></li><li id="n-main_page.2523display-e-paper"><a href="/wiki/Main_Page#Display-e-Paper" tabindex="-1">e-Paper</a></li></ul></li><li class="nav"><a href="#" id="n-iot" class="dropdown-toggle" data-toggle="dropdown">IoT <b class="caret"></b></a><ul class="dropdown-menu " role="menu"><li id="n-main_page.2523long-range-wireless-comm"><a href="/wiki/Main_Page#Long-range-wireless-comm" tabindex="-1">Long Range Wireless</a></li><li id="n-main_page.2523short-range-wireless-comm"><a href="/wiki/Main_Page#Short-range-wireless-comm" tabindex="-1">Short Range Wireless</a></li><li id="n-main_page.2523wired-communication"><a href="/wiki/Main_Page#Wired-communication" tabindex="-1">Wired Comm / Converter</a></li><li id="n-main_page.2523misc-cameras-av"><a href="/wiki/Main_Page#Misc-cameras-av" tabindex="-1">Cameras / Audio / Video</a></li><li id="n-main_page.2523misc-sensor-modules"><a href="/wiki/Main_Page#Misc-sensor-modules" tabindex="-1">Sensors</a></li><li id="n-main_page.2523misc-servos-motors"><a href="/wiki/Main_Page#Misc-servos-motors" tabindex="-1">Motors / Servos</a></li><li id="n-main_page.2523misc-other-modules"><a href="/wiki/Main_Page#Misc-other-modules" tabindex="-1">others</a></li></ul></li><li class="nav"><a href="#" id="n-robotics" class="dropdown-toggle" data-toggle="dropdown">Robotics <b class="caret"></b></a><ul class="dropdown-menu " role="menu"><li id="n-main_page.2523robotics-cars"><a href="/wiki/Main_Page#Robotics-cars" tabindex="-1">Mobile Robots</a></li><li id="n-main_page.2523dog-like-robots"><a href="/wiki/Main_Page#Dog-like-Robots" tabindex="-1">Dog-like Robots</a></li><li id="n-main_page.2523robotics-drivers-sensors"><a href="/wiki/Main_Page#Robotics-drivers-sensors" tabindex="-1">Drivers / Sensors</a></li><li id="n-main_page.2523robotics-robot-arms"><a href="/wiki/Main_Page#Robotics-robot-arms" tabindex="-1">Robot Arm / Control</a></li></ul></li><li class="nav"><a href="#" id="n-mcu.252Ffpga" class="dropdown-toggle" data-toggle="dropdown">MCU/FPGA <b class="caret"></b></a><ul class="dropdown-menu " role="menu"><li id="n-main_page.2523arduino-main-boards"><a href="/wiki/Main_Page#Arduino-main-boards" tabindex="-1">Arduino</a></li><li id="n-main_page.2523micro.253Abit"><a href="/wiki/Main_Page#micro:bit" tabindex="-1">micro:bit</a></li><li id="n-main_page.2523mcu.2farm" class="LPC"><a href="/wiki/Main_Page#MCU.2FARM" tabindex="-1">STM32</a></li><li id="n-main_page.2523fpga"><a href="/wiki/Main_Page#FPGA" tabindex="-1">FPGA</a></li></ul></li><li class="nav"><a href="https://service.waveshare.com" id="n-https.253A.252F.252Fservice.waveshare.com" rel="nofollow" target="_blank">Support</a></li>							</ul>
+						
+													<ul class="nav navbar-nav navbar-right">
+							</ul>
+				<form class="navbar-form navbar-right" action="/w/index.php" id="searchform">
+					<div class="form-group"><input type="search" name="search" placeholder="Product name search" title="Search Waveshare Wiki [f]" accesskey="f" id="searchInput" class="search-query form-control"/><input type="submit" name="go" value="Go" title="Go to a page with this exact name if it exists" id="mw-searchButton" class="searchButton btn hidden"/>
+					</div>
+				</form><ul class="nav navbar-nav navbar-right">							</ul>
+						</div>
+						
+					</div>
+				</div>
+			</div>
+			<!-- /navbar -->
+					<div id="mw-page-base"></div>
+			<div id="mw-head-base"></div>
+			<a id="top"></a>
+
+			<!-- content -->
+			<div id="contentwrapper" class="user-loggedout not-editable container with-navbar with-navbar-fixed">
+
+				
+				<div class="row">
+					<div class="col-md-offset-2 col-md-10" role="main">
+								<div class="mw-body" id="content">
+			<div id="mw-js-message" style="display:none;"></div>
+									<h1 id="firstHeading" class="firstHeading page-header" lang="en"><span dir="auto">ESP32-P4-WIFI6-Touch-LCD-3.4C</span></h1>
+									<!-- bodyContent -->
+			<div id="bodyContent">
+								<div id="siteSub">From Waveshare Wiki</div>
+								<div id="contentSub"></div>
+												<div id="jump-to-nav" class="mw-jump">
+					Jump to:					<a href="#mw-navigation">navigation</a>, 					<a href="#p-search">search</a>
+				</div>
+				<div id="mw-content-text" lang="en" dir="ltr" class="mw-content-ltr"><div class="mw-parser-output"><p> 
+<meta http-equiv="refresh" content="0; url=https://docs.waveshare.com/ESP32-P4-WIFI6-Touch-LCD-XC" />
+
+</p>
+<div class="wiki-pages jet-green-color">
+<div class="tabber">
+<table id="infotable" class="a-r at-c roundy bgd-green bl-white" style="margin-left: 5px; margin-bottom: 5px; width: 30%;">
+
+<tbody><tr>
+<td>
+<table class="at-c roundy" style="background: transparent;width:100%;">
+
+<tbody><tr>
+<td class="at-c textwhite"><b>ESP32-P4-WIFI6-Touch-LCD-3.4C</b>
+</td></tr>
+<tr>
+<td class="at-c bgwhite" style="margin:5px;"><div class="subnavber">
+<div class="subnavbertab" title="ESP32-P4-WIFI6-Touch-LCD-3.4C"><a href="https://www.waveshare.com/ESP32-P4-WIFI6-Touch-LCD-3.4C.htm" title="ESP32-P4-WIFI6-Touch-LCD-3.4C" target="_blank" rel="nofollow noreferrer noopener"><img alt="ESP32-P4-WIFI6-Touch-LCD-3.4C" src="/w/upload/thumb/4/45/540px-ESP32-P4-WIFI6-Touch-LCD-3.4C_250523_01.jpg/360px-540px-ESP32-P4-WIFI6-Touch-LCD-3.4C_250523_01.jpg" decoding="async" loading="lazy" width="360" height="270" srcset="/w/upload/4/45/540px-ESP32-P4-WIFI6-Touch-LCD-3.4C_250523_01.jpg 1.5x" /></a></div>
+</div><br /><br /><small>ESP32-P4NRW32, ETH/MIPI CSI/MIPI DSI</small>
+</td></tr></tbody></table>
+</td></tr>
+<tr style="display:none;">
+<td>
+<table class="roundy" style="background: transparent;width:100%;">
+
+<tbody><tr>
+<td class="at-c textwhite"><b>{{{name2}}}</b>
+</td></tr>
+<tr>
+<td class="at-c bgwhite" style="margin:5px;"><br />
+</td></tr></tbody></table>
+</td></tr>
+<tr style="display:none;">
+<td>
+<table class="roundy" style="background: transparent;width:100%;">
+
+<tbody><tr>
+<td class="at-c textwhite"><b>{{{name3}}}</b>
+</td></tr>
+<tr>
+<td class="at-c bgwhite" style="margin:5px;"><br />
+</td></tr></tbody></table>
+</td></tr>
+<tr style="display:none;">
+<td>
+<table class="roundy" style="background: transparent;width:100%;">
+
+<tbody><tr>
+<td class="at-c textwhite"><b>{{{name4}}}</b>
+</td></tr>
+<tr>
+<td class="at-c bgwhite" style="margin:5px;"><br />
+</td></tr></tbody></table>
+</td></tr>
+<tr style="display:none;">
+<td>
+<table class="roundy" style="background: transparent;width:100%;">
+
+<tbody><tr>
+<td class="at-c textwhite"><b>{{{name5}}}</b>
+</td></tr>
+<tr>
+<td class="at-c bgwhite" style="margin:5px;"><br />
+</td></tr></tbody></table>
+</td></tr>
+<tr style="display:none;">
+<td>
+<table class="roundy" style="background: transparent;width:100%;">
+
+<tbody><tr>
+<td class="at-c textwhite"><b>{{{name6}}}</b>
+</td></tr>
+<tr>
+<td class="at-c bgwhite" style="margin:5px;"><br />
+</td></tr></tbody></table>
+</td></tr>
+<tr>
+<td>
+<table class="roundy" style="display:none;">
+<tbody><tr>
+<td style="width:2%;">
+</td>
+<td style="width:3%;">
+</td>
+<th colspan="2" width="90%" class="at-c roundytop bgl-white">Primary Attribute
+</th>
+<td style="width:3%;">
+</td>
+<td style="width:2%;">
+</td></tr>
+<tr>
+<td colspan="6" width="90px" class="at-c roundytl roundytr bgwhite b-green" style="border-width: 0 0 1px 0;"><b>Category:</b>
+</td></tr>
+<tr style="display:none;">
+<th colspan="3" width="90px" class="at-r bgwhite b-green" style="border-width: 0 0 1px 0;">{{{userDefinedInfo}}}:
+</th>
+<td colspan="3" class="at-l b-green bgwhite" style="border-width: 0 0 1px 0;">{{{userdefinedvalue}}}
+</td></tr>
+<tr style="display:none;">
+<td colspan="6" width="90px" class="at-c roundybl roundybr bgwhite"><b>Brand:</b> Waveshare
+</td></tr></tbody></table>
+</td></tr>
+<tr>
+<td>
+<table class="a-r roundy" style="display:none;">
+<tbody><tr>
+<td style="width:2%;">
+</td>
+<td style="width:3%;">
+</td>
+<th colspan="2" width="90%" class="at-c roundytop bgl-white">Website
+</th>
+<td style="width:3%;">
+</td>
+<td style="width:2%;">
+</td></tr>
+<tr>
+<td colspan="6" width="90px" class="at-c roundytl roundytr bgwhite b-green" style="border-width: 0 0 1px 0;"><b>International:</b> {{{website_en}}}
+</td></tr>
+<tr>
+<td colspan="6" width="90px" class="at-c roundybl roundybr bgwhite"><b>Chinese:</b> {{{website_cn}}}
+</td></tr></tbody></table>
+</td></tr>
+<tr>
+<td>
+<table class="a-r roundy" style="background: transparent; border-collapse:collapse;width:100%;display:none;">
+<tbody><tr>
+<td style="width:2%;">
+</td>
+<td style="width:3%;">
+</td>
+<th colspan="2" width="90%" class="at-c roundytop bgl-white">Onboard Interfaces
+</th>
+<td style="width:3%;">
+</td>
+<td style="width:2%;">
+</td></tr>
+<tr>
+<td colspan="6" width="90px" class="at-l roundy bgwhite b-green" style="border-width: 0 0 1px 0;">
+<table class="roundy bgwhite fulltable" style="text-align:center;">
+
+<tbody><tr>
+<td class="roundy bl-gray bw-1" style="width:25%;;"><small><b><a href="/w/index.php?title=Category:MIPI_DSI_interface&amp;action=edit&amp;redlink=1" class="new" title="Category:MIPI DSI interface (page does not exist)">MIPI DSI</a></b></small>
+</td>
+<td class="roundy bl-gray bw-1" style="width:25%;;"><small><b><a href="/w/index.php?title=Category:MIPI_CSI_interface&amp;action=edit&amp;redlink=1" class="new" title="Category:MIPI CSI interface (page does not exist)">MIPI CSI</a></b></small>
+</td>
+<td class="roundy bl-gray bw-1" style="width:25%;;"><small><b><a href="/wiki/Category:ETH_interface" title="Category:ETH interface">ETH</a></b></small>
+</td>
+<td class="roundy bl-gray bw-1" style="width:25%;display:none;"><small></small>
+</td></tr>
+<tr>
+<td class="roundy bl-gray bw-1" style="width:25%;display:none;"><small></small>
+</td>
+<td class="roundy bl-gray bw-1" style="width:25%;display:none;"><small></small>
+</td>
+<td class="roundy bl-gray bw-1" style="width:25%;display:none;"><small></small>
+</td>
+<td class="roundy bl-gray bw-1" style="width:25%;display:none;"><small></small>
+</td></tr>
+<tr>
+<td class="roundy bl-gray bw-1" style="width:25%;display:none;"><small></small>
+</td>
+<td class="roundy bl-gray bw-1" style="width:25%;display:none;"><small></small>
+</td>
+<td class="roundy bl-gray bw-1" style="width:25%;display:none;"><small></small>
+</td>
+<td class="roundy bl-gray bw-1" style="width:25%;display:none;"><small></small>
+</td></tr>
+<tr>
+<td class="roundy bl-gray bw-1" style="width:25%;display:none;"><small></small>
+</td>
+<td class="roundy bl-gray bw-1" style="width:25%;display:none;"><small></small>
+</td>
+<td class="roundy bl-gray bw-1" style="width:25%;display:none;"><small></small>
+</td>
+<td class="roundy bl-gray bw-1" style="width:25%;display:none;"><small></small>
+</td></tr>
+<tr>
+<td class="roundy bl-gray bw-1" style="width:25%;display:none;"><small></small>
+</td>
+<td class="roundy bl-gray bw-1" style="width:25%;display:none;"><small></small>
+</td>
+<td class="roundy bl-gray bw-1" style="width:25%;display:none;"><small></small>
+</td>
+<td class="roundy bl-gray bw-1" style="width:25%;display:none;"><small></small>
+</td></tr></tbody></table>
+</td></tr></tbody></table>
+</td></tr>
+<tr style="display:none;">
+<td>
+<table class="a-r roundy" style="background: transparent; border-collapse:collapse;width:100%;;display:none;">
+<tbody><tr>
+<td style="width:2%;">
+</td>
+<td style="width:3%;">
+</td>
+<th colspan="2" width="90%" class="at-c roundytop bgl-white">Related Products
+</th>
+<td style="width:3%;">
+</td>
+<td style="width:2%;">
+</td></tr>
+<tr>
+<td colspan="6" width="90px" class="at-l roundy bgwhite b-green" style="border-width: 0 0 1px 0;">
+</td></tr></tbody></table>
+</td></tr></tbody></table>
+<div class="tabbertab" title="Overview" id="myintro">
+<div id="toc" class="toc" role="navigation" aria-labelledby="mw-toc-heading"><input type="checkbox" role="button" id="toctogglecheckbox" class="toctogglecheckbox" style="display:none" /><div class="toctitle" lang="en" dir="ltr"><h2 id="mw-toc-heading">Contents</h2><span class="toctogglespan"><label class="toctogglelabel" for="toctogglecheckbox"></label></span></div>
+<ul>
+<li class="toclevel-1 tocsection-1"><a href="#Overview"><span class="tocnumber">1</span> <span class="toctext">Overview</span></a>
+<ul>
+<li class="toclevel-2 tocsection-2"><a href="#Introduction"><span class="tocnumber">1.1</span> <span class="toctext">Introduction</span></a></li>
+<li class="toclevel-2 tocsection-3"><a href="#Features"><span class="tocnumber">1.2</span> <span class="toctext">Features</span></a></li>
+<li class="toclevel-2 tocsection-4"><a href="#Hardware_Description"><span class="tocnumber">1.3</span> <span class="toctext">Hardware Description</span></a></li>
+<li class="toclevel-2 tocsection-5"><a href="#Dimensions"><span class="tocnumber">1.4</span> <span class="toctext">Dimensions</span></a></li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-6"><a href="#Usage_Instructions"><span class="tocnumber">2</span> <span class="toctext">Usage Instructions</span></a></li>
+<li class="toclevel-1"><a href="#Arduino"><span class="tocnumber">3</span> <span class="toctext">Arduino</span></a>
+<ul>
+<li class="toclevel-2"><a href="#Environment_Setup"><span class="tocnumber">3.1</span> <span class="toctext">Environment Setup</span></a>
+<ul>
+<li class="toclevel-3"><a href="#Download_and_Install_Arduino_IDE"><span class="tocnumber">3.1.1</span> <span class="toctext">Download and Install Arduino IDE</span></a></li>
+<li class="toclevel-3"><a href="#Install_ESP32_Development_Board"><span class="tocnumber">3.1.2</span> <span class="toctext">Install ESP32 Development Board</span></a></li>
+<li class="toclevel-3"><a href="#Install_Library"><span class="tocnumber">3.1.3</span> <span class="toctext">Install Library</span></a></li>
+</ul>
+</li>
+<li class="toclevel-2"><a href="#Run_the_First_Arduino_Demo"><span class="tocnumber">3.2</span> <span class="toctext">Run the First Arduino Demo</span></a>
+<ul>
+<li class="toclevel-3"><a href="#New_Project"><span class="tocnumber">3.2.1</span> <span class="toctext">New Project</span></a></li>
+<li class="toclevel-3"><a href="#Compile_and_Flash_Demos"><span class="tocnumber">3.2.2</span> <span class="toctext">Compile and Flash Demos</span></a></li>
+</ul>
+</li>
+<li class="toclevel-2"><a href="#Demo"><span class="tocnumber">3.3</span> <span class="toctext">Demo</span></a></li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-7"><a href="#ESP-IDF"><span class="tocnumber">4</span> <span class="toctext">ESP-IDF</span></a>
+<ul>
+<li class="toclevel-2"><a href="#Introduction_to_ESP-IDF_and_Environment_Setup_.28VSCode_Column.29"><span class="tocnumber">4.1</span> <span class="toctext">Introduction to ESP-IDF and Environment Setup (VSCode Column)</span></a>
+<ul>
+<li class="toclevel-3"><a href="#Prerequisites"><span class="tocnumber">4.1.1</span> <span class="toctext">Prerequisites</span></a></li>
+<li class="toclevel-3"><a href="#Install_VSCode"><span class="tocnumber">4.1.2</span> <span class="toctext">Install VSCode</span></a></li>
+<li class="toclevel-3"><a href="#Install_the_ESP-IDF_Plug-in"><span class="tocnumber">4.1.3</span> <span class="toctext">Install the ESP-IDF Plug-in</span></a></li>
+<li class="toclevel-3"><a href="#Install_the_ESP-IDF_Development_Environment"><span class="tocnumber">4.1.4</span> <span class="toctext">Install the ESP-IDF Development Environment</span></a></li>
+</ul>
+</li>
+<li class="toclevel-2 tocsection-8"><a href="#Getting_Start"><span class="tocnumber">4.2</span> <span class="toctext">Getting Start</span></a>
+<ul>
+<li class="toclevel-3 tocsection-9"><a href="#Introduction_to_Basic_Structure_of_an_ESP-IDF_Project"><span class="tocnumber">4.2.1</span> <span class="toctext">Introduction to Basic Structure of an ESP-IDF Project</span></a>
+<ul>
+<li class="toclevel-4 tocsection-10"><a href="#ESP-IDF_Project_Details"><span class="tocnumber">4.2.1.1</span> <span class="toctext">ESP-IDF Project Details</span></a></li>
+<li class="toclevel-4 tocsection-11"><a href="#Description_of_Bottom_Toolbar_of_VSCode_User_Interface"><span class="tocnumber">4.2.1.2</span> <span class="toctext">Description of Bottom Toolbar of VSCode User Interface</span></a></li>
+</ul>
+</li>
+<li class="toclevel-3 tocsection-12"><a href="#HelloWorld_Demo"><span class="tocnumber">4.2.2</span> <span class="toctext">HelloWorld Demo</span></a></li>
+<li class="toclevel-3 tocsection-13"><a href="#I2C"><span class="tocnumber">4.2.3</span> <span class="toctext">I2C</span></a></li>
+</ul>
+</li>
+<li class="toclevel-2 tocsection-14"><a href="#Intermediate"><span class="tocnumber">4.3</span> <span class="toctext">Intermediate</span></a>
+<ul>
+<li class="toclevel-3 tocsection-15"><a href="#SDMMC_Demo"><span class="tocnumber">4.3.1</span> <span class="toctext">SDMMC Demo</span></a></li>
+<li class="toclevel-3 tocsection-16"><a href="#WIFI_Networking_Demo"><span class="tocnumber">4.3.2</span> <span class="toctext">WIFI Networking Demo</span></a></li>
+<li class="toclevel-3 tocsection-17"><a href="#I2S_Audio_Demo"><span class="tocnumber">4.3.3</span> <span class="toctext">I2S Audio Demo</span></a></li>
+<li class="toclevel-3 tocsection-18"><a href="#MIPI-DSI_Screen_Wake-Up_Demo"><span class="tocnumber">4.3.4</span> <span class="toctext">MIPI-DSI Screen Wake-Up Demo</span></a>
+<ul>
+<li class="toclevel-4 tocsection-19"><a href="#MIPI-DSI_LCD_Driving_Principle"><span class="tocnumber">4.3.4.1</span> <span class="toctext">MIPI-DSI LCD Driving Principle</span></a></li>
+<li class="toclevel-4 tocsection-20"><a href="#Hardware_Required"><span class="tocnumber">4.3.4.2</span> <span class="toctext">Hardware Required</span></a></li>
+<li class="toclevel-4 tocsection-21"><a href="#Screen_Wake-Up_Steps"><span class="tocnumber">4.3.4.3</span> <span class="toctext">Screen Wake-Up Steps</span></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toclevel-2 tocsection-22"><a href="#Advanced"><span class="tocnumber">4.4</span> <span class="toctext">Advanced</span></a>
+<ul>
+<li class="toclevel-3 tocsection-23"><a href="#MIPI-CSI_To_MIPI-DSI_.28Real-time_screen_display.29"><span class="tocnumber">4.4.1</span> <span class="toctext">MIPI-CSI To MIPI-DSI (Real-time screen display)</span></a>
+<ul>
+<li class="toclevel-4 tocsection-24"><a href="#Hardware_Required_2"><span class="tocnumber">4.4.1.1</span> <span class="toctext">Hardware Required</span></a></li>
+<li class="toclevel-4 tocsection-25"><a href="#Running_Steps"><span class="tocnumber">4.4.1.2</span> <span class="toctext">Running Steps</span></a></li>
+</ul>
+</li>
+<li class="toclevel-3 tocsection-26"><a href="#LVGL_HMI_Human_Machine_Interaction"><span class="tocnumber">4.4.2</span> <span class="toctext">LVGL HMI Human Machine Interaction</span></a>
+<ul>
+<li class="toclevel-4 tocsection-27"><a href="#Hardware_Required_3"><span class="tocnumber">4.4.2.1</span> <span class="toctext">Hardware Required</span></a></li>
+<li class="toclevel-4 tocsection-28"><a href="#Screen_Wake-Up_Steps_2"><span class="tocnumber">4.4.2.2</span> <span class="toctext">Screen Wake-Up Steps</span></a></li>
+</ul>
+</li>
+<li class="toclevel-3 tocsection-29"><a href="#Windows_Display_Expansion"><span class="tocnumber">4.4.3</span> <span class="toctext">Windows Display Expansion</span></a>
+<ul>
+<li class="toclevel-4 tocsection-30"><a href="#Hardware_Required_4"><span class="tocnumber">4.4.3.1</span> <span class="toctext">Hardware Required</span></a></li>
+<li class="toclevel-4 tocsection-31"><a href="#Software_Driver"><span class="tocnumber">4.4.3.2</span> <span class="toctext">Software Driver</span></a></li>
+</ul>
+</li>
+<li class="toclevel-3 tocsection-32"><a href="#Flashing_Effect"><span class="tocnumber">4.4.4</span> <span class="toctext">Flashing Effect</span></a></li>
+</ul>
+</li>
+<li class="toclevel-2 tocsection-33"><a href="#Expert_Techniques"><span class="tocnumber">4.5</span> <span class="toctext">Expert Techniques</span></a>
+<ul>
+<li class="toclevel-3 tocsection-34"><a href="#ESP-Phone"><span class="tocnumber">4.5.1</span> <span class="toctext">ESP-Phone</span></a>
+<ul>
+<li class="toclevel-4 tocsection-35"><a href="#Hardware_Required_5"><span class="tocnumber">4.5.1.1</span> <span class="toctext">Hardware Required</span></a></li>
+<li class="toclevel-4 tocsection-36"><a href="#Screen_Wake-Up_Steps_3"><span class="tocnumber">4.5.1.2</span> <span class="toctext">Screen Wake-Up Steps</span></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-37"><a href="#Resources"><span class="tocnumber">5</span> <span class="toctext">Resources</span></a>
+<ul>
+<li class="toclevel-2 tocsection-38"><a href="#Schematic_Diagram"><span class="tocnumber">5.1</span> <span class="toctext">Schematic Diagram</span></a></li>
+<li class="toclevel-2 tocsection-39"><a href="#Demo_2"><span class="tocnumber">5.2</span> <span class="toctext">Demo</span></a></li>
+<li class="toclevel-2 tocsection-40"><a href="#Datasheet"><span class="tocnumber">5.3</span> <span class="toctext">Datasheet</span></a></li>
+<li class="toclevel-2 tocsection-41"><a href="#Software"><span class="tocnumber">5.4</span> <span class="toctext">Software</span></a></li>
+<li class="toclevel-2 tocsection-42"><a href="#Project_Resources"><span class="tocnumber">5.5</span> <span class="toctext">Project Resources</span></a></li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-43"><a href="#FAQ"><span class="tocnumber">6</span> <span class="toctext">FAQ</span></a></li>
+<li class="toclevel-1 tocsection-44"><a href="#Support"><span class="tocnumber">7</span> <span class="toctext">Support</span></a></li>
+</ul>
+</div>
+
+<h1><span class="mw-headline" id="Overview">Overview</span></h1>
+<h2><span class="mw-headline" id="Introduction">Introduction</span></h2>
+<p><b>ESP32-P4-WIFI6-Touch-LCD-3.4C</b> is a dual-core plus single-core RISC-V high-performance development board based on ESP32-P4 chip designed by Waveshare. It is equipped with a 3.4inch 800 × 800 resolution IPS round touch display; it supports rich human-machine interaction interfaces, including MIPI-CSI (integrated image signal processor ISP), and also supports USB OTG 2.0 HS for high-speed connections, and has a built-in 40PIN GPIO expansion interface, compatible with some Raspberry Pi HAT expansion boards, achieving wider application compatibility. The ESP32-P4 chip integrates a digital signature peripheral and a dedicated key management unit to ensure data and operational security. It is designed for high performance and high security applications, and fully meets the higher requirements of embedded applications for human-computer interface support, edge computing capabilities and IO connection features.
+</p>
+<h2><span class="mw-headline" id="Features">Features</span></h2>
+<ul><li>Processor
+<ul><li>Equipped with RISC-V 32-bit dual-core processor (HP system), it features DSP and instruction set expansion, along with floating point unit (FPU), and the main frequency is up to 360MHz</li>
+<li>Equipped with a RISC-V 32-bit single-core processor (LP system), the main frequency is up to 40MHz</li>
+<li>Equipped with ESP32-C6 WIFI/BT co-processor, expand WIFI 6/Bluetooth 5 and other functions through SDIO</li></ul></li>
+<li>Memory
+<ul><li>128 KB of high-performance (HP) system read-only memory (ROM)</li>
+<li>16 KB of low-power (LP) system read-only memory (ROM)</li>
+<li>768 KB of high-performance (HP) L2 memory (L2MEM)</li>
+<li>32 KB of low-power (LP) SRAM</li>
+<li>8 KB of system tightly coupled memory (TCM)</li>
+<li>32 MB PSRAM is stacked in the package, and the QSPI interface is connected to 32MB Nor Flash</li></ul></li>
+<li>Peripheral interfaces
+<ul><li>Onboard Type-A USB 2.0 OTG interface, SDIO3.0 TF card slot, Type-C UART flashing port, for convenient use in different scenarios</li>
+<li>Onboard speaker interface, microphone, Codec chip and power amplifier chip can be used to achieve the ideal audio function requirements</li>
+<li>Onboard MIPI-CSI high-definition camera interface, support full HD 1080P picture acquisition and encoding, integrated image signal processor (ISP) and H264 video encoder, support H.264 &amp; JPEG video encoding (1080P @30fps), easy to apply to computer vision, machine vision and other fields</li>
+<li>Onboard MIPI-DSI high-definition screen display interface, integrated pixel processing accelerator (PPA), 2D graphics acceleration controller (2D DMA), supporting JPEG image decoding (1080P @30fps), providing strong support for high-definition screen display and smooth HMI experience, convenient for application to smart home central control screen, industrial central control screen, vending machine and other scenarios</li></ul></li></ul>
+<h2><span class="mw-headline" id="Hardware_Description">Hardware Description</span></h2>
+<p><a href="/wiki/File:ESP32-P4-WIFI6-Touch-LCD-4C-details-intro.jpg" class="image"><img alt="ESP32-P4-WIFI6-Touch-LCD-4C-details-intro.jpg" src="/w/upload/3/31/ESP32-P4-WIFI6-Touch-LCD-4C-details-intro.jpg" decoding="async" loading="lazy" width="960" height="640" /></a>
+</p>
+<table style="background-color: #f0f0f0;margin: 0px 30px;width: 90%;">
+<tbody><tr>
+<td style="width:45%;padding: 10px 30px;">
+<p><b>1. ESP32-P4-Core</b><br />
+Integrated ESP32-P4NRW32, 32MB Nor Flash
+</p><p><b>2. ESP32-C6-MINI-1 module</b><br />
+SDIO interface protocol, extends the board with Wi-Fi 6 and Bluetooth 5 (LE)
+</p><p><b>3. MIPI CSI interface</b><br />
+15Pin 1.0mm spacing, supports MIPI-2lane camera
+</p><p><b>4. ES7210 echo cancellation algorithm chip</b><br />
+Echo cancellation algorithm chip for eliminating echo and improving audio acquisition accuracy
+</p><p><b>5. Type-C interface</b><br />
+USB 2.0 Full Speed interface, for power supply, program flashing and debugging
+</p><p><b>6. RTC holder</b><br />
+Connect a rechargeable RTC battery (only rechargeable RTC batteries are supported)
+</p><p><b>7. Type-C interface USB TO UART</b><br />
+For power supply, program flashing, debugging
+</p><p><b>8. Power LED indicator</b><br />
+Power indicator
+</p><p><b>9. Type-A interface USB OTG</b><br />
+USB OTG 2.0 High Speed interface
+</p><p><br />
+</p>
+</td>
+<td style="width:45%;padding: 10px 30px;">
+<p><b>10. ES8311 Low-power audio codec chip</b><br />
+For processing audio encoding and decoding
+</p><p><b>11. Speaker</b><br />
+PH 2.0 2P connector supporting 8Ω 2W speakers (recommended)
+</p><p><b>12. SMD microphone</b><br />
+Microphone input and echo cancellation
+</p><p><b>13. MIPI DSI LCD interface</b><br />
+For connecting a MIPI 2-lane screen
+</p><p><b>14. SH1.0 4Pin holder</b><br />
+For flashing ESP32-C6 module firmware
+</p><p><b>15. SH1.0 4Pin holder</b><br />
+Bring out the ESP32-P4 serial port for firmware flashing and debugging
+</p><p><b>16. 40PIN socket interface</b><br />
+2.54mm spacing, pins are compatible with some Raspberry Pi HAT expansion boards (pin header adapter required)
+</p><p><b>17. BOOT button</b><br />
+Press when powering on or resetting to enter download mode
+</p><p><b>18. TF card slot</b><br />
+SDIO 3.0 interface protocol
+</p><p><b>19. RESET button</b><br />
+</p>
+</td></tr></tbody></table>
+<h2><span class="mw-headline" id="Dimensions">Dimensions</span></h2>
+<p><a href="/wiki/File:900px-ESP32-P4-WIFI6-Touch-LCD-4C-details-size-1.jpg" class="image"><img alt="900px-ESP32-P4-WIFI6-Touch-LCD-4C-details-size-1.jpg" src="/w/upload/thumb/4/4f/900px-ESP32-P4-WIFI6-Touch-LCD-4C-details-size-1.jpg/600px-900px-ESP32-P4-WIFI6-Touch-LCD-4C-details-size-1.jpg" decoding="async" loading="lazy" width="600" height="450" srcset="/w/upload/4/4f/900px-ESP32-P4-WIFI6-Touch-LCD-4C-details-size-1.jpg 1.5x" /></a>
+</p><p><a href="/wiki/File:900px-ESP32-P4-WIFI6-Touch-LCD-4C-details-size-3.jpg" class="image"><img alt="900px-ESP32-P4-WIFI6-Touch-LCD-4C-details-size-3.jpg" src="/w/upload/thumb/6/6e/900px-ESP32-P4-WIFI6-Touch-LCD-4C-details-size-3.jpg/600px-900px-ESP32-P4-WIFI6-Touch-LCD-4C-details-size-3.jpg" decoding="async" loading="lazy" width="600" height="494" srcset="/w/upload/6/6e/900px-ESP32-P4-WIFI6-Touch-LCD-4C-details-size-3.jpg 1.5x" /></a>
+</p>
+<h1><span class="mw-headline" id="Usage_Instructions">Usage Instructions</span></h1>
+<p>This tutorial is designed to guide users to set up a software environment for ESP32-P4 hardware development, and show how to use the ESP-IDF configuration menu and compile and download the firmware to the ESP32-P4 development board through simple examples.
+</p>
+<ul><li>Preparation
+<ul><li>Hardware
+<ul><li><b>ESP32-P4-WIFI6-Touch-LCD-3.4C</b> development board</li>
+<li><b>USB cable</b> (Type-A to Type-C, prepared as needed)</li>
+<li><b>Computer</b> (Windows, Linux or macOS)</li></ul></li>
+<li>Software (it is recommended to use the integrated development environment to install ESP-IDF, if you are familiar with ESP-IDF, you can directly start from the ESP-IDF terminal, you can choose one of the following development methods)
+<ul><li><b>VSCode + ESP-IDF plug-in</b> (<b>Recommended</b>)</li>
+<li>Eclipse + ESP-IDF plug-in (Espressif-IDE)</li>
+<li>Arduino IDE</li></ul></li></ul></li></ul>
+<h1><span class="mw-headline" id="Arduino">Arduino</span></h1>
+<p>This chapter introduces setting up the Arduino environment, including the Arduino IDE, management of ESP32 boards, installation of related libraries, program compilation and downloading, as well as testing demos. It aims to help users master the development board and facilitate secondary development.
+<a href="/wiki/File:Arduino-flow-04.png" class="image"><img alt="Arduino-flow-04.png" src="/w/upload/thumb/1/17/Arduino-flow-04.png/800px-Arduino-flow-04.png" decoding="async" loading="lazy" width="800" height="44" srcset="/w/upload/thumb/1/17/Arduino-flow-04.png/1200px-Arduino-flow-04.png 1.5x, /w/upload/1/17/Arduino-flow-04.png 2x" /></a>
+</p>
+<h2><span class="mw-headline" id="Environment_Setup">Environment Setup</span></h2>
+<h3><span class="mw-headline" id="Download_and_Install_Arduino_IDE">Download and Install Arduino IDE</span></h3>
+<ul><li>Click to visit the <a target="_blank" rel="nofollow noreferrer noopener" class="external text" href="https://www.arduino.cc/en/software">Arduino official website</a>, select the corresponding system and system bit to download <br /><a href="/wiki/File:ESP32-S3-AMOLED-1.91-Ar-software-01.png" class="image"><img alt="ESP32-S3-AMOLED-1.91-Ar-software-01.png" src="/w/upload/7/73/ESP32-S3-AMOLED-1.91-Ar-software-01.png" decoding="async" loading="lazy" width="902" height="458" /></a></li>
+<li>Run the installer and install all by default</li></ul>
+<div role="note" class="note note-info">The environment setup is carried out on the Windows 10 system, Linux and Mac users can access <a target="_blank" rel="nofollow noreferrer noopener" class="external text" href="https://docs.espressif.com/projects/arduino-esp32/en/latest/installing.html">Arduino-esp32 environment setup</a> for reference</div>
+<h3><span class="mw-headline" id="Install_ESP32_Development_Board">Install ESP32 Development Board</span></h3>
+<ul><li>Before using ESP32-related motherboards with the Arduino IDE, you must first install the software package for the <b>esp32 by Espressif Systems</b> development board</li>
+<li>According to <font color="red"><b> board installation requirement</b></font>, it is generally recommended to use <b>Install Online</b>. If online installation fails, use <b>Install Offline</b>.</li>
+<li>For the installation tutorial, please refer to <a target="_blank" rel="nofollow noreferrer noopener" class="external text" href="https://www.waveshare.com/wiki/Arduino_Board_Managers_Tutorial">Arduino board manager tutorial</a></li></ul>
+<table class="wikitable table table-bordered" style="width:80%">
+<caption>
+<ul><li>ESP32-P4 required development board installation description</li></ul>
+</caption>
+<tbody><tr>
+<th>Board name</th>
+<th>Board installation requirement</th>
+<th>Version number requirement
+</th></tr>
+<tr style="text-align:center;">
+<td>esp32 by Espressif Systems</td>
+<td>"Install Offline" / "Install Online"</td>
+<td>≥3.2.0
+</td></tr>
+</tbody></table>
+<h3><span class="mw-headline" id="Install_Library">Install Library</span></h3>
+<ul><li>When installing Arduino libraries, there are usually two ways to choose from: <b>Install online</b> and <b>Install offline</b>.<b> <font color="red"> If the library installation requires offline installation, you must use the provided library file</font></b><br /> For most libraries, users can easily search and install them through the online library manager of the Arduino software. However, some open-source libraries or custom libraries are not synchronized to the Arduino Library Manager, so they cannot be acquired through online searches. In this case, users can only manually install these libraries offline.</li>
+<li>ESP32-P4 library file is stored in the demo</li>
+<li>For library installation tutorial, please refer to <a target="_blank" rel="nofollow noreferrer noopener" class="external text" href="https://www.waveshare.com/wiki/Arduino_Library_Manager_Tutorial">Arduino library manager tutorial</a></li></ul>
+
++ ESP32-P4 library file description
+
+<table class="wikitable list table table-striped table-bordered" style="width:100%;text-align:center;"><tbody><tr>
+<th>Library Name</th>
+<th>Description</th>
+<th>Version</th>
+<th>Library Installation Requirement
+</th></tr>
+<tr>
+<td>GFX_Library_for_Arduino</td>
+<td>GFX graphical library for SH8601</td>
+<td>v1.6.0</td>
+<td>"Install Offline"
+</td></tr>
+<tr>
+<td>lvgl</td>
+<td>LVGL graphical library</td>
+<td>v9.3.0</td>
+<td>"Install Offline" is recommended
+</td></tr>
+<tr>
+<td>displays</td>
+<td>I2C driver, screen definition and touch driver</td>
+<td>——</td>
+<td>"Install Offline"
+</td></tr>
+<tr>
+<td>lv_conf.h</td>
+<td>LVGL configuration file</td>
+<td>——</td>
+<td>"Install Offline"
+</td></tr></tbody></table>
+<h2><span class="mw-headline" id="Run_the_First_Arduino_Demo">Run the First Arduino Demo</span></h2>
+<div class="toccolours mw-collapsible mw-collapsed">
+<div role="note" class="note note-reminder">If you are just getting started with ESP32 and Arduino, and you don't know how to create, compile, flash, and run Arduino ESP32 programs, then please expand and take a look. Hope it can help you! </div>
+<div class="mw-collapsible-content" style="padding: 10px; background-color: #f9f9f9; border-radius: 10px;">
+<div style="margin-bottom: 10px;">
+<h3><span class="mw-headline" id="New_Project">New Project</span></h3>
+<ul><li>Run the Arduino IDE and select <code><b>File</b></code> -&gt; <code><b>New Sketch</b></code> <br /> <a href="/wiki/File:ESP32-S3-AMOLED-1.91-Ar-study-01.png" class="image"><img alt="ESP32-S3-AMOLED-1.91-Ar-study-01.png" src="/w/upload/c/c6/ESP32-S3-AMOLED-1.91-Ar-study-01.png" decoding="async" loading="lazy" width="800" height="584" /></a></li>
+<li>Enter the code:</li></ul>
+<pre class="code2highlight lang-c">void setup() {
+  // put your setup code here, to run once:
+  Serial.begin(115200);
+}
+
+void loop() {
+  // put your main code here, to run repeatedly:
+  Serial.println(&quot;Hello, World!&quot;);
+  delay(2000);
+}</pre>
+<ul><li>Save the project and select <code><b>File</b></code> -&gt; <code><b>Save As...</b></code>. In the pop-up menu, select the path to save the project, and enter a project name, such as <b>Hello_World</b>, click <code><b>Save</b></code></li></ul>
+<pre><br /><a href="/wiki/File:ESP32-S3-AMOLED-1.91-Ar-study-02.png" class="image"><img alt="ESP32-S3-AMOLED-1.91-Ar-study-02.png" src="/w/upload/4/4c/ESP32-S3-AMOLED-1.91-Ar-study-02.png" decoding="async" loading="lazy" width="800" height="584" /></a>
+</pre>
+</div>
+<div style="margin-bottom: 10px;">
+<h3><span class="mw-headline" id="Compile_and_Flash_Demos">Compile and Flash Demos</span></h3>
+<ul><li>Select the corresponding development board, take the ESP32S3 motherboard as an example:<br /></li></ul>
+<p><font color="red">①. </font>Click to select the dropdown menu option <b>Select Other Board and Port</b>; <br />
+<font color="red">②. </font>Search for the required development board model <b>esp32s3 dev module</b> and select; <br />
+<font color="red">③. </font>Select <b>COM Port</b>; <br />
+<font color="red">④. </font><b>Save</b> the selection. <br />
+<a href="/wiki/File:ESP32-S3-AMOLED-1.91-Ar-study-03.png" class="image"><img alt="ESP32-S3-AMOLED-1.91-Ar-study-03.png" src="/w/upload/d/d9/ESP32-S3-AMOLED-1.91-Ar-study-03.png" decoding="async" loading="lazy" width="800" height="584" /></a>
+</p>
+<ul><li>If the ESP32S3 mainboard only has a USB port, you need to enable <b>USB CDC</b>, as shown in the following diagram: <br /></li></ul>
+<p><a href="/wiki/File:ESP32-S3-AMOLED-1.91-Ar-study-04.png" class="image"><img alt="ESP32-S3-AMOLED-1.91-Ar-study-04.png" src="/w/upload/3/33/ESP32-S3-AMOLED-1.91-Ar-study-04.png" decoding="async" loading="lazy" width="798" height="580" /></a>
+</p>
+<ul><li>Compile and upload the program: <br /></li></ul>
+<p><font color="red">①. </font>Compile the program; <font color="red">②. </font>Compile and download the program; <font color="red">③. </font>Download successful. <br />
+<a href="/wiki/File:ESP32-S3-AMOLED-1.91-Ar-study-05.png" class="image"><img alt="ESP32-S3-AMOLED-1.91-Ar-study-05.png" src="/w/upload/d/dc/ESP32-S3-AMOLED-1.91-Ar-study-05.png" decoding="async" loading="lazy" width="800" height="583" /></a>
+</p>
+<ul><li>Open the <b>Serial Monitor</b> window, and the demo will print "Hello World!" every 2 seconds, and the operation is as follows:<br /></li></ul>
+<p><a href="/wiki/File:ESP32-S3-AMOLED-1.91-Ar-study-06.png" class="image"><img alt="ESP32-S3-AMOLED-1.91-Ar-study-06.png" src="/w/upload/6/66/ESP32-S3-AMOLED-1.91-Ar-study-06.png" decoding="async" loading="lazy" width="798" height="580" /></a>
+</p>
+</div>
+</div>
+</div>
+</div>
+<h2><span class="mw-headline" id="Demo">Demo</span></h2>
+<p><a href="/wiki/File:Demo-flow-01.png" class="image"><img alt="Demo-flow-01.png" src="/w/upload/thumb/7/74/Demo-flow-01.png/1000px-Demo-flow-01.png" decoding="async" loading="lazy" width="1000" height="54" srcset="/w/upload/7/74/Demo-flow-01.png 1.5x" /></a>
+</p>
+<table class="wikitable table table-striped table-bordered" style="width:90%;background: white;">
+<caption>
+<ul><li>ESP32-P4 demos</li></ul>
+</caption>
+<tbody><tr>
+<th>Demo</th>
+<th>Basic Description</th>
+<th>Dependency Library
+</th></tr>
+<tr>
+<td>HelloWorld</td>
+<td>Demonstrates the basic graphics library function and can also be used to test the basic performance of display screens and the display effect of random text</td>
+<td>GFX_Library_for_Arduino, displays
+</td></tr>
+<tr>
+<td>Drawing_board</td>
+<td>Touch drawing dot test</td>
+<td>GFX_Library_for_Arduino, displays
+</td></tr>
+<tr>
+<td>AsciiTable</td>
+<td>Prints ASCII characters in rows and columns on the display screen according to the screen size</td>
+<td>GFX_Library_for_Arduino, displays
+</td></tr>
+<tr>
+<td>GFX_ESPWiFiAnalyzer</td>
+<td>Draws the WiFi band signal strength on the screen</td>
+<td>GFX_Library_for_Arduino, displays
+</td></tr>
+<tr>
+<td>LVGLV9_Arduino</td>
+<td>LVGL demonstration</td>
+<td>LVGL, GFX_Library_for_Arduino, displays
+</td></tr></tbody></table>
+<h1><span class="mw-headline" id="ESP-IDF">ESP-IDF</span></h1>
+<h2><span id="Introduction_to_ESP-IDF_and_Environment_Setup_(VSCode_Column)"></span><span class="mw-headline" id="Introduction_to_ESP-IDF_and_Environment_Setup_.28VSCode_Column.29">Introduction to ESP-IDF and Environment Setup (VSCode Column)</span></h2>
+<p>ESP-IDF (Espressif IoT Development Framework) is an open-source IoT development framework launched by Espressif specifically for the development of its ESP32 series chips. ESP-IDF provides the necessary tools and libraries to build IoT applications, including Wi-Fi, Bluetooth, peripheral drivers, file systems, network protocol stacks, encryption, security, and real-time operating systems (FreeRTOS).
+<br /><br />
+The following description only applies to the VSCode + ESP-IDF environment<br /><br />
+</p>
+<ul><li><b>PS:</b>
+<ul><li>If you wish to use the Eclipse editor as your primary development environment, please click the link to download <a target="_blank" rel="nofollow noreferrer noopener" class="external text" href="https://dl.espressif.com/dl/esp-idf/">Espressif-IDE</a> and install it, replacing the ESP-IDF version to be ≥v5.3.1.</li>
+<li><font size="4" color="red"> <b>If you encounter errors such as TSL Error, Network Error, etc., during the installation of ESP-IDF, please re-clear the directory folders, ensure a stable network environment without any proxy contamination, and then try the installation again. It will take a long time, so please be patient.</b> </font></li></ul></li></ul>
+<h3><span class="mw-headline" id="Prerequisites">Prerequisites</span></h3>
+<ol><li>If you are using a Mac or Linux, install the following <a target="_blank" rel="nofollow noreferrer noopener" class="external text" href="https://docs.espressif.com/projects/esp-idf/en/latest/esp32/get-started/linux-macos-setup.html#step-1-install-prerequisites">ESP-IDF prerequisites</a>. If you're using Windows, ignore this step.</li>
+<li class="mw-empty-elt"></li></ol>
+<h3><span class="mw-headline" id="Install_VSCode">Install VSCode</span></h3>
+<ol><li>Open the <a target="_blank" rel="nofollow noreferrer noopener" class="external text" href="https://code.visualstudio.com/download">download page</a> of the official VSCode website, and select the corresponding system and system bit to download <br /><a href="/wiki/File:Esp32-vscod-01.jpg" class="image"><img alt="Esp32-vscod-01.jpg" src="/w/upload/5/5f/Esp32-vscod-01.jpg" decoding="async" loading="lazy" width="800" height="512" /></a></li>
+<li>After running the installation package, the rest can be installed by default, but here for the subsequent experience, it is recommended to check boxes 1, 2, and 3<br /> <a href="/wiki/File:Esp32-vscod-02.jpg" class="image"><img alt="Esp32-vscod-02.jpg" src="/w/upload/0/08/Esp32-vscod-02.jpg" decoding="async" loading="lazy" width="800" height="615" /></a>
+<ul><li>After <b>the first and second items</b> are enabled, you can open VSCode directly by right-clicking files or directories, which can improve the subsequent user experience</li>
+<li>After <b>the third item</b> is enabled, you can select VSCode directly when you choose how to open it</li></ul></li></ol>
+<h3><span class="mw-headline" id="Install_the_ESP-IDF_Plug-in">Install the ESP-IDF Plug-in</span></h3>
+<ol><li>Open VSCode, click on Plugin Manager, and search for <b>ESP-IDF</b> to download and install, as shown in the figure: <br /><a href="/wiki/File:ESP32-P4_VSCode_ESP-IDF_env_240905_01.png" class="image"><img alt="ESP32-P4 VSCode ESP-IDF env 240905 01.png" src="/w/upload/4/4b/ESP32-P4_VSCode_ESP-IDF_env_240905_01.png" decoding="async" loading="lazy" width="2561" height="1439" /></a></li>
+<li>After installation, there is an Espressif logo on the left toolbar is a plug-in, click into the plug-in (there will be a short period of time for loading the program), select <font color="red"><b>EXPRESS</b></font>, for quick installation, as shown in the figure: <a href="/wiki/File:ESP32-P4_VSCode_ESP-IDF_env_240905_02.png" class="image"><img alt="ESP32-P4 VSCode ESP-IDF env 240905 02.png" src="/w/upload/d/d4/ESP32-P4_VSCode_ESP-IDF_env_240905_02.png" decoding="async" loading="lazy" width="2561" height="1439" /></a></li></ol>
+<h3><span class="mw-headline" id="Install_the_ESP-IDF_Development_Environment">Install the ESP-IDF Development Environment</span></h3>
+<ol><li>Enter the <b>EXPRESS</b> installation interface, <b>confirm the ESP-IDF version ≥v5.3.1 release version</b>, ESP-IDF directory and ESP-IDF tool directory, click Install, and wait patiently for the installation steps to be completed, as shown in the figure: <br /><a href="/wiki/File:ESP32-P4_VSCode_ESP-IDF_env_240905_03.png" class="image"><img alt="ESP32-P4 VSCode ESP-IDF env 240905 03.png" src="/w/upload/5/5f/ESP32-P4_VSCode_ESP-IDF_env_240905_03.png" decoding="async" loading="lazy" width="2561" height="1439" /></a></li>
+<li><b>If you are a domestic user in China, you can choose to download the server as Espressif</b>, the installation process is slow, make sure the network is in good condition, you can wait patiently for the installation to complete, <a href="/wiki/File:ESP32-P4_VSCode_ESP-IDF_env_240905_04.png" class="image"><img alt="ESP32-P4 VSCode ESP-IDF env 240905 04.png" src="/w/upload/0/05/ESP32-P4_VSCode_ESP-IDF_env_240905_04.png" decoding="async" loading="lazy" width="2561" height="1440" /></a></li>
+<li>The installation process is as follows: <br /><a href="/wiki/File:ESP32-P4_VSCode_ESP-IDF_env_240905_05.png" class="image"><img alt="ESP32-P4 VSCode ESP-IDF env 240905 05.png" src="/w/upload/2/2c/ESP32-P4_VSCode_ESP-IDF_env_240905_05.png" decoding="async" loading="lazy" width="2561" height="1439" /></a></li>
+<li>After the installation is complete, the interface is as follows: <br /><a href="/wiki/File:ESP32-P4_VSCode_ESP-IDF_env_240905_06.png" class="image"><img alt="ESP32-P4 VSCode ESP-IDF env 240905 06.png" src="/w/upload/2/2e/ESP32-P4_VSCode_ESP-IDF_env_240905_06.png" decoding="async" loading="lazy" width="2561" height="1440" /></a></li></ol>
+<h2><span class="mw-headline" id="Getting_Start">Getting Start</span></h2>
+<div role="note" class="note note-info">This Wiki keeps updating the ESP32-P4 demos, some demos require ESP-IDF version dependencies, it will take a period of time to test the update, please be patient. </div>
+<p>The best way to learn a language or development environment is to start from the basics. This section will provide a detailed guide on how to create projects, develop from existing projects, and include embedded classic tutorials such as <b>HelloWorld</b> and the usage of common interface <b>I2C</b>
+</p>
+<h3><span class="mw-headline" id="Introduction_to_Basic_Structure_of_an_ESP-IDF_Project">Introduction to Basic Structure of an ESP-IDF Project</span></h3>
+<ul><li>Open the ESP-IDF plug-in, click New project, select the ESP-IDF demo -- &gt;<b>sample_project</b> -- &gt; click Create<br /><a href="/wiki/File:ESP32-P4_VSCode_ESP-IDF_GettingStart_240905_01.png" class="image"><img alt="ESP32-P4 VSCode ESP-IDF GettingStart 240905 01.png" src="/w/upload/3/37/ESP32-P4_VSCode_ESP-IDF_GettingStart_240905_01.png" decoding="async" loading="lazy" width="2561" height="1439" /></a></li>
+<li>Create a new VSCode and open it in the window, you can see the structure of VSCode as follows</li></ul>
+<pre>├── CMakeLists.txt
+├── main
+│   ├── CMakeLists.txt
+│   └── main.c
+└── README.md                  
+</pre>
+<h4><span class="mw-headline" id="ESP-IDF_Project_Details">ESP-IDF Project Details</span></h4>
+<ul><li>Component: The components in ESP-IDF are the basic modules for building applications, each component is usually a relatively independent code base or library, which can implement specific functions or services, and can be reused by applications or other components, similar to the definition of libraries in Python development.
+<ul><li>Component reference: The import of libraries in the Python development environment only requires to "import library name or path", while ESP-IDF is based on the C language, and the importing of libraries is configured and defined through <code>CMakeLists.txt</code>.</li>
+<li>When we use online components, we usually use <code>idf.py add-dependency &lt;componetsName&gt;</code> to add online components to the project, which generates a <code>idf_component.yml</code> file for managing components.</li>
+<li>The purpose of CmakeLists.txt: When compiling ESP-IDF, the build tool <code>CMake</code> first reads the content of the top-level <code>CMakeLists.txt</code> in the project directory to read the build rules and identify the content to be compiled. When the required components and demos are imported into the <code>CMakeLists.txt</code>, the compilation tool <code>CMake</code> will import each content that needs to be compiled according to the index. The compilation process is as follows:</li></ul></li></ul>
+<p><a href="/wiki/File:ESP32-P4_VSCode_ESP-IDF_GettingStart_240906_02.png" class="image"><img alt="ESP32-P4 VSCode ESP-IDF GettingStart 240906 02.png" src="/w/upload/f/f7/ESP32-P4_VSCode_ESP-IDF_GettingStart_240906_02.png" decoding="async" loading="lazy" width="898" height="890" /></a>
+</p>
+<h4><span class="mw-headline" id="Description_of_Bottom_Toolbar_of_VSCode_User_Interface">Description of Bottom Toolbar of VSCode User Interface</span></h4>
+<p>When we open an ESP-IDF project, the environment is automatically loaded at the bottom. For the development of <b>ESP32-P4-WIFI6-Touch-LCD-3.4C</b>, the bottom toolbar is also very important, as shown in the figure:
+<a href="/wiki/File:ESP32-P4_VSCode_ESP-IDF_GettingStart_240905_03.png" class="image"><img alt="ESP32-P4 VSCode ESP-IDF GettingStart 240905 03.png" src="/w/upload/b/b6/ESP32-P4_VSCode_ESP-IDF_GettingStart_240905_03.png" decoding="async" loading="lazy" width="1005" height="169" /></a>
+</p>
+<ol><li><b>ESP-IDF Development Environment Version Manager</b>, when our project requires differentiation of development environment versions, it can be managed by installing different versions of ESP-IDF. When the project uses a specific version, it can be switched to by utilizing it</li>
+<li><b>Device flashing COM port</b>, select to flash the compiled program into the chip</li>
+<li><b>Select set-target chip model</b>, select the corresponding chip model, for example, ESP32-P4-WIFI6-Touch-LCD-3.4C needs to choose <code>esp32p4</code> as the target chip</li>
+<li><b>menuconfig</b>, click it to modify sdkconfig configuration file</li>
+<li><b>Fullclean button</b>, when the project compilation error or other operations pollute the compiled content, you can clean up all the compiled content by clicking it</li>
+<li><b>Build project</b>, when a project satisfies the build, click this button to compile</li>
+<li><b>Flash button</b>, when a project build is completed, select the COM port of the corresponding development board, and click this button to flash the compiled firmware to the chip</li>
+<li><b>Monitor enable flashing port monitoring</b>, when a project passes through Build --&gt; Flash, click this button to view the log of output from flashing port and debugging port, so as to observe whether the application works normally</li>
+<li><b>Build Flash Monitor one-click button</b>, which is used to continuously execute Build-&gt;Flash-&gt;Monitor, often referred to as "little flame"</li></ol>
+<h3><span class="mw-headline" id="HelloWorld_Demo">HelloWorld Demo</span></h3>
+<p>After understanding <b>Description of bottom toolbar of VSCode user interface</b>, the HelloWorld project allows you to quickly get started and understand the basic projects of the ESP32 development environment. It demonstrates how to use ESP-IDF to create a basic application, and covers the ESP32 development process, including compilation, flashing, and monitor debugging steps.
+</p>
+<ol><li>After opening the sample project <code>HelloWorld</code>, set the target port and chip type (<font color="red">Note: There is a loading action in the lower right corner when the chip type is selected, indicating that ESP-IDF is executing the command <code>idf.py set-target esp32p4</code>. It needs to pull the architecture package environment corresponding to the chip from the package manager, which may take some time. Please wait patiently. If you perform build or other operations at this time, there will be errors!!! </font>)</li>
+<li>Through the bottom tool <code>🔥</code> with one click, you can build, flash, and monitor, allowing you to view the terminal output of "Hello World"! <br /><a href="/wiki/File:900px-ESP32-P4_VSCode_ESP-IDF_GettingStart_240906_01.png" class="image"><img alt="900px-ESP32-P4 VSCode ESP-IDF GettingStart 240906 01.png" src="/w/upload/thumb/8/88/900px-ESP32-P4_VSCode_ESP-IDF_GettingStart_240906_01.png/600px-900px-ESP32-P4_VSCode_ESP-IDF_GettingStart_240906_01.png" decoding="async" loading="lazy" width="600" height="245" srcset="/w/upload/8/88/900px-ESP32-P4_VSCode_ESP-IDF_GettingStart_240906_01.png 1.5x" /></a></li>
+<li>Code content analysis
+<ol><li>There is only one <code>app_main</code> main function in the code, which determines the print content output through conditional judgment, and adds a loop at the end to achieve 10s restart of the chip.</li>
+<li><code>app_main</code> function is the entry point for user applications in the ESP-IDF (Espressif IoT Development Framework) development framework. It is the core function of the ESP-IDF project and is equivalent to the main function in the standard program of the C language. In ESP32 development, <code>app_main</code> function is the first task scheduled by the real-time operating system (FreeRTOS), which is the starting point for the execution of the user's code.</li></ol></li></ol>
+<h3><span class="mw-headline" id="I2C">I2C</span></h3>
+<p>I2C is a commonly used serial communication bus, which can communicate through two lines, one data cable (SDA, Serial Data) and one clock cable (SCL, Serial Clock), and supports multi-master and multi-slave mode. On the ESP32-P4, there are two I2C bus interfaces. The chip internally uses a GPIO exchange matrix to configure the use of any GPIO pins. This feature allows us to freely use any GPIO as an I2C pin control. Of course, the ESP32-P4 I2C supports both Slave and Master modes. Below, we primarily use the I2C host (Master) mode for ESP32-P4 to start communication, control, send data requests or receive data from the slave devices (which can be sensors with any I2C interface).
+The I2C pins of <b>ESP32-P4-WIFI6-Touch-LCD-3.4C</b> use <code>SCL(GPIO8)</code> and <code>SDA(GPIO7)</code> by default <br />
+<a href="/wiki/File:ESP32-P4-Nano-I2C_240906_01.png" class="image"><img alt="ESP32-P4-Nano-I2C 240906 01.png" src="/w/upload/0/0e/ESP32-P4-Nano-I2C_240906_01.png" decoding="async" loading="lazy" width="998" height="391" /></a>
+</p><p>In ESP-IDF, the I2C bus requires the configuration specified by <code>i2c_master_bus_config_t</code>:
+</p>
+<ul><li><code>i2c_master_bus_config_t::clk_source</code> selects the source clock for the I2C bus, using the default I2C clock source (usually the default clock source) is simply set to <code>I2C_CLK_SRC_DEFAULT</code></li>
+<li><code>i2c_master_bus_config_t::i2c_port</code> sets the I2C port used by the controller, as explained above, the ESP32-P4 has two I2C ports. When two different I2C interfaces need to be <b>enabled simultaneously</b>, this needs to be utilized to distinguish between them</li>
+<li><code>i2c_master_bus_config_t::scl_io_num</code> sets the GPIO number of the serial clock bus (SCL), which is 8 on ESP32-P4-WIFI6-Touch-LCD-3.4C</li>
+<li><code>i2c_master_bus_config_t::sda_io_num</code> sets the GPIO number for the serial data bus (SDA), which is 7 on the ESP32-P4-WIFI6-Touch-LCD-3.4C</li>
+<li><code>i2c_master_bus_config_t::glitch_ignore_cnt</code> sets the Glitch Period for the Master Bus, and if the Glitch Period on the line is smaller than this value, it can be filtered out. Typically, this value is set to 7</li>
+<li><code>i2c_master_bus_config_t::enable_internal_pullup</code> enables internal pullups, on the ESP32-P4-WIFI6-Touch-LCD-3.4C, there is already an additional I2C pullup, no need to enable internal pullups</li></ul>
+<p>As described above, the I2C configuration is:
+</p>
+<pre>   i2c_master_bus_config_t i2c_bus_config = {
+       .clk_source = I2C_CLK_SRC_DEFAULT,
+       .i2c_port = I2C_NUM_0,
+       .scl_io_num = 8,
+       .sda_io_num = 7,
+       .glitch_ignore_cnt = 7,
+       .flags.enable_internal_pullup = false,
+   };
+</pre>
+<ol><li>Open the <code>i2c_tools</code> the project, select the COM port and chip model, click <code>⚙️</code> to enter the settings. This will open a new tab: <b>SDK Configuration editor</b>, also known as menuconfig. Directly search for I2C in the search bar. The content has already been retrieved, and the SCL GPIO Num and SDA GPIO Num in the demo are already corresponding to <code>SCL(GPIO8)</code> and <code>SDA(GPIO7)</code></li>
+<li>Next, you can directly compile, flash, and monitor by clicking <code>🔥</code>. Upon after completion, you will see the command menu in the terminal. When you execute i2cdetect, all I2C addresses will be printed. If there is a device, a number will be displayed (I2C address 18 device corresponds to the onboard ES8311 Codec audio chip, this chip will be detailed in the I2S section), as shown in the figure:<br /><a href="/wiki/File:ESP32-P4-Nano_I2C_demo_240906_01.png" class="image"><img alt="ESP32-P4-Nano I2C demo 240906 01.png" src="/w/upload/thumb/a/ab/ESP32-P4-Nano_I2C_demo_240906_01.png/600px-ESP32-P4-Nano_I2C_demo_240906_01.png" decoding="async" loading="lazy" width="600" height="525" srcset="/w/upload/thumb/a/ab/ESP32-P4-Nano_I2C_demo_240906_01.png/900px-ESP32-P4-Nano_I2C_demo_240906_01.png 1.5x, /w/upload/a/ab/ESP32-P4-Nano_I2C_demo_240906_01.png 2x" /></a></li>
+<li>The above steps have realized the basics of I2C device communication. In devices that use the I2C communication protocol, it is often necessary to write register configurations to the corresponding address device via the I2C bus to achieve the functionality of the I2C device. In this case, we need to write the initialization program for the I2C device in the program to drive the I2C device. Different I2C devices have different I2C addresses. In development, we can use the i2ctools tool to query the attached I2C address, nd then read the chip manual to query the registers, configuration and other contents to achieve I2C bus communication.</li></ol>
+<h2><span class="mw-headline" id="Intermediate">Intermediate</span></h2>
+<div role="note" class="note note-info">This Wiki keeps updating the ESP32-P4 demos, some demos require ESP-IDF version dependencies, it will take a period of time to test the update, please be patient. </div>
+<h3><span class="mw-headline" id="SDMMC_Demo">SDMMC Demo</span></h3>
+<p>The ESP32-P4-WIFI6-Touch-LCD-3.4C features a 4-Wire SDIO3.0 card slot for off-chip memory expansion
+</p>
+<ul><li><b>Supported rate modes</b>
+<ul><li>Default rate (20 MHz)</li>
+<li>High-speed mode (40 MHz)</li></ul></li>
+<li><b>Configure bus width and frequency</b></li></ul>
+<p>In ESP-IDF, use <code>sdmmc_host_t</code> and <code>sdmmc_slot_config_t</code> settings to configure the default 20MHz communication frequency and 4-wire width communication, as follows:
+</p>
+<pre>sdmmc_host_t host = SDMMC_HOST_DEFAULT();
+sdmmc_slot_config_t slot_config = SDMMC_SLOT_CONFIG_DEFAULT();
+</pre>
+<p>In the design that supports 40 MHz communication, you can adjust the max_freq_khz field in the sdmmc_host_t structure to increase the bus frequency:
+</p>
+<pre>sdmmc_host_t host = SDMMC_HOST_DEFAULT();
+host.max_freq_khz = SDMMC_FREQ_HIGHSPEED;
+</pre>
+<p>The SDMMC 4-wire connection on the ESP32-P4-WIFI6-Touch-LCD-3.4C should be defined as:
+</p>
+<pre>sdmmc_slot_config_t slot_config = SDMMC_SLOT_CONFIG_DEFAULT();
+slot_config.width = 4;
+slot_config.clk = 43;
+slot_config.cmd = 44;
+slot_config.d0 = 39;
+slot_config.d1 = 40;
+slot_config.d2 = 41;
+slot_config.d3 = 42;
+slot_config.flags |= SDMMC_SLOT_FLAG_INTERNAL_PULLUP;
+</pre>
+<ol><li>Open the <code>sdmmc</code> project, select the COM port and chip model, because the demo project defines the pin as a macro, so you need to configure it, of course, you can also directly fill in the pin value. Click <code>⚙️</code> to enter the settings, here a new tab will open: <b>SDK Configuration editor</b>, which is also known as menuconfig. We directly search for sd in the search bar, see that the content has been retrieved at this time, and the demo configuration has been configured, check the default initialization and create the demo file by default: <br /><a href="/wiki/File:ESP32-P4-Nano-SDMMC_240906_02.png" class="image"><img alt="ESP32-P4-Nano-SDMMC 240906 02.png" src="/w/upload/thumb/c/c3/ESP32-P4-Nano-SDMMC_240906_02.png/800px-ESP32-P4-Nano-SDMMC_240906_02.png" decoding="async" loading="lazy" width="800" height="821" srcset="/w/upload/thumb/c/c3/ESP32-P4-Nano-SDMMC_240906_02.png/1200px-ESP32-P4-Nano-SDMMC_240906_02.png 1.5x, /w/upload/c/c3/ESP32-P4-Nano-SDMMC_240906_02.png 2x" /></a></li>
+<li>Next, insert the prepared TF card, click <code>🔥</code> to compile, flash and monitor. After completion, you will see the output of the command menu in the terminal showing the contents of the files in the directory:<br /><a href="/wiki/File:ESP32-P4-Nano-SDMMC_240906_03.png" class="image"><img alt="ESP32-P4-Nano-SDMMC 240906 03.png" src="/w/upload/thumb/e/e1/ESP32-P4-Nano-SDMMC_240906_03.png/800px-ESP32-P4-Nano-SDMMC_240906_03.png" decoding="async" loading="lazy" width="800" height="603" srcset="/w/upload/e/e1/ESP32-P4-Nano-SDMMC_240906_03.png 1.5x" /></a></li></ol>
+<h3><span class="mw-headline" id="WIFI_Networking_Demo">WIFI Networking Demo</span></h3>
+<p>The ESP32-P4 does not come with WIFI/BT capabilities by itself, whereas the ESP32-P4-WIFI6-Touch-LCD-3.4C extends its WIFI functionality by connecting to an ESP32-C6 module via SDIO. The ESP32-C6 acts as a Slave, supporting the ESP32-P4 as the Host utilizing the <b>WIFI 6/BT 5</b> features through SDIO via a series of instruction sets. By adding two components, seamless use of <code>esp_wifi</code> is achieved.
+</p>
+<pre>// In a WIFI project, add the following two components through the ESP-IDF component management tool
+idf.py add-dependency "espressif/esp_wifi_remote"
+idf.py add-dependency "espressif/esp_hosted"
+</pre>
+<ol><li>Open the <code>wifistation</code> project to add components<br /><a href="/wiki/File:ESP32-P4-Nano-WiFistation_240907_01.png" class="image"><img alt="ESP32-P4-Nano-WiFistation 240907 01.png" src="/w/upload/1/10/ESP32-P4-Nano-WiFistation_240907_01.png" decoding="async" loading="lazy" width="1724" height="1008" /></a></li>
+<li>As shown in the above figure, these are the specific steps to add components
+<ol><li>Open the ESP-IDF terminal</li>
+<li>Add the required components in Terminal</li>
+<li>After successful addition, there will be an additional <code>idf_component.yml</code> in the main folder of the project, which is used to manage project components, as explained in the ESP-IDF Project Catalog section</li>
+<li>After opening, it can be seen that two poments <code>espressif/esp_hosted: "*"</code> and <code>espressif/esp_wifi_remote: "*"</code> have been added. They are added to the project as you build it</li></ol></li>
+<li>Next, you can open the settings by clicking on <code>⚙️</code>. Input "Example" for the search, here you set the <b>ssid</b> and <b>password</b> for the WiFi you want to connect to. <b>Note that ESP32-C6 supports 2.4GHz WiFi-6, so when choosing your target WiFi, make sure the frequency is 2.4GHz. </b>After making the changes, you need to save them, otherwise, there will be an error! <br /><a href="/wiki/File:ESP32-P4-Nano-WiFistation_240907_02.png" class="image"><img alt="ESP32-P4-Nano-WiFistation 240907 02.png" src="/w/upload/c/c7/ESP32-P4-Nano-WiFistation_240907_02.png" decoding="async" loading="lazy" width="1624" height="1040" /></a></li>
+<li>Next, you can directly compile, flash, and monitor by clicking <code>🔥</code>. After completion, you will see the following results on the terminal, at this point the ESP32-P4-WIFI6-Touch-LCD-3.4C has already connected to WIFI and is online: <br /><a href="/wiki/File:ESP32-P4-Nano-WiFistation_240907_03.png" class="image"><img alt="ESP32-P4-Nano-WiFistation 240907 03.png" src="/w/upload/d/db/ESP32-P4-Nano-WiFistation_240907_03.png" decoding="async" loading="lazy" width="1116" height="381" /></a></li></ol>
+<h3><span class="mw-headline" id="I2S_Audio_Demo">I2S Audio Demo</span></h3>
+<p><b>I2S (Inter-IC Sound)</b> is a digital communication protocol for transmitting audio data. I2S is a serial bus interface that is primarily used for digital audio data transmission between audio devices, such as digital audio processors (DSPs), digital-to-analog converters (DACs), analog-to-digital converters (ADCs), and audio codecs. <br />
+The ESP32-P4 includes 1 I2S peripheral. By configuring these peripherals, the sample data can be input and output with the help of an I2S driver.<b> ESP32-P4-WIFI6-Touch-LCD-3.4C</b> board integrates the es8311 codec chip and the NS4150B power amplifier chip combination. The I2S bus and pin distribution are as follows:<br />
+</p>
+<ul><li><b>MCLK (Master Clock)</b>: Master clock signal. The clock is typically provided to the ES8311 by an external device (such as an MCU or DSP), which serves as the clock source for its internal digital audio processing module.</li>
+<li><b>SCLK (Serial Clock)</b>: Serial clock signal. This signal is typically used for clock synchronization for I2S data transmission and is generated by the master device to indicate the rate at which the data is transferred. The transmission of each bit of each audio sample requires a clock cycle.</li>
+<li><b>ASDOUT (Audio Serial Data Output)</b> or <b>DOUT</b>: Audio data output pin. The ES8311 outputs decoded digital audio data to this pin, which is then transmitted to an amplifier chip or other audio device.</li>
+<li><b>LRCK (Left/Right Clock)</b> or <b>WS (Word Select)</b>: Left and right channel selection signals to indicate whether the current data sample belongs to the left or right channel. Typically in the I2S protocol, one clock cycle represents the left channel data and the other clock cycle represents the right channel data.</li>
+<li><b>DSDIN (Digital Serial Data Input)</b> or <b>DIN</b>: Digital audio data input pin. This pin receives audio data from an external audio device or a master. The ES7210 decodes this data and processes the audio signals through a digital signal processing module, enabled by an echo cancellation algorithm.</li></ul>
+<p><a href="/wiki/File:ESP32-P4-WIFI6-Touch-LCD-3.4C_250523_02.png" class="image"><img alt="ESP32-P4-WIFI6-Touch-LCD-3.4C 250523 02.png" src="/w/upload/f/f1/ESP32-P4-WIFI6-Touch-LCD-3.4C_250523_02.png" decoding="async" loading="lazy" width="1200" height="896" /></a>
+</p>
+<table class="wikitable list table table-striped table-bordered" style="width:80%">
+
+<tbody><tr>
+<th>Function Pin</th>
+<th>ESP32-P4-WIFI6-Touch-LCD-3.4C Pin
+</th></tr>
+<tr>
+<td>MCLK</td>
+<td><b>GPIO13</b>
+</td></tr>
+<tr>
+<td>SCLK</td>
+<td><b>GPIO12</b>
+</td></tr>
+<tr>
+<td>ASDOUT</td>
+<td><b>GPIO11</b>
+</td></tr>
+<tr>
+<td>LRCK</td>
+<td><b>GPIO10</b>
+</td></tr>
+<tr>
+<td>DSDIN</td>
+<td><b>GPIO9</b>
+</td></tr>
+<tr>
+<td>PA_Ctrl (Power amplifier chip enable pin, active high)</td>
+<td><b>GPIO53</b>
+</td></tr></tbody></table>
+<p>The ESP32-P4-WIFI6-Touch-LCD-3.4C es8311 driver uses <a target="_blank" rel="nofollow noreferrer noopener" class="external text" href="https://components.espressif.com/component/espressif/es8311">ES8311 component (which is about to be deprecated, it is recommended to use esp_codec_dev)</a>. It can be added during usage through the IDF Component Manager.
+</p>
+<pre>idf.py add-dependency "espressif/es8311"
+</pre>
+<ol><li>Open the <code>i2scodec</code> project to add components <br /><a href="/wiki/File:ESP32-P4-Nano-i2scodec_240909_01.png" class="image"><img alt="ESP32-P4-Nano-i2scodec 240909 01.png" src="/w/upload/0/04/ESP32-P4-Nano-i2scodec_240909_01.png" decoding="async" loading="lazy" width="2560" height="1440" /></a></li>
+<li>As shown in the above figure, these are the specific steps to add components
+<ol><li>Open the ESP-IDF terminal</li>
+<li>Add the required components in Terminal</li>
+<li>After successful addition, there will be an additional <code>idf_component.yml</code> in the main folder of the project, which is used to manage project components, as explained in the ESP-IDF Project Catalog section</li>
+<li>Once opened, you can see that <code>the espressif/es8311</code> component has been added, and it will be added to the project when you build it</li></ol></li>
+<li>Next, you can open the settings by clicking on <code>⚙️</code>, search for Example, and adjust the appropriate volume<br /><a href="/wiki/File:ESP32-P4-Nano-i2scodec_240909_02.png" class="image"><img alt="ESP32-P4-Nano-i2scodec 240909 02.png" src="/w/upload/a/a8/ESP32-P4-Nano-i2scodec_240909_02.png" decoding="async" loading="lazy" width="1469" height="791" /></a></li>
+<li>When connected to the speaker, you can directly compile, flash, and monitor by clicking <code>🔥</code> on it, and the following result will be viewed in the terminal after completion, at this time, ESP32-P4-WIFI6-Touch-LCD-3.4C is already playing audio <br /><a href="/wiki/File:ESP32-P4-Nano-i2scodec_240909_03.png" class="image"><img alt="ESP32-P4-Nano-i2scodec 240909 03.png" src="/w/upload/c/c6/ESP32-P4-Nano-i2scodec_240909_03.png" decoding="async" loading="lazy" width="1068" height="270" /></a></li></ol>
+<h3><span class="mw-headline" id="MIPI-DSI_Screen_Wake-Up_Demo">MIPI-DSI Screen Wake-Up Demo</span></h3>
+<p><b>ESP32-P4-WIFI6-Touch-LCD-3.4C</b> uses the ESP32-P4NRW32 chip with the following new features:
+</p>
+<ul><li><b>MIPI-DSI</b> compliant, using <b>D-PHY v1.1</b> version, up to 2-lane x 1.5Gbps (total 3Gbps)</li>
+<li>Supports RGB888, RGB565, YUV422 input</li>
+<li>Supports RGB888, RGB666, RGB565 output</li>
+<li>Uses video mode to output video streams, and supports output of fixed image patterns</li></ul>
+<p><b>MIPI-DSI</b> image processing can also be processed using a <b>2D-DMA</b> controller, which supports PPA and JPEG encoding/decoding peripherals
+</p>
+<h4><span class="mw-headline" id="MIPI-DSI_LCD_Driving_Principle">MIPI-DSI LCD Driving Principle</span></h4>
+<p><a href="/wiki/File:ESP32-P4-Nano-ETH_to_WiFi_240925_02.png" class="image"><img alt="ESP32-P4-Nano-ETH to WiFi 240925 02.png" src="/w/upload/0/0d/ESP32-P4-Nano-ETH_to_WiFi_240925_02.png" decoding="async" loading="lazy" width="902" height="474" /></a>
+</p>
+<h4><span class="mw-headline" id="Hardware_Required">Hardware Required</span></h4>
+<ul><li>ESP32-P4-WIFI6-Touch-LCD-3.4C</li></ul>
+<h4><span class="mw-headline" id="Screen_Wake-Up_Steps">Screen Wake-Up Steps</span></h4>
+<ol><li>After opening the project, select <code>esp32p4</code> core, and you can directly click 🔥 to compile, flash, monitor. Upon completion, you can see that the screen has lit up to refresh the color bar:</li></ol>
+<p><a href="/wiki/File:900px-ESP32-P4-WIFI6-Touch-LCD-3.4C-250524_01.png" class="image"><img alt="900px-ESP32-P4-WIFI6-Touch-LCD-3.4C-250524 01.png" src="/w/upload/thumb/0/00/900px-ESP32-P4-WIFI6-Touch-LCD-3.4C-250524_01.png/600px-900px-ESP32-P4-WIFI6-Touch-LCD-3.4C-250524_01.png" decoding="async" loading="lazy" width="600" height="431" srcset="/w/upload/0/00/900px-ESP32-P4-WIFI6-Touch-LCD-3.4C-250524_01.png 1.5x" /></a>
+</p>
+<h2><span class="mw-headline" id="Advanced">Advanced</span></h2>
+<div role="note" class="note note-info">This Wiki keeps updating the ESP32-P4 demos, some demos require ESP-IDF version dependencies, it will take a period of time to test the update, please be patient. </div>
+<h3><span id="MIPI-CSI_To_MIPI-DSI_(Real-time_screen_display)"></span><span class="mw-headline" id="MIPI-CSI_To_MIPI-DSI_.28Real-time_screen_display.29">MIPI-CSI To MIPI-DSI (Real-time screen display)</span></h3>
+<p>This example shows how to use the esp_driver_cam component to capture the camera sensor signal and display it through the DSI interface. This example utilizes the ESP camera sensor driver <code>esp_cam_sensor</code> to capture camera sensor signals through the CSI interface and display them via the DSI interface.
+</p>
+<h4><span class="mw-headline" id="Hardware_Required_2">Hardware Required</span></h4>
+<ul><li>OV5647 camera</li>
+<li>ESP32-P4-WIFI6-Touch-LCD-3.4C</li></ul>
+<h4><span class="mw-headline" id="Running_Steps">Running Steps</span></h4>
+<ol><li>Connect the hardware</li>
+<li>Use Type-C TO USB to connect the ESP32-P4-WIFI6-Touch-LCD-3.4C to the host</li>
+<li>After opening the project, select the <code>esp32p4</code> core. Next, you can directly compile, flash, and monitor through clicking 🔥. Upon completion, you can view the screen lighting up and refreshing the camera's captured images. Here is a demonstration of the ESP32-P4-86-Panel-ETH-2RO</li></ol>
+<p><a href="/wiki/File:900px-ESP32-P4-WIFI6-Touch-LCD-3.4C-250524_02.png" class="image"><img alt="900px-ESP32-P4-WIFI6-Touch-LCD-3.4C-250524 02.png" src="/w/upload/thumb/0/01/900px-ESP32-P4-WIFI6-Touch-LCD-3.4C-250524_02.png/600px-900px-ESP32-P4-WIFI6-Touch-LCD-3.4C-250524_02.png" decoding="async" loading="lazy" width="600" height="827" srcset="/w/upload/0/01/900px-ESP32-P4-WIFI6-Touch-LCD-3.4C-250524_02.png 1.5x" /></a>
+</p>
+<h3><span class="mw-headline" id="LVGL_HMI_Human_Machine_Interaction">LVGL HMI Human Machine Interaction</span></h3>
+<p>This example shows that the ESP32-P4 displays LVGL images through the MIPI DSI interface, which fully demonstrates the powerful image processing capabilities of the ESP32-P4
+</p>
+<h4><span class="mw-headline" id="Hardware_Required_3">Hardware Required</span></h4>
+<ul><li>ESP32-P4-WIFI6-Touch-LCD-3.4C</li></ul>
+<h4><span class="mw-headline" id="Screen_Wake-Up_Steps_2">Screen Wake-Up Steps</span></h4>
+<ol><li>After opening the project, select <code>esp32p4</code> core, and you can directly click 🔥 to compile, flash, monitor. Upon completion, you can view the screen:</li></ol>
+<p><a href="/wiki/File:600px-ESP32-P4-WIFI6-Touch-LCD-3.4C-250524_04.png" class="image"><img alt="600px-ESP32-P4-WIFI6-Touch-LCD-3.4C-250524 04.png" src="/w/upload/thumb/4/41/600px-ESP32-P4-WIFI6-Touch-LCD-3.4C-250524_04.png/400px-600px-ESP32-P4-WIFI6-Touch-LCD-3.4C-250524_04.png" decoding="async" loading="lazy" width="400" height="283" srcset="/w/upload/4/41/600px-ESP32-P4-WIFI6-Touch-LCD-3.4C-250524_04.png 1.5x" /></a>
+<a href="/wiki/File:600px-ESP32-P4-WIFI6-Touch-LCD-3.4C-250524_05.png" class="image"><img alt="600px-ESP32-P4-WIFI6-Touch-LCD-3.4C-250524 05.png" src="/w/upload/thumb/3/32/600px-ESP32-P4-WIFI6-Touch-LCD-3.4C-250524_05.png/400px-600px-ESP32-P4-WIFI6-Touch-LCD-3.4C-250524_05.png" decoding="async" loading="lazy" width="400" height="285" srcset="/w/upload/3/32/600px-ESP32-P4-WIFI6-Touch-LCD-3.4C-250524_05.png 1.5x" /></a>
+<a href="/wiki/File:600px-ESP32-P4-WIFI6-Touch-LCD-3.4C-250524_06.png" class="image"><img alt="600px-ESP32-P4-WIFI6-Touch-LCD-3.4C-250524 06.png" src="/w/upload/thumb/1/1f/600px-ESP32-P4-WIFI6-Touch-LCD-3.4C-250524_06.png/400px-600px-ESP32-P4-WIFI6-Touch-LCD-3.4C-250524_06.png" decoding="async" loading="lazy" width="400" height="277" srcset="/w/upload/1/1f/600px-ESP32-P4-WIFI6-Touch-LCD-3.4C-250524_06.png 1.5x" /></a><br />
+<a href="/wiki/File:600px-ESP32-P4-WIFI6-Touch-LCD-3.4C-250524_07.png" class="image"><img alt="600px-ESP32-P4-WIFI6-Touch-LCD-3.4C-250524 07.png" src="/w/upload/thumb/c/cc/600px-ESP32-P4-WIFI6-Touch-LCD-3.4C-250524_07.png/400px-600px-ESP32-P4-WIFI6-Touch-LCD-3.4C-250524_07.png" decoding="async" loading="lazy" width="400" height="279" srcset="/w/upload/c/cc/600px-ESP32-P4-WIFI6-Touch-LCD-3.4C-250524_07.png 1.5x" /></a>
+<a href="/wiki/File:600px-ESP32-P4-WIFI6-Touch-LCD-3.4C-250524_08.png" class="image"><img alt="600px-ESP32-P4-WIFI6-Touch-LCD-3.4C-250524 08.png" src="/w/upload/thumb/0/09/600px-ESP32-P4-WIFI6-Touch-LCD-3.4C-250524_08.png/400px-600px-ESP32-P4-WIFI6-Touch-LCD-3.4C-250524_08.png" decoding="async" loading="lazy" width="400" height="276" srcset="/w/upload/0/09/600px-ESP32-P4-WIFI6-Touch-LCD-3.4C-250524_08.png 1.5x" /></a>
+<a href="/wiki/File:600px-ESP32-P4-WIFI6-Touch-LCD-3.4C-250524_09.png" class="image"><img alt="600px-ESP32-P4-WIFI6-Touch-LCD-3.4C-250524 09.png" src="/w/upload/thumb/2/28/600px-ESP32-P4-WIFI6-Touch-LCD-3.4C-250524_09.png/400px-600px-ESP32-P4-WIFI6-Touch-LCD-3.4C-250524_09.png" decoding="async" loading="lazy" width="400" height="275" srcset="/w/upload/2/28/600px-ESP32-P4-WIFI6-Touch-LCD-3.4C-250524_09.png 1.5x" /></a>
+</p>
+<h3><span class="mw-headline" id="Windows_Display_Expansion">Windows Display Expansion</span></h3>
+<p>This example shows that ESP32-P4 expands Windows display through MIPI DSI interface and USB2.0 HS interface to support touch and audio. It fully demonstrates the powerful image encoding and decoding capabilities of ESP32-P4
+</p>
+<h4><span class="mw-headline" id="Hardware_Required_4">Hardware Required</span></h4>
+<ul><li>ESP32-P4-WIFI6-Touch-LCD-3.4C</li>
+<li>Type-A TO Type-A adapter cable</li>
+<li>Speaker</li></ul>
+<h4><span class="mw-headline" id="Software_Driver">Software Driver</span></h4>
+<ul><li>Driver installation reference: <a target="_blank" rel="nofollow noreferrer noopener" class="external text" href="https://github.com/espressif/esp-iot-solution/tree/master/examples/usb/device/usb_extend_screen/windows_driver">Windows IDD Driver</a></li></ul>
+<h3><span class="mw-headline" id="Flashing_Effect">Flashing Effect</span></h3>
+<p><a href="/wiki/File:ESP32-P4-WIFI6-Touch-LCD-3.4C-250524_14.png" class="image"><img alt="ESP32-P4-WIFI6-Touch-LCD-3.4C-250524 14.png" src="/w/upload/thumb/c/ce/ESP32-P4-WIFI6-Touch-LCD-3.4C-250524_14.png/400px-ESP32-P4-WIFI6-Touch-LCD-3.4C-250524_14.png" decoding="async" loading="lazy" width="400" height="410" srcset="/w/upload/c/ce/ESP32-P4-WIFI6-Touch-LCD-3.4C-250524_14.png 1.5x" /></a>
+<a href="/wiki/File:ESP32-P4-WIFI6-Touch-LCD-3.4C-250524_15.png" class="image"><img alt="ESP32-P4-WIFI6-Touch-LCD-3.4C-250524 15.png" src="/w/upload/thumb/9/98/ESP32-P4-WIFI6-Touch-LCD-3.4C-250524_15.png/600px-ESP32-P4-WIFI6-Touch-LCD-3.4C-250524_15.png" decoding="async" loading="lazy" width="600" height="393" srcset="/w/upload/9/98/ESP32-P4-WIFI6-Touch-LCD-3.4C-250524_15.png 1.5x" /></a>
+</p>
+<h2><span class="mw-headline" id="Expert_Techniques">Expert Techniques</span></h2>
+<div role="note" class="note note-info">This Wiki keeps updating the ESP32-P4 demos. Some demos require <b>ESP-IDF Master</b> version dependencies, which will take some time to test and update. Please be patient. </div>
+<h3><span class="mw-headline" id="ESP-Phone">ESP-Phone</span></h3>
+<p>This example is based on <a target="_blank" rel="nofollow noreferrer noopener" class="external text" href="https://github.com/espressif/esp-brookesia">ESP_Brookesia</a> and shows an Android-like interface with many different applications. This example uses the board's MIPI-DSI interface, MIPI-CSI interface, ESP32-C6, TF card, and audio interface. Based on this example, you can create a use case based on ESP_Brookesia to efficiently develop multimedia applications.
+</p>
+<h4><span class="mw-headline" id="Hardware_Required_5">Hardware Required</span></h4>
+<ul><li>OV5647 or SC2336 camera and cable</li>
+<li>8Ω 2W speaker</li>
+<li>ESP32-P4-WIFI6-Touch-LCD-3.4C</li></ul>
+<h4><span class="mw-headline" id="Screen_Wake-Up_Steps_3">Screen Wake-Up Steps</span></h4>
+<ol><li>After opening the project, select <code>esp32p4</code> core, and you can directly click 🔥 to compile, flash, monitor. Upon completion, you can view the screen:</li></ol>
+<p><a href="/wiki/File:ESP32-P4-WIFI6-Touch-LCD-3.4C-250524_10.png" class="image"><img alt="ESP32-P4-WIFI6-Touch-LCD-3.4C-250524 10.png" src="/w/upload/thumb/8/80/ESP32-P4-WIFI6-Touch-LCD-3.4C-250524_10.png/400px-ESP32-P4-WIFI6-Touch-LCD-3.4C-250524_10.png" decoding="async" loading="lazy" width="400" height="476" srcset="/w/upload/8/80/ESP32-P4-WIFI6-Touch-LCD-3.4C-250524_10.png 1.5x" /></a>
+<a href="/wiki/File:ESP32-P4-WIFI6-Touch-LCD-3.4C-250524_11.png" class="image"><img alt="ESP32-P4-WIFI6-Touch-LCD-3.4C-250524 11.png" src="/w/upload/thumb/5/50/ESP32-P4-WIFI6-Touch-LCD-3.4C-250524_11.png/400px-ESP32-P4-WIFI6-Touch-LCD-3.4C-250524_11.png" decoding="async" loading="lazy" width="400" height="447" srcset="/w/upload/5/50/ESP32-P4-WIFI6-Touch-LCD-3.4C-250524_11.png 1.5x" /></a>
+<a href="/wiki/File:ESP32-P4-WIFI6-Touch-LCD-3.4C-250524_12.png" class="image"><img alt="ESP32-P4-WIFI6-Touch-LCD-3.4C-250524 12.png" src="/w/upload/thumb/9/9f/ESP32-P4-WIFI6-Touch-LCD-3.4C-250524_12.png/400px-ESP32-P4-WIFI6-Touch-LCD-3.4C-250524_12.png" decoding="async" loading="lazy" width="400" height="466" srcset="/w/upload/9/9f/ESP32-P4-WIFI6-Touch-LCD-3.4C-250524_12.png 1.5x" /></a>
+</p>
+<h1><span class="mw-headline" id="Resources">Resources</span></h1>
+<h2><span class="mw-headline" id="Schematic_Diagram">Schematic Diagram</span></h2>
+<ul><li><a target="_blank" rel="nofollow noreferrer noopener" class="external text" href="https://files.waveshare.com/wiki/ESP32-P4-WIFI6-Touch-LCD-XC/ESP32-P4-WIFI6-Touch-LCD-XC-Schematic.pdf">ESP32-P4-WIFI6-Touch-LCD-XC Schematic</a></li></ul>
+<h2><span class="mw-headline" id="Demo_2">Demo</span></h2>
+<ul><li><a target="_blank" rel="nofollow noreferrer noopener" class="external text" href="https://github.com/waveshareteam/ESP32-P4-WIFI6-Touch-LCD-XC">Github</a></li></ul>
+<h2><span class="mw-headline" id="Datasheet">Datasheet</span></h2>
+<ul><li><a target="_blank" rel="nofollow noreferrer noopener" class="external text" href="https://files.waveshare.com/wiki/common/Esp32-p4_datasheet_en.pdf">ESP32-P4 Datasheet</a></li>
+<li><a target="_blank" rel="nofollow noreferrer noopener" class="external text" href="https://files.waveshare.com/wiki/common/Esp32-p4_technical_reference_manual_en.pdf">ESP32-P4 Technical Reference Manual</a></li></ul>
+<h2><span class="mw-headline" id="Software">Software</span></h2>
+<ul><li><a target="_blank" rel="nofollow noreferrer noopener" class="external text" href="https://dl.espressif.com/public/flash_download_tool.zip">Flash_download_tool</a></li></ul>
+</div>
+<h2><span class="mw-headline" id="Project_Resources">Project Resources</span></h2>
+<p>This section features third - party project resources. We merely provide links and bear no responsibility for content updates or maintenance. Thank you for your understanding.<br />
+</p><p><b>That Project-Offline Map Viewer with ESP32 and Round Display</b><br />
+<iframe width="400" height="315" src="//www.youtube.com/embed/Kyjf24e-Poo" frameborder="0" allowfullscreen=""></iframe>
+</p>
+<ul><li>Youtube&#160;: <a target="_blank" rel="nofollow noreferrer noopener" class="external text" href="https://www.youtube.com/watch?v=Kyjf24e-Poo">https://www.youtube.com/watch?v=Kyjf24e-Poo</a></li>
+<li>Github&#160;:  <a target="_blank" rel="nofollow noreferrer noopener" class="external text" href="https://github.com/0015/map_tiles/tree/main/script">https://github.com/0015/map_tiles/tree/main/script</a><br /></li></ul>
+<p>&#8195;&#8195;&#8195;&#8195;&#8194;<a target="_blank" rel="nofollow noreferrer noopener" class="external text" href="https://github.com/0015/OfflineMapDownloader">https://github.com/0015/OfflineMapDownloader</a>
+</p><p><br />
+<b>Garage Tinkering-I Built a Real Mini Map from Need for Speed</b><br />
+<iframe width="400" height="315" src="//www.youtube.com/embed/sAp7oCB939c" frameborder="0" allowfullscreen=""></iframe>
+</p>
+<ul><li>Youtube&#160;: <a target="_blank" rel="nofollow noreferrer noopener" class="external text" href="https://www.youtube.com/watch?v=sAp7oCB939c">https://www.youtube.com/watch?v=sAp7oCB939c</a></li>
+<li>Github&#160;:  <a target="_blank" rel="nofollow noreferrer noopener" class="external text" href="https://github.com/garagetinkering/Video_Game_Mini_Maps">https://github.com/garagetinkering/Video_Game_Mini_Maps</a></li></ul>
+<p><br />
+<b>Garage Tinkering-I Built the Iconic Gauges from Need for Speed Underground 2</b><br />
+<iframe width="400" height="315" src="//www.youtube.com/embed/RtjxET1l-Wg" frameborder="0" allowfullscreen=""></iframe>
+</p>
+<ul><li>Youtube&#160;: <a target="_blank" rel="nofollow noreferrer noopener" class="external text" href="https://www.youtube.com/watch?v=RtjxET1l-Wg">https://www.youtube.com/watch?v=RtjxET1l-Wg</a></li>
+<li>Github&#160;: <a target="_blank" rel="nofollow noreferrer noopener" class="external text" href="https://github.com/garagetinkering/Video_Game_Mini_Maps">https://github.com/garagetinkering/Video_Game_Mini_Maps</a></li></ul>
+<p><br />
+<b>Garage Tinkering-Ditch the Touchscreens. Use a PS3 Controller</b><br />
+<iframe width="400" height="315" src="//www.youtube.com/embed/YvJxpaWFxp4" frameborder="0" allowfullscreen=""></iframe>
+</p>
+<ul><li>Youtube&#160;: <a target="_blank" rel="nofollow noreferrer noopener" class="external text" href="https://www.youtube.com/watch?v=YvJxpaWFxp4">https://www.youtube.com/watch?v=YvJxpaWFxp4</a></li></ul>
+<p><br />
+<b>traviscea-I Built a DIY Round LCD Digital Dash</b><br />
+<iframe width="400" height="315" src="//www.youtube.com/embed/t7H6pevep40" frameborder="0" allowfullscreen=""></iframe>
+</p>
+<ul><li>Youtube&#160;: <a target="_blank" rel="nofollow noreferrer noopener" class="external text" href="https://www.youtube.com/watch?v=t7H6pevep40">https://www.youtube.com/watch?v=t7H6pevep40</a></li>
+<li>Github&#160;: <a target="_blank" rel="nofollow noreferrer noopener" class="external text" href="https://github.com/traviscea?tab=repositories">https://github.com/traviscea?tab=repositories</a></li></ul>
+<p><br />
+<b>traviscea-Coding a DIY Digital Dash Front-End (ESP32 + LVGL)</b><br />
+<iframe width="400" height="315" src="//www.youtube.com/embed/ff-u4jB2Mug" frameborder="0" allowfullscreen=""></iframe>
+</p>
+<ul><li>Youtube&#160;: <a target="_blank" rel="nofollow noreferrer noopener" class="external text" href="https://www.youtube.com/watch?v=ff-u4jB2Mug">https://www.youtube.com/watch?v=ff-u4jB2Mug</a></li></ul>
+<p><br />
+<b>traviscea-DIY Round Digital Dash Part 3: The Backend/Brain That Powers Everything (ESP32)</b><br />
+<iframe width="400" height="315" src="//www.youtube.com/embed/5Tu0i3o-3ps" frameborder="0" allowfullscreen=""></iframe>
+</p>
+<ul><li>Youtube&#160;: <a target="_blank" rel="nofollow noreferrer noopener" class="external text" href="https://www.youtube.com/watch?v=5Tu0i3o-3ps">https://www.youtube.com/watch?v=5Tu0i3o-3ps</a></li></ul>
+<div class="tabbertab" title="FAQ" id="myfaq">
+<h1><span class="mw-headline" id="FAQ">FAQ</span></h1>
+</div>
+<div class="tabbertab" title="Support" id="mysupport">
+<h1><span class="mw-headline" id="Support">Support</span></h1>
+<p><br />
+<br />
+</p>
+<div style="background:linear-gradient(to bottom right,#91C942,#7DB036); border-radius:15px; width:100%;min-width:750px;">
+<div style="display:flex;flex-direction: row;align-items: flex-start;">
+<div style="flex:l; font-size:15px; width:70%; margin-top:20px; margin-bottom:20px; margin-right:40px;padding-left:40px;">
+<p style="font-size:20px; font-weight:bold;">
+Technical Support
+</p>
+<p>
+If you need technical support or have any feedback/review, please click the <b>Submit Now</b> button to submit a ticket, Our support team will check and reply to you within 1 to 2 working days. Please be patient as we make every effort to help you to resolve the issue. 
+<br /> 
+Working Time: 9 AM - 6 PM GMT+8 (Monday to Friday)
+</p>
+</div>
+<div style="margin-top:94px;">
+<div id="service" style="display:flex; flex:r; background-color:#393939; color:white; text-align:center; font-size:20px; border-radius:20px;">
+<p><a target="_blank" rel="nofollow noreferrer noopener" class="external text" href="https://service.waveshare.com/">Submit Now</a>
+</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- 
+NewPP limit report
+Cached time: 20260902115012
+Cache expiry: 0
+Dynamic content: true
+Complications: []
+CPU time usage: 0.248 seconds
+Real time usage: 0.394 seconds
+Preprocessor visited node count: 813/1000000
+Post‐expand include size: 23723/2097152 bytes
+Template argument size: 3850/2097152 bytes
+Highest expansion depth: 7/40
+Expensive parser function count: 0/100
+Unstrip recursion depth: 0/20
+Unstrip post‐expand size: 1165/5000000 bytes
+-->
+<!--
+Transclusion expansion time report (%,ms,calls,template)
+100.00%  105.197      1 -total
+ 39.55%   41.601      1 Template:ESP32-P4-Arduino
+ 20.06%   21.106      1 Template:Infobox_item
+ 14.43%   15.181      1 Template:Run_the_first_Arduino_demo
+ 14.10%   14.829      1 Template:ESP32-P4-Gettingstart
+ 11.87%   12.483      1 Template:ESP32-P4-Dock
+ 11.61%   12.218      1 Template:Servicebox1
+ 11.56%   12.162      6 Template:Note
+-->
+</div></div>								<div class="printfooter">
+				Retrieved from "<a dir="ltr" href="https://www.waveshare.com/w/index.php?title=ESP32-P4-WIFI6-Touch-LCD-3.4C&amp;oldid=110674">https://www.waveshare.com/w/index.php?title=ESP32-P4-WIFI6-Touch-LCD-3.4C&amp;oldid=110674</a>"				</div>
+												<div id="catlinks" class="catlinks" data-mw="interface"><div id="mw-normal-catlinks" class="mw-normal-catlinks"><a href="/wiki/Special:Categories" title="Special:Categories">Categories</a>: <ul><li><a href="/w/index.php?title=Category:MIPI_DSI_interface&amp;action=edit&amp;redlink=1" class="new" title="Category:MIPI DSI interface (page does not exist)">MIPI DSI interface</a></li><li><a href="/w/index.php?title=Category:MIPI_CSI_interface&amp;action=edit&amp;redlink=1" class="new" title="Category:MIPI CSI interface (page does not exist)">MIPI CSI interface</a></li><li><a href="/wiki/Category:ETH_interface" title="Category:ETH interface">ETH interface</a></li></ul></div></div>												<div class="visualClear"></div>
+							</div>
+			<!-- /bodyContent -->
+		</div>
+						</div>
+				</div>
+			</div>
+			<!-- /content -->
+
+			<!-- sidebar-left -->
+			<div class="sidebar-wrapper sidebar-left-wrapper">
+				<div class="sidebar-container container">
+					<div class="row">
+						<div id="sidebar-left" class="col-md-2 col-md-offset-0">
+							<div id="tweekiTOC"></div>						</div>
+					</div>
+				</div>
+			</div>
+			<!-- /sidebar-left -->
+					<!-- footer -->
+			<div id="footer" role="contentinfo" class="footer container footer-sticky bg-light">
+			<ul id="footer-custom"><li class="dropup"><a href="/w/index.php?title=Special:UserLogin&amp;returnto=ESP32-P4-WIFI6-Touch-LCD-3.4C" title="You are encouraged to log in; however, it is not mandatory [o]" accesskey="o">Login / Create Account</a></li></ul><div style="clear:both"></div>			</div>
+			<!-- /footer -->
+		
+<script>
+var fbtFancyBoxOptions = {};
+</script>
+
+<script>(RLQ=window.RLQ||[]).push(function(){mw.config.set({"wgPageParseReport":{"limitreport":{"cputime":"0.248","walltime":"0.394","ppvisitednodes":{"value":813,"limit":1000000},"postexpandincludesize":{"value":23723,"limit":2097152},"templateargumentsize":{"value":3850,"limit":2097152},"expansiondepth":{"value":7,"limit":40},"expensivefunctioncount":{"value":0,"limit":100},"unstrip-depth":{"value":0,"limit":20},"unstrip-size":{"value":1165,"limit":5000000},"timingprofile":["100.00%  105.197      1 -total"," 39.55%   41.601      1 Template:ESP32-P4-Arduino"," 20.06%   21.106      1 Template:Infobox_item"," 14.43%   15.181      1 Template:Run_the_first_Arduino_demo"," 14.10%   14.829      1 Template:ESP32-P4-Gettingstart"," 11.87%   12.483      1 Template:ESP32-P4-Dock"," 11.61%   12.218      1 Template:Servicebox1"," 11.56%   12.162      6 Template:Note"]},"cachereport":{"timestamp":"20260902115012","ttl":0,"transientcontent":true}}});mw.config.set({"wgBackendResponseTime":959});});</script>	<script>(function(){function c(){var b=a.contentDocument||(a.contentWindow&&a.contentWindow.document);if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a34c4bb2c837c9eb',t:'MTc4ODM0OTgxMQ=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>
