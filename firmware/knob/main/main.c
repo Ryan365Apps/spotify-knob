@@ -43,10 +43,16 @@
 
 #include "app_shell.h"
 #include "bidi_knob.h"
+#include "clock_app.h"
 #include "lcd_init_waveshare.h"
 #include "secrets_local.h"
+#include "selector.h"
+#include "settings_app.h"
 #include "spotify_app.h"
 
+#include "esp_netif_sntp.h"
+#include "esp_timer.h"
+#include "freertos/queue.h"
 #include "freertos/semphr.h"
 
 /* Verified against the Waveshare schematic, 2026-08-31. See BUILD.md section 3.
@@ -69,7 +75,10 @@
 #define PIN_ENCODER_B      7
 /* No encoder button exists on this board. */
 
-static const char *TAG = "dial4spotify";
+/* The shell's log tag. TorqueOS is the firmware and its companion
+ * (docs/SOFTWARE-CONTEXTS.md); the per-app tags below it stay as the app
+ * names - "spotify", "clock", "selector". */
+static const char *TAG = "torque-os";
 
 /* Wave 2, step B4: prove the firmware can drive the board by lighting the
  * backlight. The panel itself comes in B5. */
@@ -93,7 +102,11 @@ static void backlight_init(uint32_t duty_pct)
         .hpoint     = 0,
     };
     ESP_ERROR_CHECK(ledc_channel_config(&channel));
-    ESP_LOGI(TAG, "backlight on GPIO%d at %lu%%", PIN_BACKLIGHT, (unsigned long) duty_pct);
+    /* This is the compiled boot level, not the stored one - NVS is not up yet.
+     * The stored brightness is applied by settings_load a few lines into
+     * app_main and logged there. Do not read this line as the live value. */
+    ESP_LOGI(TAG, "backlight on GPIO%d at %lu%% (boot default, pre-NVS)",
+             PIN_BACKLIGHT, (unsigned long) duty_pct);
 }
 
 /* Wave 2, step B5: the ST77916 panel over QSPI. 360x360, RGB565. */
@@ -145,7 +158,12 @@ static lv_display_t *lvgl_init(esp_lcd_panel_io_handle_t io, esp_lcd_panel_handl
     const lvgl_port_display_cfg_t disp_cfg = {
         .io_handle     = io,
         .panel_handle  = panel,
-        .buffer_size   = LCD_H_RES * 36,   /* ~1/10 of the screen */
+        /* These live in internal DMA-capable RAM, which is the scarcest thing
+         * on this board: at 1/10 of the screen, double-buffered, they were
+         * 52 KB, and a TLS handshake then failed to allocate (esp-aes: Failed
+         * to allocate memory, 2026-09-03). 1/18 costs a few more flush chunks
+         * per frame and gives 23 KB back. */
+        .buffer_size   = LCD_H_RES * 20,
         .double_buffer = true,
         .hres          = LCD_H_RES,
         .vres          = LCD_V_RES,
@@ -161,6 +179,8 @@ static lv_display_t *lvgl_init(esp_lcd_panel_io_handle_t io, esp_lcd_panel_handl
 /* Wave 2, step C3: touch. One i2c_master bus for the whole board - the DRV2605
  * haptic driver (Checkpoint E) joins THIS handle. Never create a second bus. */
 static i2c_master_bus_handle_t i2c_bus = NULL;
+
+static lv_indev_t *s_touch_indev = NULL;
 
 static void touch_init(lv_display_t *disp)
 {
@@ -196,7 +216,10 @@ static void touch_init(lv_display_t *disp)
         .disp   = disp,
         .handle = tp,
     };
-    lvgl_port_add_touch(&touch_cfg);
+    s_touch_indev = lvgl_port_add_touch(&touch_cfg);
+    /* 550 ms is the long-press threshold the interaction core specifies; the
+     * LVGL default of 400 ms fires while you are still deciding. */
+    lv_indev_set_long_press_time(s_touch_indev, 550);
     ESP_LOGI(TAG, "touch registered");
 }
 
@@ -382,13 +405,6 @@ bool shell_auth_dead(void)
     return s_auth_dead;
 }
 
-void shell_token_corrupt_for_test(void)
-{
-    xSemaphoreTake(s_token_mutex, portMAX_DELAY);
-    snprintf(s_access_token, sizeof(s_access_token), "deliberately-broken");
-    xSemaphoreGive(s_token_mutex);
-}
-
 /* Refresh on boot (with backoff), then every 55 minutes. */
 static void token_task(void *arg)
 {
@@ -444,6 +460,12 @@ static void wifi_event_cb(void *arg, esp_event_base_t base, int32_t id, void *da
         if (!token_task_started) {
             token_task_started = true;
             xTaskCreate(token_task, "token", 8192, NULL, 5, NULL);
+            /* The shell owns the clock (BUILD.md section 6), so it owns
+             * getting the time right. Without this the Clock app has nothing
+             * to show but 1970. */
+            esp_sntp_config_t sntp_cfg = ESP_NETIF_SNTP_DEFAULT_CONFIG("pool.ntp.org");
+            esp_netif_sntp_init(&sntp_cfg);
+            ESP_LOGI(TAG, "SNTP started");
         }
     }
 }
@@ -503,11 +525,172 @@ static void haptics_init(void)
     ESP_LOGI(TAG, "haptics ready");
 }
 
-static void haptic_click(void)
+/* --- device settings -----------------------------------------------------
+ * Held in RAM, applied immediately, written to NVS when a value screen is
+ * left. Defaults match BUILD.md section 6. */
+static int s_brightness = 40;   /* the working default Wave 2 settled on */
+static int s_sleep_min = 20;
+static int s_haptics = 2;       /* firm */
+static int s_dial_step = 5;
+static bool s_settings_dirty = false;
+
+static void backlight_duty(int pct)
 {
-    drv2605_write(DRV2605_REG_WAVESEQ, 1);      /* effect 1: strong click, 100% */
+    ledc_set_duty(LEDC_LOW_SPEED_MODE, LEDC_CHANNEL_0, (1023 * pct) / 100);
+    ledc_update_duty(LEDC_LOW_SPEED_MODE, LEDC_CHANNEL_0);
+}
+
+int  shell_brightness(void)   { return s_brightness; }
+int  shell_sleep_min(void)    { return s_sleep_min; }
+int  shell_haptics(void)      { return s_haptics; }
+int  shell_dial_step(void)    { return s_dial_step; }
+
+void shell_brightness_set(int pct)
+{
+    if (pct < 10) {
+        pct = 10;      /* floor: the screen must never be turned dark and lost */
+    } else if (pct > 100) {
+        pct = 100;
+    }
+    if (pct != s_brightness) {
+        s_settings_dirty = true;
+    }
+    s_brightness = pct;
+    backlight_duty(pct);
+}
+
+void shell_sleep_min_set(int minutes)
+{
+    s_settings_dirty |= (minutes != s_sleep_min);
+    s_sleep_min = minutes;
+}
+
+void shell_haptics_set(int level)
+{
+    s_settings_dirty |= (level != s_haptics);
+    s_haptics = level;
+}
+
+void shell_dial_step_set(int pct)
+{
+    s_settings_dirty |= (pct != s_dial_step);
+    s_dial_step = pct;
+}
+
+static void settings_load(void)
+{
+    nvs_handle_t h;
+    if (nvs_open(NVS_NAMESPACE, NVS_READONLY, &h) != ESP_OK) {
+        return;
+    }
+    int32_t v;
+    if (nvs_get_i32(h, "brightness", &v) == ESP_OK) { s_brightness = (int) v; }
+    if (nvs_get_i32(h, "sleep_min", &v) == ESP_OK)  { s_sleep_min = (int) v; }
+    if (nvs_get_i32(h, "haptics", &v) == ESP_OK)    { s_haptics = (int) v; }
+    if (nvs_get_i32(h, "dial_step", &v) == ESP_OK)  { s_dial_step = (int) v; }
+    nvs_close(h);
+}
+
+/* Called every time a settings screen is left, which includes leaving status
+ * screens where nothing can have changed. Flash endurance should not pay for
+ * browsing, so a save with nothing to save costs nothing. */
+void shell_settings_save(void)
+{
+    if (!s_settings_dirty) {
+        return;
+    }
+    s_settings_dirty = false;
+
+    nvs_handle_t h;
+    if (nvs_open(NVS_NAMESPACE, NVS_READWRITE, &h) != ESP_OK) {
+        return;
+    }
+    nvs_set_i32(h, "brightness", s_brightness);
+    nvs_set_i32(h, "sleep_min", s_sleep_min);
+    nvs_set_i32(h, "haptics", s_haptics);
+    nvs_set_i32(h, "dial_step", s_dial_step);
+    nvs_commit(h);
+    nvs_close(h);
+    ESP_LOGI(TAG, "settings written to NVS: brightness %d%%, sleep %d min, haptics %d, dial step %d%%",
+             s_brightness, s_sleep_min, s_haptics, s_dial_step);
+}
+
+/* Facts for the Settings app. */
+static char s_ip_str[16] = "0.0.0.0";
+static char s_ssid[33] = "";
+
+const char *shell_ip(void)   { return s_ip_str; }
+const char *shell_wifi_ssid(void)
+{
+    if (s_ssid[0] == '\0') {
+        wifi_config_t cfg;
+        if (esp_wifi_get_config(WIFI_IF_STA, &cfg) == ESP_OK) {
+            snprintf(s_ssid, sizeof(s_ssid), "%s", (const char *) cfg.sta.ssid);
+        }
+    }
+    return s_ssid;
+}
+
+int shell_wifi_rssi(void)
+{
+    wifi_ap_record_t ap;
+    return (esp_wifi_sta_get_ap_info(&ap) == ESP_OK) ? ap.rssi : 0;
+}
+
+int shell_uptime_s(void)
+{
+    return (int)(esp_timer_get_time() / 1000000);
+}
+
+/* The refresh token dies 180 days after authorisation and refreshing does not
+ * extend it, so the date is arithmetic rather than a guess (section 6). */
+int shell_reauth_days(void)
+{
+    char auth_date[16] = { 0 };
+    if (nvs_get_string("auth_date", auth_date, sizeof(auth_date)) != ESP_OK) {
+        return -1;
+    }
+    struct tm tm_auth = { 0 };
+    if (sscanf(auth_date, "%4d-%2d-%2d", &tm_auth.tm_year, &tm_auth.tm_mon,
+               &tm_auth.tm_mday) != 3) {
+        return -1;
+    }
+    tm_auth.tm_year -= 1900;
+    tm_auth.tm_mon -= 1;
+    const time_t authed = mktime(&tm_auth);
+    const time_t now = time(NULL);
+    if (now < 1000000000) {
+        return -1;   /* clock not set yet; say nothing rather than something wrong */
+    }
+    return 180 - (int)((now - authed) / 86400);
+}
+
+static void haptic_effect(uint8_t effect)
+{
+    drv2605_write(DRV2605_REG_WAVESEQ, effect);
     drv2605_write(DRV2605_REG_WAVESEQ + 1, 0);  /* end of sequence */
     drv2605_write(DRV2605_REG_GO, 1);
+}
+
+/* The vocabulary in docs/SOFTWARE-INTERACTION-CORE.md: one short click for a
+ * detent, something heavier for a press or a refused detent. Effect 1 is a
+ * strong click at 100%, 7 a soft bump, 16 a 1000 ms alert - the DRV2605's own
+ * library 5 numbering. The Settings value scales the whole vocabulary rather
+ * than muting parts of it. */
+void shell_haptic_click(void)
+{
+    if (s_haptics == 0) {
+        return;
+    }
+    haptic_effect(s_haptics == 1 ? 7 : 1);
+}
+
+void shell_haptic_firm(void)
+{
+    if (s_haptics == 0) {
+        return;
+    }
+    haptic_effect(s_haptics == 1 ? 1 : 16);
 }
 
 /* The dial (Wave 2). NOT a quadrature encoder - two bidirectional detector
@@ -518,14 +701,214 @@ static void haptic_click(void)
  * Shell role (Wave 4): one haptic click per detent, then dispatch the signed
  * delta to the active app. */
 static bidi_knob_handle_t s_knob = NULL;
+
+/* --- the app registry ----------------------------------------------------
+ * The shell owns the list, the screen lifecycle and the selector. An app
+ * never switches itself. */
+static const knob_app_t *const s_apps[] = { &spotify_app, &clock_app, &settings_app };
+#define APP_COUNT (sizeof(s_apps) / sizeof(s_apps[0]))
+
+static int s_active_index = 0;
 static const knob_app_t *s_active_app = NULL;
+static lv_obj_t *s_app_screen = NULL;
+
+int shell_app_count(void)
+{
+    return (int) APP_COUNT;
+}
+
+const knob_app_t *shell_app_at(int index)
+{
+    return (index >= 0 && index < (int) APP_COUNT) ? s_apps[index] : NULL;
+}
+
+int shell_app_active_index(void)
+{
+    return s_active_index;
+}
+
+/* Long-press from anywhere opens the selector. The handler is attached by the
+ * shell to every app screen it creates, so an app cannot forget it and cannot
+ * override it. */
+static void open_selector_async(void *unused)
+{
+    (void) unused;
+    selector_open();
+}
+
+static void app_screen_event(lv_event_t *e)
+{
+    if (lv_event_get_code(e) == LV_EVENT_LONG_PRESSED && !selector_is_open()) {
+        ESP_LOGI(TAG, "long-press - opening the selector");
+        shell_haptic_firm();
+        lv_async_call(open_selector_async, NULL);
+    }
+}
+
+static lv_obj_t *app_screen_create(void)
+{
+    lv_obj_t *screen = lv_obj_create(NULL);
+    lv_obj_add_flag(screen, LV_OBJ_FLAG_CLICKABLE);
+    lv_obj_add_event_cb(screen, app_screen_event, LV_EVENT_LONG_PRESSED, NULL);
+    return screen;
+}
+
+void shell_switch_to(int index)
+{
+    if (index < 0 || index >= (int) APP_COUNT) {
+        return;
+    }
+    lvgl_port_lock(0);
+    if (index == s_active_index && s_app_screen != NULL) {
+        lvgl_port_unlock();
+        return;
+    }
+    const knob_app_t *outgoing = s_active_app;
+    lv_obj_t *old_screen = s_app_screen;
+
+    /* No dial reaches an app that is between screens. */
+    s_active_app = NULL;
+    if (outgoing != NULL && outgoing->on_exit != NULL) {
+        outgoing->on_exit();
+    }
+
+    s_active_index = index;
+    s_app_screen = app_screen_create();
+    s_apps[index]->on_enter(s_app_screen);
+    lv_screen_load(s_app_screen);
+    if (old_screen != NULL) {
+        lv_obj_delete(old_screen);
+    }
+    s_active_app = s_apps[index];
+    lvgl_port_unlock();
+
+    ESP_LOGI(TAG, "app '%s' active (heap %u internal, %u PSRAM)", s_active_app->name,
+             (unsigned) heap_caps_get_free_size(MALLOC_CAP_INTERNAL),
+             (unsigned) heap_caps_get_free_size(MALLOC_CAP_SPIRAM));
+}
+
+/* --- the timer -----------------------------------------------------------
+ * Shell-owned because the clock is (BUILD.md section 6): it has to keep
+ * counting while you are looking at Spotify, and fire wherever you are. */
+static int64_t s_timer_end_us = 0;
+static int     s_timer_total_ms = 0;
+static bool    s_alarm_ringing = false;
+static lv_obj_t *s_alarm_overlay = NULL;
+
+void shell_timer_set(int minutes)
+{
+    if (minutes <= 0) {
+        s_timer_end_us = 0;
+        s_timer_total_ms = 0;
+        return;
+    }
+    s_timer_total_ms = minutes * 60 * 1000;
+    s_timer_end_us = esp_timer_get_time() + (int64_t) s_timer_total_ms * 1000;
+}
+
+bool shell_timer_running(void)
+{
+    return s_timer_end_us != 0;
+}
+
+int shell_timer_remaining_ms(void)
+{
+    if (s_timer_end_us == 0) {
+        return 0;
+    }
+    const int64_t left = (s_timer_end_us - esp_timer_get_time()) / 1000;
+    return (left > 0) ? (int) left : 0;
+}
+
+int shell_timer_total_ms(void)
+{
+    return s_timer_total_ms;
+}
+
+static void alarm_dismiss_cb(lv_event_t *e)
+{
+    (void) e;
+    s_alarm_ringing = false;
+    lv_obj_add_flag(s_alarm_overlay, LV_OBJ_FLAG_HIDDEN);
+    ESP_LOGI(TAG, "alarm dismissed");
+}
+
+/* Built once and kept hidden on the top layer: the alarm has to be able to
+ * appear over whatever app is up, without that app knowing it exists. */
+static void alarm_overlay_create(void)
+{
+    s_alarm_overlay = lv_obj_create(lv_layer_top());
+    lv_obj_remove_style_all(s_alarm_overlay);
+    lv_obj_set_size(s_alarm_overlay, 360, 360);
+    lv_obj_center(s_alarm_overlay);
+    lv_obj_remove_flag(s_alarm_overlay, LV_OBJ_FLAG_SCROLLABLE);
+    lv_obj_set_style_bg_color(s_alarm_overlay, lv_color_black(), 0);
+    lv_obj_set_style_bg_opa(s_alarm_overlay, LV_OPA_COVER, 0);
+    lv_obj_set_style_radius(s_alarm_overlay, LV_RADIUS_CIRCLE, 0);
+    lv_obj_add_flag(s_alarm_overlay, LV_OBJ_FLAG_CLICKABLE);
+    lv_obj_add_event_cb(s_alarm_overlay, alarm_dismiss_cb, LV_EVENT_CLICKED, NULL);
+
+    lv_obj_t *zero = lv_label_create(s_alarm_overlay);
+    lv_obj_set_style_text_font(zero, &lv_font_montserrat_48, 0);
+    lv_obj_set_style_text_color(zero, lv_color_white(), 0);
+    lv_label_set_text(zero, "0:00");
+    lv_obj_center(zero);
+
+    lv_obj_t *hint = lv_label_create(s_alarm_overlay);
+    lv_obj_set_style_text_color(hint, lv_color_hex(0x8A8F99), 0);
+    lv_label_set_text(hint, "TIMER DONE  TAP ANYWHERE");
+    lv_obj_align(hint, LV_ALIGN_CENTER, 0, 52);
+
+    lv_obj_add_flag(s_alarm_overlay, LV_OBJ_FLAG_HIDDEN);
+}
+
+static void alarm_fire(void)
+{
+    s_timer_end_us = 0;
+    s_alarm_ringing = true;
+    lvgl_port_lock(0);
+    lv_obj_remove_flag(s_alarm_overlay, LV_OBJ_FLAG_HIDDEN);
+    lv_obj_move_foreground(s_alarm_overlay);
+    lvgl_port_unlock();
+    ESP_LOGI(TAG, "timer done - ringing until touched");
+}
+
+/* --- input ---------------------------------------------------------------
+ * Dial callbacks arrive on the esp_timer task, which is also where the knob's
+ * own polling runs. Doing the haptic I2C write and the LVGL work there would
+ * stall that task - a bloom render can hold the LVGL lock for tens of
+ * milliseconds - and the stall would cost us detents. So the callback only
+ * posts, and this task does the work. (BUILD.md section 6's input_task.) */
+static QueueHandle_t s_dial_queue = NULL;
 
 static void dial_cb(void *arg, void *usr_data)
 {
     const bidi_knob_event_t event = (bidi_knob_event_t)(uintptr_t) usr_data;
-    haptic_click();                             /* one click per detent */
-    if (s_active_app != NULL && s_active_app->on_dial != NULL) {
-        s_active_app->on_dial(event == BIDI_KNOB_RIGHT ? 1 : -1);
+    const int8_t delta = (event == BIDI_KNOB_RIGHT) ? 1 : -1;
+    xQueueSend(s_dial_queue, &delta, 0);
+}
+
+static void input_task(void *arg)
+{
+    int8_t delta;
+    for (;;) {
+        if (xQueueReceive(s_dial_queue, &delta, portMAX_DELAY) != pdTRUE) {
+            continue;
+        }
+        if (s_alarm_ringing) {
+            continue;   /* the alarm owns every input until it is dismissed */
+        }
+        shell_haptic_click();               /* one click per detent */
+        lvgl_port_lock(0);
+        /* The dial is not an LVGL input device, so tell LVGL it happened -
+         * that is what the sleep timer measures. */
+        lv_display_trigger_activity(NULL);
+        if (selector_is_open()) {
+            selector_dial(delta);
+        } else if (s_active_app != NULL && s_active_app->on_dial != NULL) {
+            s_active_app->on_dial(delta);
+        }
+        lvgl_port_unlock();
     }
 }
 
@@ -555,6 +938,13 @@ void app_main(void)
     }
     ESP_ERROR_CHECK(err);
 
+    /* Settings before anything that uses them; brightness applies at once so
+     * the boot flash is at the level you chose, not the compiled default. */
+    settings_load();
+    backlight_duty(s_brightness);
+    ESP_LOGI(TAG, "settings loaded: brightness %d%%, sleep %d min, haptics %d, dial step %d%%",
+             s_brightness, s_sleep_min, s_haptics, s_dial_step);
+
     ESP_LOGI(TAG, "--- dependency check ---");
     ESP_LOGI(TAG, "LVGL            %d.%d.%d",
              LVGL_VERSION_MAJOR, LVGL_VERSION_MINOR, LVGL_VERSION_PATCH);
@@ -579,9 +969,14 @@ void app_main(void)
     /* C3: the touch controller on the shared I2C bus. */
     touch_init(disp);
 
-    /* The encoder and haptics (Wave 2). */
-    dial_init();
+    /* The encoder and haptics (Wave 2). Haptics first: the input task fires a
+     * click as soon as a detent arrives, and the queue must exist before the
+     * dial can post to it. */
     haptics_init();
+    s_dial_queue = xQueueCreate(16, sizeof(int8_t));
+    assert(s_dial_queue != NULL);
+    xTaskCreate(input_task, "input", 4096, NULL, 6, NULL);
+    dial_init();
 
     /* Credentials into NVS, then onto the network (Wave 3). */
     s_token_mutex = xSemaphoreCreateMutex();
@@ -590,23 +985,74 @@ void app_main(void)
     nvs_seed_if_missing();
     wifi_start();
 
-    /* Wave 4: the shell hosts apps behind knob_app_t. One app for now; the
-     * selector arrives in Wave 7. The app builds its own screen and frees it
-     * on exit; the shell owns the switch. */
-    spotify_app_init();
-    s_active_app = &spotify_app;
-    lvgl_port_lock(0);
-    lv_obj_t *app_screen = lv_obj_create(NULL);
-    s_active_app->on_enter(app_screen);
-    lv_screen_load(app_screen);
-    lvgl_port_unlock();
-    ESP_LOGI(TAG, "shell up, app '%s' active", s_active_app->name);
+    /* UK time, so the Clock app reads correctly once SNTP lands. */
+    setenv("TZ", "GMT0BST,M3.5.0/1,M10.5.0", 1);
+    tzset();
 
-    /* ~1 Hz housekeeping tick to the active app. */
+    /* Wave 4 and 7: the shell hosts apps behind knob_app_t, and owns the
+     * selector that moves between them. Each app builds its own screen and
+     * frees its own buffers; the shell owns the switch. */
+    spotify_app_init();
+    lvgl_port_lock(0);
+    alarm_overlay_create();
+    lvgl_port_unlock();
+    shell_switch_to(0);
+    ESP_LOGI(TAG, "shell up, %d apps, long-press for the selector", shell_app_count());
+
+    /* ~1 Hz housekeeping: the timer and sleep are the shell's, the tick is the
+     * app's. */
+    bool asleep = false;
     for (;;) {
         vTaskDelay(pdMS_TO_TICKS(1000));
+
+        /* Sleep: a permanently-powered desk object should not be a
+         * permanently-lit one. LVGL already tracks touch inactivity; the input
+         * task feeds dial movement into the same counter. */
+        if (!s_alarm_ringing && s_sleep_min > 0) {
+            lvgl_port_lock(0);
+            const uint32_t idle_ms = lv_display_get_inactive_time(NULL);
+            lvgl_port_unlock();
+            const bool should_sleep = idle_ms > (uint32_t) s_sleep_min * 60000;
+            if (should_sleep != asleep) {
+                asleep = should_sleep;
+                backlight_duty(asleep ? 0 : s_brightness);
+                if (asleep) {
+                    ESP_LOGI(TAG, "screen off (%d min idle)", s_sleep_min);
+                } else {
+                    ESP_LOGI(TAG, "awake");
+                }
+            }
+        } else if (asleep) {
+            asleep = false;
+            backlight_duty(s_brightness);
+        }
+
+        if (s_timer_end_us != 0 && esp_timer_get_time() >= s_timer_end_us) {
+            alarm_fire();
+        }
+        if (s_alarm_ringing) {
+            shell_haptic_firm();   /* keeps ringing until it is touched */
+        }
         if (s_active_app != NULL && s_active_app->on_tick != NULL) {
             s_active_app->on_tick();
+        }
+
+        /* Heap telemetry every 30 s. A steady figure means the TLS failure was
+         * fragmentation or a high-water mark; a falling one means a leak, and
+         * the two want completely different fixes. `largest` is the number
+         * that actually decides whether a handshake can allocate. */
+        static int ticks;
+        if (++ticks % 30 == 0) {
+            /* DMA-capable is reported separately because it is what actually
+             * failed: esp-aes allocates DMA descriptors for hardware AES, and
+             * that pool can be exhausted while ordinary internal RAM looks
+             * comfortable. */
+            ESP_LOGI(TAG, "heap: %u internal (%u largest), %u DMA (%u largest), %u PSRAM",
+                     (unsigned) heap_caps_get_free_size(MALLOC_CAP_INTERNAL),
+                     (unsigned) heap_caps_get_largest_free_block(MALLOC_CAP_INTERNAL),
+                     (unsigned) heap_caps_get_free_size(MALLOC_CAP_DMA),
+                     (unsigned) heap_caps_get_largest_free_block(MALLOC_CAP_DMA),
+                     (unsigned) heap_caps_get_free_size(MALLOC_CAP_SPIRAM));
         }
     }
 }

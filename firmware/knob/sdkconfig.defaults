@@ -12,7 +12,16 @@ CONFIG_SPIRAM_SPEED_80M=y
 
 # HTTPS to Spotify without pinning certificates by hand
 CONFIG_MBEDTLS_CERTIFICATE_BUNDLE=y
-CONFIG_MBEDTLS_DYNAMIC_BUFFER=y
+
+# Dynamic mbedTLS buffers are deliberately OFF (2026-09-03). They are meant to
+# save RAM by allocating TLS buffers only while they are needed, but with this
+# workload - one long-lived connection polled every few seconds - roughly 5-7 KB
+# went missing per request and never came back, taking the device from 80 KB
+# free to 5 KB in two minutes. The failing allocation named the culprit:
+# "Dynamic Impl: alloc(4437 bytes) failed". Fixed buffers cost more at rest and
+# are constant, which is the trade this device wants: it holds one connection
+# for days. Do not re-enable without measuring free heap over ten minutes.
+CONFIG_MBEDTLS_DYNAMIC_BUFFER=n
 
 CONFIG_ESP_MAIN_TASK_STACK_SIZE=8192
 CONFIG_FREERTOS_HZ=1000

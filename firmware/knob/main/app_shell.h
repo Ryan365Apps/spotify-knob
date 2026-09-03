@@ -42,7 +42,56 @@ esp_err_t shell_token_refresh_now(void);
  * app should show its re-auth state and stop polling. */
 bool shell_auth_dead(void);
 
-/* TEST ONLY (Wave 4 checkpoint D): overwrite the in-RAM access token so the
- * next API call 401s, proving the refresh-and-recover path. Removed when the
- * checkpoint passes. */
-void shell_token_corrupt_for_test(void);
+/* --- haptics -------------------------------------------------------------
+ * The shell owns the DRV2605 and fires one click per detent by itself. These
+ * are for the extra feedback an app asks for; no app ever touches I2C.
+ * Vocabulary in docs/SOFTWARE-INTERACTION-CORE.md. */
+void shell_haptic_click(void);   /* a detent accepted */
+void shell_haptic_firm(void);    /* a press, or a clamp refusing a detent */
+
+/* --- the timer -----------------------------------------------------------
+ * The shell owns the clock (BUILD.md section 6), so it owns the timer with
+ * it: a timer that stopped counting when you left the Clock app would be
+ * useless, and it has to fire wherever you are. The Clock app is its UI, not
+ * its owner - the same split as the token and the Spotify app.
+ *
+ * Sixty detents, sixty minutes. Setting 0 cancels. */
+void shell_timer_set(int minutes);
+bool shell_timer_running(void);
+int  shell_timer_remaining_ms(void);
+int  shell_timer_total_ms(void);
+
+/* --- device settings -----------------------------------------------------
+ * The shell's, not any app's: these are facts about the device, and the shell
+ * is what acts on them. The Settings app is their UI. Persisted to NVS when a
+ * value screen is left, never on every detent.
+ *
+ * No setting here can be typed. Each is a value the dial picks - which is
+ * what a rotary encoder is actually good at (BUILD.md section 6). */
+int  shell_brightness(void);            /* 10..100, floor so it cannot be lost */
+void shell_brightness_set(int pct);     /* applies to the backlight immediately */
+int  shell_sleep_min(void);             /* 0 = never */
+void shell_sleep_min_set(int minutes);
+int  shell_haptics(void);               /* 0 off, 1 light, 2 firm */
+void shell_haptics_set(int level);
+int  shell_dial_step(void);             /* volume % per detent: 2, 5 or 10 */
+void shell_dial_step_set(int pct);
+void shell_settings_save(void);
+
+/* Facts the Settings app displays and cannot compute for itself. */
+const char *shell_wifi_ssid(void);
+int         shell_wifi_rssi(void);
+const char *shell_ip(void);
+int         shell_uptime_s(void);
+int         shell_reauth_days(void);    /* until the refresh token dies */
+
+/* --- apps and switching --------------------------------------------------
+ * The shell owns the app registry, the screen lifecycle and the selector.
+ * An app never switches itself; the selector asks the shell to. */
+int  shell_app_count(void);
+const knob_app_t *shell_app_at(int index);
+int  shell_app_active_index(void);
+
+/* Exit the current app, enter the given one, and load its screen. Safe to
+ * call from an LVGL callback; must not be called with the LVGL lock held. */
+void shell_switch_to(int index);
