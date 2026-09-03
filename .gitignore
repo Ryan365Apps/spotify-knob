@@ -5,3 +5,5 @@ sdkconfig
 sdkconfig.old
 dependencies.lock
 .vscode/
+secrets_local.h
+design/artwork/renders/

@@ -120,10 +120,11 @@ Two further facts worth having before Wave 2:
 - **The haptic driver sits on the touch I²C bus.** One bus, two devices — initialise the CST816 and the DRV2605 on the same `i2c_master` handle rather than creating two. `HAPTIC_EN` is tied to 3V3 and `HAPTIC_TRIG` to ground, so the part is permanently enabled and driven entirely over I²C.
 - **The two microcontrollers are wired together** over UART on GPIO48/38, and the S3 can drive the audio DAC directly over I²S on GPIO39/40/41. Unused here, but it means audio output is available later without new hardware.
 
-### Two gotchas that will cost you an hour each if you do not know them
+### Three gotchas that will cost you an hour each if you do not know them
 
 1. **The USB-C cable orientation selects which MCU you flash.** Flip the connector if the board enumerates as the wrong chip. This is a documented board behaviour, not a fault.
 2. **There is no BOOT button and no RESET button either.** Sheet 1 shows only SW1 and SW2, and both are SSCM110100 rotary encoders. `CHIP_PU` and `GPIO0` carry 10K pull-ups and nothing else — there is no switch anywhere on the board able to pull either low. Download mode therefore depends entirely on the S3's native USB-Serial-JTAG auto-reset, which normally handles it without intervention. **There is no manual recovery to fall back on**, so if a flash fails, the first move is the cable orientation, not a button.
+3. **A USB-C hub swallows the board entirely** (hit 2026-09-02). Through a monitor/dock/front-panel hub, Device Manager shows only a "Billboard Device" — the hub's own controller announcing a failed data connection (seen: Aorus monitor, Realtek `VID_0BDA&PID_5418`) — and nothing of the board in either orientation. Plug directly into a rear USB-A port with an A-to-C cable.
 
 ---
 
@@ -232,29 +233,14 @@ All of the above applies identically to the Settings ring and the Launcher ring.
 
 With two apps this is a toggle wearing a carousel's clothes. It is built now anyway, because the cost of adding it later is rewriting whichever app was built without it.
 
-### THE WAGGLE — dictation from any app
+### The waggle — retired on hardware evidence (2026-09-02)
 
-The dial is the active app's, and in Spotify that means volume. So the one gesture that has to work everywhere cannot be a rotation, a press or a hold — all of those are already spoken for. It is a **rapid reversal**: flick the dial left-right-left in one wrist movement.
+There was a global dictation gesture here: a rapid left-right-left reversal of the dial, safe because a waggle nets to zero detents and so never moves the volume. Wave 2's reversal test (D4) killed it: over ten fast waggles the dial drifted **+2, +1, 0, −2, 0, +1, +1, +2, +3, +4** detents — the bidirectional detector switches miscount under fast direction changes, so the net-zero argument is void, and swallowing recognised waggles still leaks drift through every waggle that fails recognition. Slow detents count exactly, so ordinary corrections are unaffected.
 
-**Definition.** A *reversal* is a detent whose direction differs from the previous detent. The gesture fires on **three reversals inside 600 ms**, each run being one to three detents. Both thresholds are compile-time constants and both will need tuning on real hardware.
+Dictation is therefore reached the ordinary way — selector → Wispr — and there is no global gesture. Two things outlive the waggle:
 
-**Why this does not fire by accident.** The only time you naturally reverse the dial is correcting an overshoot — too loud, come back two. That correction contains a *pause*: you hear the result before you react, and that dwell is comfortably over 300 ms. A waggle has no dwell in it at all. The discriminator is the gap between reversals, not their number.
-
-**What the app underneath sees: nothing.** The gesture detector does not buffer detents and adds no latency — buffering would put a delay on every genuine direction change, which is exactly the overshoot case and would feel broken. Instead it exploits the debounce that already exists: volume writes accumulate and only go out 400 ms after the last detent, and a waggle's net displacement is zero by construction. So the pending delta cancels itself, no API call is ever sent, and when the gesture fires the accumulated delta is discarded outright. The on-screen number twitches for half a second and the overlay covers it.
-
-Order of processing is therefore: **raw detents → gesture detector → debouncer → active app.**
-
-**What happens on recognition.** A distinct double-click from the DRV2605 — the only haptic in the product that is not a single click — and then the waggle *navigates*:
-
-- **Believed off:** the chord is sent and the device enters the Wispr app, remembering where you came from. The screen in front of you now *is* the believed state — no overlay needed.
-- **Believed on, inside the Wispr app:** the chord is sent, dictation is believed off, and you are returned to the app the waggle-on interrupted, with a short DICTATION OFF overlay riding the transition.
-- **Believed on, anywhere else:** the chord is sent, the overlay confirms, and you stay where you are.
-
-Inside the Wispr app the waggle never blindly toggles — it only **dismisses**: off if needed, then back. Tap and the directional spins own toggling on that screen (see the mapping in section 6). One waggle in, one waggle out, and the pair nets to nothing but the dictation you did in between.
-
-**Send discipline.** The believed state changes **only when a chord was actually dispatched**, and chords are serialised with at least 600 ms between them — one movement can never double-send, and a suppressed send never flips belief. Decided 2026-08-31, after the simulator produced exactly that double-send and desynced itself.
-
-**It is still a toggle underneath, and Wispr can drop it.** A chord Wispr ignores (see the focus quirk in section 6) flips belief without flipping reality. The Wispr screen states what the device believes; Wispr's own Flow Bar is the truth; the resync spin recovers the difference. Waggle-on landing you on that screen means drift is visible immediately rather than on the next attempt.
+- **Send discipline.** The believed dictation state changes **only when a chord was actually dispatched**, and chords are serialised with at least 600 ms between them — one movement can never double-send, and a suppressed send never flips belief. Decided 2026-08-31 after the simulator double-sent and desynced itself; the rule holds for every chord the device ever sends.
+- **The belief model.** A chord Wispr ignores (see the focus quirk in section 6) flips belief without flipping reality. The Wispr screen states what the device believes; Wispr's own Flow Bar is the truth; the resync spin recovers the difference.
 
 ### CONTROLS — one tap from the default screen
 
@@ -295,6 +281,8 @@ Four FreeRTOS tasks, one owner of shared state.
 ```
 
 `player_state_t` holds: `is_playing`, `track_id`, `title`, `artist`, `album_art_url`, `progress_ms`, `duration_ms`, `volume_percent`, `supports_volume`, `device_name`, `last_update_tick`. **It belongs to the Spotify app, not to the shell.**
+
+**The provider seam (recorded 2026-09-02, for the shared core).** `player_state_t` is written by a *provider* behind one small interface — fill the struct, plus the command set: play/pause, next, previous, seek, volume, transfer — and the screens read the struct without knowing who wrote it. On this build the only provider is the Spotify Web API poller. The halo build swaps in the companion's Windows media-session feed and renders the same screens. The enforcement rule: nothing above the seam mentions Spotify, HTTP or JSON. The simulator already proves the shape — its mock engine and live engine drive one UI through one interface.
 
 ### The app shell (R9)
 
@@ -514,9 +502,8 @@ Steps 1–4 need a phone. Step 5 needs the PC. Nothing needs a keyboard on the d
 | Spin right ≥ 3 detents | Send combo → on | Nothing |
 | Spin left ≥ 3 detents | Nothing | Send combo → off |
 | Same direction again within 2 s | Send combo regardless | Send combo regardless |
-| Waggle | Leave, nothing sent | Send combo → off, then leave |
 
-Three detents, not one, because this must never fire from a knock. Tap is the fast path when you are already looking at the screen; the spins carry direction for muscle memory; the waggle is only ever the exit. There is no dwell timer and no confirmation — the Flow Bar is the confirmation.
+Three detents, not one, because this must never fire from a knock. Tap is the fast path when you are already looking at the screen; the spins carry direction for muscle memory; the back chevron leaves without touching the state. There is no dwell timer and no confirmation — the Flow Bar is the confirmation.
 
 **Transport: BLE HID, not USB HID.** The S3's USB HID and its USB-Serial-JTAG flashing port are the same peripheral on the same pins and cannot both be active. **This board has no BOOT and no RESET button**, and GPIO0 is wired to `I2S_SWITCH_IN` rather than to a button, so if firmware claims the USB peripheral there may be no way back into download mode. That is a brick, not an inconvenience. BLE HID never touches USB and costs nothing that matters here.
 
@@ -639,12 +626,16 @@ Result recorded in section 1 under Verified constraints. Volume works on the des
 
 ESP-IDF v5.5.5 installed. Schematic read and section 3's pin map verified against it. `firmware/knob/` builds clean with the full dependency set — see section 4 for the known-good versions.
 
-### Wave 2 — Board bring-up
+### Wave 2 — Board bring-up — **COMPLETE (2026-09-02)**
 
-- Flash `hello_world`, confirm the chip and PSRAM from the boot log.
-- Bring up ST77916 over QSPI, CST816 over I2C, and the encoder via `espressif/knob`, all through `esp_lvgl_port`.
-- Test UI: a number that increments on clockwise rotation and decrements anticlockwise, and a button that changes colour on touch.
-- **Done when:** all four inputs are demonstrably correct and the pin map in section 3 has been confirmed or corrected in this document.
+All five checkpoints passed in one bench day: chip + 8 MB octal PSRAM confirmed, ST77916 up over QSPI, CST816 touch, the dial counting exactly, DRV2605 haptics clicking per detent on the shared I²C bus. Test UI: a counter driven by the dial, reset by a screen tap. Four findings worth keeping:
+
+1. **The dial is not a quadrature encoder** — section 3 corrected; driver ported from the vendor demo as `firmware/knob/main/bidi_knob.c`.
+2. **The panel needs Waveshare's vendor init table** (`main/lcd_init_waveshare.h`, from their demo) — the generic ST77916 init leaves colours washed out (no display-inversion command). RGB565 also needs byte-swapping on the wire (`swap_bytes` in the lvgl_port config).
+3. **Fast-reversal drift is real** — see the confirmed row in section 9 (open risks) for the D4 numbers and the Wave 10 consequence.
+4. On full black at high backlight the module shows edge glow and faint lines from its light guide — physical, scales with backlight duty, invisible at the 40% working default.
+
+(Transient trap, recorded for re-runs: the IDF 5.5 hello_world example ships `MINIMAL_BUILD ON`, which hides the ESP PSRAM menuconfig entry until that line is deleted.)
 
 ### Wave 3 — Network and auth
 
@@ -738,8 +729,7 @@ This screen is the recovery documentation. It should never be seen, and it must 
 - Wispr app implementing `knob_app_t`, with the direction mapping and the 2-second resync rule from section 6.
 - Optional and off by default: `Win`+`N` on the CONTROLS device pill, with the pin position set in Settings.
 - **Measure Wi-Fi throughput with BLE connected and with it disconnected**, and decide from that whether BLE stays up permanently.
-- The waggle detector from section 5, sitting upstream of the volume debouncer, plus the waggle's enter/dismiss navigation.
-- **Done when:** spinning right starts dictation and spinning right again does not stop it; spinning left stops it; a waggle from NOW PLAYING lands in the Wispr app with dictation on and a second waggle returns to NOW PLAYING with it off; two spins the same way inside 2 s resync a deliberately desynced device; and the album art fetch time with BLE connected is recorded in this document; a waggle in the middle of a volume sweep toggles dictation **and sends no volume change to Spotify**; and 200 deliberate volume corrections produce zero false waggles.
+- **Done when:** spinning right starts dictation and spinning right again does not stop it; spinning left stops it; two spins the same way inside 2 s resync a deliberately desynced device; and the album art fetch time with BLE connected is recorded in this document.
 
 ### Wave 11 — Launcher
 
@@ -757,7 +747,7 @@ This screen is the recovery documentation. It should never be seen, and it must 
 | ~~Pin map wrong~~ | — | **Closed 2026-08-31** — verified against the schematic; see section 3 |
 | ~~Component versions clash~~ | — | **Closed 2026-08-31** — full set builds clean on IDF 5.5.5 |
 | ~~Post-February-2026 Client ID may not reach every endpoint~~ | — | **Closed 2026-08-31** — all seven pre-flighted, none restricted; see section 1 |
-| Rate limit hit despite the budget | Screen goes stale intermittently | `Retry-After` handling plus interval doubling, Wave 8 |
+| Rate limit hit despite the budget (**happened 2026-09-03**: 429 with an 11-hour `Retry-After`, caused by forgotten simulator tabs polling on the same dev-mode account quota, not by the firmware) | Screen goes stale for hours; the quota is per developer account, so anything else using the Client ID spends the device's budget | `Retry-After` handling plus interval doubling, Wave 8. Simulator now stops polling in hidden tabs and `serve_sim.py` no longer auto-opens them |
 | Refresh token expiry at 6 months | Device dies silently | Wave 9 web config; calendar reminder as the interim |
 | Accidental skips from knocking the knob | Daily irritation | Burst collapsing + lockout in Wave 6; quarter-turn commit as fallback |
 | PSRAM fragmentation from repeated art buffers | Crash after hours | Fixed-size pre-allocated art buffers, verified in Wave 5 |
@@ -765,8 +755,7 @@ This screen is the recovery documentation. It should never be seen, and it must 
 | Launcher chords go stale when the taskbar is reordered | Wrong app launches, silently | `Win`+`N` is inherently positional. Prefer `Ctrl`+`Alt` shortcut keys on `.lnk` files for anything you care about — those follow the file, not the position |
 | A chord fires while the PC is locked or asleep | Nothing happens, and the device cannot say why | Accepted, not solved. The launcher is open-loop by design, which is why the confirmation says "Launching" and never "Launched" |
 | A config-page endpoint that forwards text to the HID layer | Remote code execution on the PC from anywhere on the LAN | Architectural rule in section 6: the HID layer accepts a fixed action enum, never a string. Check for this in review, not at runtime |
-| Encoder emits phantom counts on fast reversal (**confirmed, Wave 2 D4, 2026-09-02**: drift +2,+1,0,−2,0,+1,+1,+2,+3,+4 over ten fast waggles, clockwise bias, worst +4) | The waggle's net-zero safety argument is void as written; slow single detents count exactly, so ordinary corrections are barely exposed | Section 5 amendment required before Wave 10: the gesture detector must swallow a recognised waggle's detents rather than rely on cancellation; the leak case is a waggle that fails recognition. One driver-tuning experiment (poll/debounce in `bidi_knob.c`) also worth trying |
-| Waggle fires during a genuine volume correction | Dictation starts while you are turning the music down | Threshold is the gap between reversals, not their count; tuned on hardware against 200 real corrections in Wave 10 |
+| Encoder emits phantom counts on fast reversal (**confirmed, Wave 2 D4, 2026-09-02**: drift +2,+1,0,−2,0,+1,+1,+2,+3,+4 over ten fast waggles, clockwise bias, worst +4) | Fast direction changes miscount; slow single detents count exactly, so ordinary corrections are barely exposed | **The waggle gesture was retired over this** (section 5, 2026-09-02). Residual exposure is volume accuracy during violent corrections; one driver-tuning experiment (poll/debounce in `bidi_knob.c`) still worth trying |
 | BLE HID reconnect after PC sleep | Dictation trigger dead until replug | Windows is unreliable here. If it proves bad, Classic BT HID on the second MCU (UART, GPIO48/38) is the fallback — more work, better reconnect |
 | BLE and Wi-Fi contending for one radio | Album art visibly slower | Measured in Wave 10; BLE can be scoped to the Wispr app if the numbers are bad |
 | Radial's believed dictation state drifts from reality | Spinning right does nothing | Two spins the same way inside 2 s force the toggle; the Flow Bar is the visible truth |
@@ -779,11 +768,11 @@ This screen is the recovery documentation. It should never be seen, and it must 
 
 > This section always describes **only the wave being worked on right now**. When the wave is done, it is deleted and replaced with the next one. Nothing accumulates here.
 
-### Wave 2 — Board bring-up — in progress, see `WAVE-2.md`
+### Wave 3 — Network and auth — in progress, see `WAVE-3.md`
 
-The wave is being worked at the bench and has grown step-level detail — code blocks, exact commands, a pass test per step — that this document does not need to keep. All of it lives in **`WAVE-2.md`** at the repo root. When the wave is done, its results (including the measured encoder drift from the reversal test, step D4) are written back here and that file is deleted.
+The current wave's step-level detail — per-step actions, exact commands, a pass test per step — lives in **`WAVE-3.md`** at the repo root. When the wave is done, its results are written back here and that file is deleted. (Wave 2 followed this process; its results are in section 8 and its findings in sections 3 and 9.)
 
-**Status:** Checkpoint A (reach the right chip) passed 2026-09-02 — board on COM7, ESP32-S3 rev v0.2, 8 MB octal PSRAM verified. Checkpoint B (screen), C (LVGL and touch), D (dial) and E (haptics) remain.
+**Status:** started 2026-09-02. Nothing passed yet.
 
 ---
 

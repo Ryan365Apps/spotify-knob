@@ -10,6 +10,8 @@
  */
 
 #include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 
 #include "driver/i2c_master.h"
 #include "driver/ledc.h"
@@ -31,8 +33,21 @@
 #include "iot_knob.h"
 #include "jpeg_decoder.h"
 
+#include "cJSON.h"
+#include "esp_crt_bundle.h"
+#include "esp_event.h"
+#include "esp_http_client.h"
+#include "esp_netif.h"
+#include "esp_wifi.h"
+#include "nvs.h"
+
+#include "app_shell.h"
 #include "bidi_knob.h"
 #include "lcd_init_waveshare.h"
+#include "secrets_local.h"
+#include "spotify_app.h"
+
+#include "freertos/semphr.h"
 
 /* Verified against the Waveshare schematic, 2026-08-31. See BUILD.md section 3.
  * Unused for now; Wave 2 wires them up. */
@@ -185,6 +200,274 @@ static void touch_init(lv_display_t *disp)
     ESP_LOGI(TAG, "touch registered");
 }
 
+/* Wave 3, checkpoint A: NVS-stored credentials and Wi-Fi STA.
+ *
+ * NVS namespace "radial" holds: wifi_ssid, wifi_pass, client_id,
+ * refresh_token, auth_date (BUILD.md section 6). On first boot the keys are
+ * seeded from the gitignored secrets_local.h; after that NVS is the truth.
+ * Nothing secret is ever logged - log lines say what happened, not the value. */
+#define NVS_NAMESPACE "radial"
+
+static void nvs_seed_if_missing(void)
+{
+    nvs_handle_t h;
+    ESP_ERROR_CHECK(nvs_open(NVS_NAMESPACE, NVS_READWRITE, &h));
+
+    if (SECRET_WIFI_SSID[0] == '\0') {
+        ESP_LOGE(TAG, "secrets_local.h Wi-Fi fields not filled in");
+        nvs_close(h);
+        return;
+    }
+
+    /* Re-seed whenever the compiled-in secrets differ from NVS, so a fixed
+     * password in secrets_local.h actually takes effect on the next flash.
+     * (Wave 9 replaces this: NVS becomes the sole truth once provisioning
+     * has a real flow.) */
+    char cur_ssid[33] = { 0 };
+    char cur_pass[65] = { 0 };
+    size_t ssid_len = sizeof(cur_ssid);
+    size_t pass_len = sizeof(cur_pass);
+    nvs_get_str(h, "wifi_ssid", cur_ssid, &ssid_len);
+    nvs_get_str(h, "wifi_pass", cur_pass, &pass_len);
+    if (strcmp(cur_ssid, SECRET_WIFI_SSID) == 0 && strcmp(cur_pass, SECRET_WIFI_PASS) == 0) {
+        nvs_close(h);
+        return;  /* NVS already matches the header */
+    }
+    ESP_ERROR_CHECK(nvs_set_str(h, "wifi_ssid", SECRET_WIFI_SSID));
+    ESP_ERROR_CHECK(nvs_set_str(h, "wifi_pass", SECRET_WIFI_PASS));
+    ESP_ERROR_CHECK(nvs_set_str(h, "client_id", SECRET_CLIENT_ID));
+    ESP_ERROR_CHECK(nvs_set_str(h, "refresh_token", SECRET_REFRESH_TOKEN));
+    ESP_ERROR_CHECK(nvs_set_str(h, "auth_date", SECRET_AUTH_DATE));
+    ESP_ERROR_CHECK(nvs_commit(h));
+    nvs_close(h);
+    ESP_LOGI(TAG, "NVS seeded from build secrets");
+}
+
+static esp_err_t nvs_get_string(const char *key, char *buf, size_t buf_len)
+{
+    nvs_handle_t h;
+    esp_err_t err = nvs_open(NVS_NAMESPACE, NVS_READONLY, &h);
+    if (err != ESP_OK) {
+        return err;
+    }
+    err = nvs_get_str(h, key, buf, &buf_len);
+    nvs_close(h);
+    return err;
+}
+
+/* The shell's token module (BUILD.md section 6: token refresh stays in the
+ * shell). Refresh on boot, at T+55 min, and on demand via
+ * shell_token_refresh_now(); rotate the refresh token into NVS when a new one
+ * arrives; a 400 invalid_grant means the token is dead - stop, never retry.
+ * Token values are never logged. */
+#define SPOTIFY_TOKEN_URL "https://accounts.spotify.com/api/token"
+
+static char s_access_token[512];
+static bool s_token_valid = false;
+static bool s_auth_dead = false;
+static SemaphoreHandle_t s_token_mutex;    /* guards the three fields above */
+static SemaphoreHandle_t s_refresh_mutex;  /* serialises concurrent refreshes */
+
+static esp_err_t token_refresh_locked(void)
+{
+    char refresh[256];
+    char client_id[64];
+    ESP_ERROR_CHECK(nvs_get_string("refresh_token", refresh, sizeof(refresh)));
+    ESP_ERROR_CHECK(nvs_get_string("client_id", client_id, sizeof(client_id)));
+
+    static char body[512];
+    snprintf(body, sizeof(body),
+             "grant_type=refresh_token&refresh_token=%s&client_id=%s",
+             refresh, client_id);
+
+    const esp_http_client_config_t cfg = {
+        .url = SPOTIFY_TOKEN_URL,
+        .method = HTTP_METHOD_POST,
+        .crt_bundle_attach = esp_crt_bundle_attach,
+        .timeout_ms = 10000,
+    };
+    esp_http_client_handle_t client = esp_http_client_init(&cfg);
+    if (client == NULL) {
+        return ESP_FAIL;
+    }
+    esp_http_client_set_header(client, "Content-Type", "application/x-www-form-urlencoded");
+
+    esp_err_t err = esp_http_client_open(client, strlen(body));
+    if (err != ESP_OK) {
+        ESP_LOGW(TAG, "token endpoint unreachable: %s", esp_err_to_name(err));
+        esp_http_client_cleanup(client);
+        return err;
+    }
+    esp_http_client_write(client, body, strlen(body));
+    esp_http_client_fetch_headers(client);
+    const int status = esp_http_client_get_status_code(client);
+
+    static char resp[2048];
+    const int len = esp_http_client_read_response(client, resp, sizeof(resp) - 1);
+    resp[len > 0 ? len : 0] = '\0';
+    esp_http_client_cleanup(client);
+
+    if (status == 400 && strstr(resp, "invalid_grant") != NULL) {
+        ESP_LOGE(TAG, "refresh token dead (invalid_grant) - re-auth required, not retrying");
+        s_auth_dead = true;
+        return ESP_FAIL;
+    }
+    if (status != 200) {
+        ESP_LOGW(TAG, "token refresh failed, HTTP %d (transient, will retry)", status);
+        return ESP_FAIL;
+    }
+
+    cJSON *root = cJSON_Parse(resp);
+    if (root == NULL) {
+        ESP_LOGW(TAG, "token response did not parse");
+        return ESP_FAIL;
+    }
+    const cJSON *at = cJSON_GetObjectItem(root, "access_token");
+    const cJSON *expires = cJSON_GetObjectItem(root, "expires_in");
+    const cJSON *rt = cJSON_GetObjectItem(root, "refresh_token");
+    if (!cJSON_IsString(at)) {
+        cJSON_Delete(root);
+        return ESP_FAIL;
+    }
+    xSemaphoreTake(s_token_mutex, portMAX_DELAY);
+    snprintf(s_access_token, sizeof(s_access_token), "%s", at->valuestring);
+    s_token_valid = true;
+    xSemaphoreGive(s_token_mutex);
+
+    /* Rotation rule: a new refresh token in the response is written to NVS
+     * before anything uses it; absent one, the old token stays. */
+    if (cJSON_IsString(rt) && strcmp(rt->valuestring, refresh) != 0) {
+        nvs_handle_t h;
+        ESP_ERROR_CHECK(nvs_open(NVS_NAMESPACE, NVS_READWRITE, &h));
+        ESP_ERROR_CHECK(nvs_set_str(h, "refresh_token", rt->valuestring));
+        ESP_ERROR_CHECK(nvs_commit(h));
+        nvs_close(h);
+        ESP_LOGI(TAG, "refresh token rotated into NVS");
+    }
+    ESP_LOGI(TAG, "token refreshed, expires_in %d",
+             cJSON_IsNumber(expires) ? expires->valueint : -1);
+    cJSON_Delete(root);
+    return ESP_OK;
+}
+
+static esp_err_t token_refresh(void)
+{
+    xSemaphoreTake(s_refresh_mutex, portMAX_DELAY);
+    const esp_err_t err = token_refresh_locked();
+    xSemaphoreGive(s_refresh_mutex);
+    return err;
+}
+
+/* Shell services (app_shell.h). */
+
+esp_err_t shell_token_get(char *buf, size_t buf_len)
+{
+    esp_err_t err = ESP_ERR_INVALID_STATE;
+    xSemaphoreTake(s_token_mutex, portMAX_DELAY);
+    if (s_token_valid) {
+        snprintf(buf, buf_len, "%s", s_access_token);
+        err = ESP_OK;
+    }
+    xSemaphoreGive(s_token_mutex);
+    return err;
+}
+
+esp_err_t shell_token_refresh_now(void)
+{
+    return token_refresh();
+}
+
+bool shell_auth_dead(void)
+{
+    return s_auth_dead;
+}
+
+void shell_token_corrupt_for_test(void)
+{
+    xSemaphoreTake(s_token_mutex, portMAX_DELAY);
+    snprintf(s_access_token, sizeof(s_access_token), "deliberately-broken");
+    xSemaphoreGive(s_token_mutex);
+}
+
+/* Refresh on boot (with backoff), then every 55 minutes. */
+static void token_task(void *arg)
+{
+    int backoff_s = 2;
+    while (token_refresh() != ESP_OK) {
+        if (s_auth_dead) {
+            vTaskDelete(NULL);
+        }
+        vTaskDelay(pdMS_TO_TICKS(backoff_s * 1000));
+        if (backoff_s < 60) {
+            backoff_s *= 2;
+        }
+    }
+    for (;;) {
+        vTaskDelay(pdMS_TO_TICKS(55 * 60 * 1000));
+        if (token_refresh() != ESP_OK && s_auth_dead) {
+            vTaskDelete(NULL);
+        }
+    }
+}
+
+
+static void wifi_event_cb(void *arg, esp_event_base_t base, int32_t id, void *data)
+{
+    if (base == WIFI_EVENT && id == WIFI_EVENT_STA_START) {
+        esp_wifi_connect();
+    } else if (base == WIFI_EVENT && id == WIFI_EVENT_STA_DISCONNECTED) {
+        static int fail_count = 0;
+        const wifi_event_sta_disconnected_t *ev = data;
+        ESP_LOGW(TAG, "wifi disconnected (reason %d), retrying", ev->reason);
+        if (++fail_count == 3) {
+            /* Diagnostic: show what the 2.4 GHz radio can actually see. */
+            ESP_LOGW(TAG, "three failures - scanning for visible networks");
+            esp_wifi_scan_start(NULL, false);
+            return;  /* reconnect resumes from SCAN_DONE */
+        }
+        esp_wifi_connect();
+    } else if (base == WIFI_EVENT && id == WIFI_EVENT_SCAN_DONE) {
+        /* Static: the event task's stack is small, and this array is ~1.3 KB. */
+        static wifi_ap_record_t recs[10];
+        uint16_t n = 10;
+        if (esp_wifi_scan_get_ap_records(&n, recs) == ESP_OK) {
+            for (int i = 0; i < n; i++) {
+                ESP_LOGI(TAG, "  seen: '%s' ch%d rssi %d", (const char *) recs[i].ssid,
+                         recs[i].primary, recs[i].rssi);
+            }
+        }
+        esp_wifi_connect();
+    } else if (base == IP_EVENT && id == IP_EVENT_STA_GOT_IP) {
+        static bool token_task_started = false;
+        const ip_event_got_ip_t *ev = data;
+        ESP_LOGI(TAG, "wifi connected, ip " IPSTR, IP2STR(&ev->ip_info.ip));
+        if (!token_task_started) {
+            token_task_started = true;
+            xTaskCreate(token_task, "token", 8192, NULL, 5, NULL);
+        }
+    }
+}
+
+static void wifi_start(void)
+{
+    ESP_ERROR_CHECK(esp_netif_init());
+    ESP_ERROR_CHECK(esp_event_loop_create_default());
+    esp_netif_create_default_wifi_sta();
+
+    const wifi_init_config_t init_cfg = WIFI_INIT_CONFIG_DEFAULT();
+    ESP_ERROR_CHECK(esp_wifi_init(&init_cfg));
+    ESP_ERROR_CHECK(esp_event_handler_register(WIFI_EVENT, ESP_EVENT_ANY_ID, wifi_event_cb, NULL));
+    ESP_ERROR_CHECK(esp_event_handler_register(IP_EVENT, IP_EVENT_STA_GOT_IP, wifi_event_cb, NULL));
+
+    wifi_config_t cfg = { 0 };
+    ESP_ERROR_CHECK(nvs_get_string("wifi_ssid", (char *) cfg.sta.ssid, sizeof(cfg.sta.ssid)));
+    ESP_ERROR_CHECK(nvs_get_string("wifi_pass", (char *) cfg.sta.password, sizeof(cfg.sta.password)));
+
+    ESP_ERROR_CHECK(esp_wifi_set_mode(WIFI_MODE_STA));
+    ESP_ERROR_CHECK(esp_wifi_set_config(WIFI_IF_STA, &cfg));
+    ESP_ERROR_CHECK(esp_wifi_start());
+}
+
 /* Wave 2, checkpoint E: DRV2605 haptics. Hand-rolled register writes - no
  * managed component exists for it. Lives on the SAME i2c_master bus handle as
  * touch (section 3: they share the bus); a second handle would break touch.
@@ -227,33 +510,23 @@ static void haptic_click(void)
     drv2605_write(DRV2605_REG_GO, 1);
 }
 
-/* Wave 2, steps D2/D3: the dial feeding a counter. The dial is NOT a
- * quadrature encoder - it is two bidirectional detector switches, one pulse
- * line per direction, read by main/bidi_knob.c (ported from Waveshare's demo).
- * The espressif/knob component stays as a compile-time dependency of
- * esp_lvgl_port only. No LVGL indev registration yet - the selector (Wave 7)
- * is the first thing that navigates; raw detent events are under test here. */
+/* The dial (Wave 2). NOT a quadrature encoder - two bidirectional detector
+ * switches, one pulse line per direction, read by main/bidi_knob.c (ported
+ * from Waveshare's demo). The espressif/knob component stays as a compile-time
+ * dependency of esp_lvgl_port only.
+ *
+ * Shell role (Wave 4): one haptic click per detent, then dispatch the signed
+ * delta to the active app. */
 static bidi_knob_handle_t s_knob = NULL;
-static lv_obj_t *s_count_label = NULL;
-static int32_t s_count = 0;
+static const knob_app_t *s_active_app = NULL;
 
 static void dial_cb(void *arg, void *usr_data)
 {
     const bidi_knob_event_t event = (bidi_knob_event_t)(uintptr_t) usr_data;
-    s_count += (event == BIDI_KNOB_RIGHT) ? 1 : -1;
-    haptic_click();                             /* checkpoint E: one click per detent */
-    if (lvgl_port_lock(50)) {
-        lv_label_set_text_fmt(s_count_label, "%ld", (long) s_count);
-        lvgl_port_unlock();
+    haptic_click();                             /* one click per detent */
+    if (s_active_app != NULL && s_active_app->on_dial != NULL) {
+        s_active_app->on_dial(event == BIDI_KNOB_RIGHT ? 1 : -1);
     }
-}
-
-/* Checkpoint E's touch-still-works proof, and handy for dial tests: tapping
- * anywhere resets the counter. */
-static void screen_tap_cb(lv_event_t *e)
-{
-    s_count = 0;
-    lv_label_set_text(s_count_label, "0");
 }
 
 static void dial_init(void)
@@ -306,26 +579,34 @@ void app_main(void)
     /* C3: the touch controller on the shared I2C bus. */
     touch_init(disp);
 
-    /* D3: dial test UI - a large number, clockwise +1, anticlockwise -1. */
-    lvgl_port_lock(0);
-    lv_obj_set_style_bg_color(lv_screen_active(), lv_color_black(), 0);
-    s_count_label = lv_label_create(lv_screen_active());
-    lv_label_set_text(s_count_label, "0");
-    lv_obj_set_style_text_color(s_count_label, lv_color_white(), 0);
-    lv_obj_set_style_text_font(s_count_label, &lv_font_montserrat_48, 0);
-    lv_obj_center(s_count_label);
-    lv_obj_add_flag(lv_screen_active(), LV_OBJ_FLAG_CLICKABLE);
-    lv_obj_add_event_cb(lv_screen_active(), screen_tap_cb, LV_EVENT_CLICKED, NULL);
-    lvgl_port_unlock();
-
-    /* D2: the encoder. */
+    /* The encoder and haptics (Wave 2). */
     dial_init();
-
-    /* E: haptics on the shared bus. */
     haptics_init();
 
-    /* Stay alive so the monitor has something to talk to. */
+    /* Credentials into NVS, then onto the network (Wave 3). */
+    s_token_mutex = xSemaphoreCreateMutex();
+    s_refresh_mutex = xSemaphoreCreateMutex();
+    assert(s_token_mutex != NULL && s_refresh_mutex != NULL);
+    nvs_seed_if_missing();
+    wifi_start();
+
+    /* Wave 4: the shell hosts apps behind knob_app_t. One app for now; the
+     * selector arrives in Wave 7. The app builds its own screen and frees it
+     * on exit; the shell owns the switch. */
+    spotify_app_init();
+    s_active_app = &spotify_app;
+    lvgl_port_lock(0);
+    lv_obj_t *app_screen = lv_obj_create(NULL);
+    s_active_app->on_enter(app_screen);
+    lv_screen_load(app_screen);
+    lvgl_port_unlock();
+    ESP_LOGI(TAG, "shell up, app '%s' active", s_active_app->name);
+
+    /* ~1 Hz housekeeping tick to the active app. */
     for (;;) {
         vTaskDelay(pdMS_TO_TICKS(1000));
+        if (s_active_app != NULL && s_active_app->on_tick != NULL) {
+            s_active_app->on_tick();
+        }
     }
 }

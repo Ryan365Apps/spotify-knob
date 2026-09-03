@@ -244,7 +244,7 @@
   .jrow i{font-style:normal;font-family:var(--mono);width:14px;text-align:center}
   .jwhy{font-family:var(--ui);font-size:11px;color:var(--amber-lit);opacity:.85;
     text-align:center;margin-top:-2px}
-  /* wispr screens 13 A / 13 B and the waggle overlay (screen 14) */
+  /* wispr screens 13 A / 13 B, and the timer alarm overlay */
   .starc{position:absolute;inset:8px;border-radius:50%;
     -webkit-mask:radial-gradient(farthest-side,transparent calc(100% - 4px),#000 calc(100% - 4px));
             mask:radial-gradient(farthest-side,transparent calc(100% - 4px),#000 calc(100% - 4px))}
@@ -283,8 +283,8 @@
   .hint{position:absolute;left:0;right:0;bottom:66px;text-align:center;
     font-family:var(--ui);font-size:10px;font-weight:600;
     letter-spacing:.2em;color:rgba(255,255,255,.26)}
-  #waggleol{position:absolute;inset:0;background:rgba(0,0,0,.82)}
-  #waggleol[hidden]{display:none}
+  #ovl{position:absolute;inset:0;background:rgba(0,0,0,.82)}
+  #ovl[hidden]{display:none}
 
   /* ---------------- side panels ---------------- */
   .panel{background:var(--panel);border:1px solid var(--rule);border-radius:12px;padding:18px 20px}
@@ -343,7 +343,7 @@
         <div id="bezel"><i></i></div>
         <div class="screen">
           <div id="screenRoot"></div>
-          <div id="waggleol" hidden></div>
+          <div id="ovl" hidden></div>
           <div id="dimmer"></div>
           <div id="sleepveil"></div>
         </div>
@@ -353,8 +353,7 @@
       <span class="k">scroll</span> turn the dial &nbsp;·&nbsp;
       <span class="k">click</span> tap &nbsp;·&nbsp;
       <span class="k">hold</span> long-press<br>
-      keys: <b>←/→</b> dial · <b>Enter</b> tap · <b>L</b> long-press<br>
-      <b>waggle</b> — scroll down·up·down fast, from any app: dictation toggle
+      keys: <b>←/→</b> dial · <b>Enter</b> tap · <b>L</b> long-press
     </p>
   </div>
 
@@ -663,6 +662,10 @@ function RealEngine(){
   function schedule(ms){ clearTimeout(timer); timer=setTimeout(poll,ms); }
 
   async function poll(){
+    /* a hidden tab must never poll — forgotten tabs put the whole
+       developer account in Spotify's penalty box (429, hours-long
+       Retry-After) that the device then inherits. Learned 2026-09-03. */
+    if(document.hidden){ schedule(15000); return; }
     try{
       var r=await sfetch("/me/player");
       if(!r){ if(cb)cb(); return; }
@@ -787,11 +790,12 @@ var opt={};                 // optimistic values while turning
 var pendingWrite=null;      // {kind, timer, value}
 var bezelRot=0, lastInput=now(), lastSig="", bootAt=now();
 
-/* wispr / waggle / join-narration state */
+/* wispr / timer / join-narration state */
 var wispr={believed:false,paired:true,onSince:0,run:0,runDir:0,lastTrigDir:0,lastTrigT:0};
 function setBelieved(v){ wispr.believed=v; wispr.onSince=v?now():0; }
 var dictConfirm=0, joinState=null;
-var wag={lastDir:0,revs:[]};
+/* timer lives inside Clock: sixty detents, sixty minutes, works unplugged */
+var timerS={running:false,endAt:0,totalMs:0}, winMin=0, alarmOn=false, alarmTick=0;
 
 /* launcher (app 4): curated list + Task View legend. Labels are drawn,
    chords are enums — nothing typed reaches the HID layer. */
@@ -956,6 +960,24 @@ function renderIdle(c){
 }
 function clockText(){ var d=new Date();
   return d.getHours()+":"+String(d.getMinutes()).padStart(2,"0"); }
+
+/* the Clock app: idle bloom + time, with the timer riding the rim */
+function renderClock(c){
+  var tint=(c&&c.pal)?c.pal[0]:"#E4572E";
+  root.innerHTML='<canvas class="idlecanvas" id="idleCanvas" width="360" height="360" data-tint="'+tint+'"></canvas>'+
+    (timerS.running?'<canvas class="dial" id="trim" width="360" height="360"></canvas>':"")+
+    '<div class="bigval"><div class="v" id="clocktime" style="font-size:44px">'+clockText()+"</div></div>"+
+    (timerS.running?'<p class="elapsed" id="tleft">'+fmtMs(Math.max(0,timerS.endAt-now()))+"</p>":"");
+  drawTrim();
+}
+function renderWind(){
+  root.innerHTML='<div class="selground"></div>'+
+    '<canvas class="dial" id="wedge" width="360" height="360"></canvas>'+
+    '<div class="bigval"><div class="v" id="dialval">'+winMin+"<small>min</small></div></div>"+
+    '<p class="setttl">TIMER</p>'+
+    '<p class="hint">ONE DETENT · ONE MINUTE</p>';
+  drawWedge($("wedge"),winMin/60,"white",0);
+}
 
 function renderExpired(){
   root.innerHTML='<div class="bigval stack expired"><div class="v">Login<br>expired</div>'+
@@ -1202,7 +1224,7 @@ function sig(){
   var c=es();
   return [S.asleep,S.app,S.screen,S.itemKey,S.selIdx,S.setIdx,S.assignment,S.dialMode,
     settings.sleep,settings.haptics,settings.step,settings.bright,
-    wispr.believed,wispr.paired,launcher.idx,
+    wispr.believed,wispr.paired,launcher.idx,timerS.running,alarmOn,
     (S.screen==="join"&&joinState)?joinState.steps.join("")+(joinState.done?"D":""):"",
     c.ok?[c.trackId,c.playing,c.deviceId,c.supportsVolume,c.isAd,c.artUrl].join("|"):c.reason
   ].join("~");
@@ -1215,7 +1237,10 @@ function render(){
   if(S.asleep){ lastSig=sig(); return; }
 
   if(S.screen==="selector"){ renderSelector(); }
-  else if(S.app==="clock"){ renderIdle(c.ok?c:null); }
+  else if(S.app==="clock"){
+    if(S.screen==="wind") renderWind();
+    else renderClock(c.ok?c:null);
+  }
   else if(S.app==="wispr"){ renderWispr(); }
   else if(S.app==="launcher"){
     if(S.screen==="launching") renderLaunching();
@@ -1287,7 +1312,6 @@ function commitLeavingSetting(){
 /* ---------- dial routing ---------- */
 
 function onDial(dir){
-  if(feedWaggle(dir)) return;
   var c=cur();
   if(S.screen==="selector"){
     /* a ring has no ends — it wraps, and the rotation carries on forward */
@@ -1296,7 +1320,23 @@ function onDial(dir){
     haptic(); updateSelector(); arm("auto",4000,closeSelector);
     return;
   }
-  if(S.app==="clock") return;
+  if(S.app==="clock"){
+    /* the clock's dial winds a timer: one detent, one minute, 0–60 */
+    if(S.screen!=="wind"){
+      winMin=timerS.running?Math.ceil(Math.max(0,timerS.endAt-now())/60000):0;
+      S.screen="wind"; render();
+    }
+    var w0=winMin;
+    winMin=clamp(winMin+dir,0,60);
+    if(winMin===w0){ bump(dir); }
+    else{
+      haptic();
+      $("dialval").innerHTML=winMin+"<small>min</small>";
+      drawWedge($("wedge"),winMin/60,"white",0);
+    }
+    arm("auto",2000,commitTimer);
+    return;
+  }
   if(S.app==="wispr"){ wisprDial(dir); return; }
   if(S.app==="launcher"){
     if(S.screen==="list"){
@@ -1385,7 +1425,7 @@ function bump(dir){
   haptic(true);
 }
 
-/* ---------- wispr: direction mapping, waggle, BLE combo ---------- */
+/* ---------- wispr: direction mapping, BLE combo ---------- */
 
 var lastComboT=0;
 function sendCombo(why){
@@ -1423,69 +1463,36 @@ function wisprDial(dir){
   render();
 }
 
-/* raw detents → gesture detector → debouncer → active app */
-function feedWaggle(dir){
-  var t=now();
-  if(wag.lastDir&&dir!==wag.lastDir){
-    wag.revs.push(t);
-    wag.revs=wag.revs.filter(function(x){return t-x<600;});
-    if(wag.revs.length>=3){ wag.revs=[]; wag.lastDir=dir; fireWaggle(); return true; }
-  }
-  wag.lastDir=dir;
-  return false;
-}
+/* ---------- timer, inside Clock ---------- */
+/* The waggle gesture that used to live here was retired 2026-09-02:
+   Wave 2's D4 reversal test measured up to +4 detents of drift on fast
+   direction changes, voiding its net-zero safety argument. */
 
-function fireWaggle(){
-  if(pendingWrite){
-    clearTimeout(pendingWrite.timer);
-    log("· waggle — pending "+pendingWrite.kind+" write discarded, net zero");
-    pendingWrite=null;
+function commitTimer(){
+  if(S.screen!=="wind") return;
+  if(winMin>0){
+    timerS.running=true; timerS.totalMs=winMin*60000; timerS.endAt=now()+timerS.totalMs;
+    log("· timer set — "+winMin+" min, counted on the device, works unplugged");
+  }else if(timerS.running){
+    timerS.running=false;
+    log("· timer cancelled");
   }
-  opt={};
-  if(!wispr.paired){ log("· waggle recognised — no BLE bond, nothing sent",true); return; }
-  wispr.run=0; wispr.runDir=0;               /* don't let the waggle feed the spin counter */
-
-  if(S.app==="wispr"){
-    /* inside the app the waggle only dismisses: off if needed, then back.
-       Tap and directional spins own toggling here — no blind flip. */
-    if(wispr.believed&&!sendCombo("waggle, off")) return;
-    setBelieved(false);
-    haptic(true); setTimeout(function(){ haptic(true); },130);
-    var r=wispr.returnTo; wispr.returnTo=null;
-    if(r) goto_(r.app,r.screen,r.itemKey); else render();
-    waggleOverlay(false);
-    return;
-  }
-  if(!wispr.believed){
-    /* waggle on: jump into the Wispr app, remembering where we came from */
-    if(!sendCombo("waggle, on")) return;
-    setBelieved(true);
-    haptic(true); setTimeout(function(){ haptic(true); },130);
-    wispr.returnTo={app:S.app,
-      screen:(S.screen==="dial"||S.screen==="selector")?"now":S.screen,
-      itemKey:S.itemKey};
-    goto_("wispr","wispr");
-  }else{
-    /* believed on but we're elsewhere: waggle just turns it off in place */
-    if(!sendCombo("waggle, off")) return;
-    setBelieved(false);
-    haptic(true); setTimeout(function(){ haptic(true); },130);
-    wispr.returnTo=null;
-    render();
-    waggleOverlay(false);
-  }
+  S.screen="clock"; render();
 }
-/* screen 14: the waggle overlay over whatever was showing */
-function waggleOverlay(on){
-  var ol=$("waggleol");
-  ol.innerHTML=on?
-    '<div class="starc r"></div><div class="mic live">'+MIC_SVG+"</div>"+
-    '<div class="stcen" style="top:228px"><b style="color:var(--live-lit)">Live</b><s>Dictation on</s></div>':
-    '<div class="starc dim"></div><div class="mic">'+MIC_SVG+"</div>"+
-    '<div class="stcen" style="top:228px"><b>Off</b><s>Dictation off</s></div>';
+function drawTrim(){
+  if(!timerS.running) return;
+  drawWedge($("trim"),clamp((timerS.endAt-now())/(timerS.totalMs||1),0,1),"white",0.70);
+}
+function fireAlarm(){
+  timerS.running=false; alarmOn=true; alarmTick=0; S.asleep=false;
+  var ol=$("ovl");
+  ol.innerHTML='<div class="bigval"><div class="v" style="font-size:44px;'+
+    'animation:breathe 1.2s ease-in-out infinite">0:00</div></div>'+
+    '<p class="hint">TIMER DONE · TAP ANYWHERE</p>';
   ol.hidden=false;
-  clearTimeout(timers.waggle);
-  timers.waggle=setTimeout(function(){ ol.hidden=true; },2000);
+  haptic(true);
+  log("· timer done — buzzing until touched");
+  render();
 }
 
 /* ---------- join narration (screens 12 A–C) ---------- */
@@ -1565,7 +1572,10 @@ function onAct(act){
 
 function onTap(){
   if(S.screen==="selector"){ enterApp(); return; }
-  if(S.app==="clock") return;
+  if(S.app==="clock"){
+    if(S.screen==="wind") commitTimer();
+    return;
+  }
   if(S.app==="wispr"){
     if(!wispr.paired){ log("· no BLE bond — tap ignored (Settings ▸ Dictation)",true); return; }
     if(sendCombo(wispr.believed?"tap, off":"tap, on")) setBelieved(!wispr.believed);
@@ -1633,6 +1643,7 @@ var device=$("device"), wheelAcc=0, lpTimer=null, lpFired=false;
 
 function anyInput(){
   lastInput=now();
+  if(alarmOn){ alarmOn=false; $("ovl").hidden=true; log("· alarm dismissed"); render(); return true; }
   if(S.asleep){ S.asleep=false; render(); log("· wake"); return true; }
   return false;
 }
@@ -1773,6 +1784,8 @@ setInterval(function(){
     }
     var ct=$("clocktime"); if(ct) ct.textContent=clockText();
     var elp=$("elapsed"); if(elp&&wispr.onSince) elp.textContent=fmtMs(now()-wispr.onSince);
+    var tl=$("tleft"); if(tl&&timerS.running){
+      tl.textContent=fmtMs(Math.max(0,timerS.endAt-now())); drawTrim(); }
     var up=$("uptime"); if(up) up.textContent=fmtUp();
     var cc=$("cfgcount");
     if(cc){
@@ -1781,6 +1794,10 @@ setInterval(function(){
       else{ cc.textContent="CLOSES IN "+fmtMs(left); updateCfgRing(); }
     }
   }
+  /* timer fires regardless of which app is up, and wakes the screen */
+  if(timerS.running&&now()>=timerS.endAt) fireAlarm();
+  if(alarmOn&&(++alarmTick%4===0)) haptic(true);
+
   /* sleep */
   if(!S.asleep&&settings.sleep!=="never"){
     var mins=parseInt(settings.sleep,10);

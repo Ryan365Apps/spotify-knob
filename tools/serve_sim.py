@@ -21,7 +21,6 @@ import http.server
 import json
 import subprocess
 import threading
-import webbrowser
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -91,7 +90,8 @@ def main():
     print("Live mode uses the registered redirect "
           f"http://127.0.0.1:{PORT}/callback — no dashboard changes needed.")
     print("Ctrl+C to stop.")
-    webbrowser.open(url)
+    # Deliberately no webbrowser.open(): auto-opened tabs accumulate, each
+    # one polls Spotify in Live mode, and the account ends up rate-limited.
     server.serve_forever()
 
 

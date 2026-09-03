@@ -18,12 +18,12 @@
 - End stops are felt, rings are not: a clamped value (volume at 0 or 100, brightness at its floor, an enum at either end) answers a rejected detent with a firm haptic and a small visual kick. Rings wrap and never bump.
 - Back is visible: a chevron at the foot of every ring, the whole lower band as its hit target. Long-press and idle timeouts still work and are never the only way.
 - Timing: dial overlay clears after 2 s, controls return after 5 s, selector backs out after 4 s.
-- The haptic vocabulary: one click per detent, a heavier click on a press, a double click for the waggle (the only double in the product), a thud at a clamp. The standard speaks it through the DRV2605 vibration driver; the halo speaks it through the motor. Same words, different voice.
+- The haptic vocabulary: one click per detent, a heavier click on a press, a thud at a clamp. The standard speaks it through the DRV2605 vibration driver; the halo speaks it through the motor. Same words, different voice.
 - The colour law: white is progress, green is volume, amber is seek, red is mute/recording.
 
 **2. The HID input contract.** One document covering both transports (Bluetooth on the standard, USB on the halo): the fixed chord enum — no string a human typed ever becomes a keystroke; chords are serialized, at least 600 ms apart; a believed state changes only when a chord was actually dispatched. The halo's extra interfaces (the wheel-only mouse, later a telephony page for Meet) extend this document rather than fork it.
 
-**3. Dictation.** The Wispr Flow hands-free chord: spin right for on, left for off, idempotent; same direction twice inside 2 s resyncs; the waggle enters and dismisses. Designed, simulated, identical on both. Firmware lands at the standard's Wave 10 and transfers whole.
+**3. Dictation.** The Wispr Flow hands-free chord: spin right for on, left for off, idempotent; same direction twice inside 2 s resyncs. (The waggle — the global entry gesture — was retired 2026-09-02 on Wave 2's D4 evidence: the dial miscounts fast reversals. Dictation is reached via the selector.) Designed, simulated, identical on both. Firmware lands at the standard's Wave 10 and transfers whole.
 
 **4. The Launcher.** A ring of up to eight entries, each a label (free text, only ever drawn) and a chord (a dropdown, never a text field), edited on a browser page. Identical on both; only where the editor page lives differs — the standard's config server, the halo's companion settings.
 
