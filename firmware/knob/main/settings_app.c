@@ -129,6 +129,26 @@ static void hero_update(void)
     lv_label_set_text(s_hero_value, v);
 }
 
+/* Place every glyph on the ring at the current angle and fade it by distance.
+ *
+ * Split out of the chase timer because that timer returns early once the ring
+ * has settled - correct, since there is nothing to animate - but on entry the
+ * ring is *already* settled at zero, so it returned before laying anything out
+ * at all. Every icon stayed stacked at the centre behind the hero until the
+ * first detent moved the dial (found on hardware 2026-09-03). Layout is not
+ * animation; it has to happen once whether or not anything is moving. */
+static void ring_layout(void)
+{
+    for (int i = 0; i < ITEM_COUNT; i++) {
+        const float deg = (float) i * SPACING + s_angle_now;
+        const float rad = deg * (float) M_PI / 180.0f;
+        lv_obj_align(s_slots[i], LV_ALIGN_CENTER,
+                     (int32_t)(RING_RADIUS * sinf(rad)),
+                     (int32_t)(-RING_RADIUS * cosf(rad)));
+        lv_obj_set_style_text_opa(s_slots[i], falloff(deg), 0);
+    }
+}
+
 static void chase_cb(lv_timer_t *t)
 {
     (void) t;
@@ -242,12 +262,18 @@ static int index_of(const int *opts, int count, int value)
 static void settings_on_dial(int delta)
 {
     if (!s_in_detail) {
+        /* Reversed 2026-09-04 to match the menu, at Ryan's call. Only the ring
+         * turns the other way - a value editor still goes up when you turn
+         * right, because a quantity has a direction of its own and brightness
+         * that fell when you turned it up would be nonsense. */
+        const int step = -delta;
+
         /* A ring has no ends. */
-        s_sel = (s_sel + delta) % ITEM_COUNT;
+        s_sel = (s_sel + step) % ITEM_COUNT;
         if (s_sel < 0) {
             s_sel += ITEM_COUNT;
         }
-        s_angle_target -= (float) delta * SPACING;
+        s_angle_target -= (float) step * SPACING;
         hero_update();
         return;
     }
@@ -342,13 +368,13 @@ static void settings_on_enter(lv_obj_t *parent)
 
     for (int i = 0; i < ITEM_COUNT; i++) {
         s_slots[i] = lv_label_create(s_ring);
-        lv_obj_set_style_text_font(s_slots[i], &lv_font_montserrat_20, 0);
+        lv_obj_set_style_text_font(s_slots[i], &lv_font_montserrat_28, 0);
         lv_obj_set_style_text_color(s_slots[i], lv_color_white(), 0);
         lv_label_set_text(s_slots[i], ITEM_GLYPH[i]);
     }
 
     s_hero_glyph = lv_label_create(s_ring);
-    lv_obj_set_style_text_font(s_hero_glyph, &lv_font_montserrat_20, 0);
+    lv_obj_set_style_text_font(s_hero_glyph, &lv_font_montserrat_36, 0);
     lv_obj_set_style_text_color(s_hero_glyph, lv_color_hex(0xEAFFF1), 0);
     lv_obj_align(s_hero_glyph, LV_ALIGN_CENTER, 0, -40);
 
@@ -359,7 +385,7 @@ static void settings_on_enter(lv_obj_t *parent)
     /* Name above, value below: you are choosing what to change, so the name
      * leads and the value confirms. */
     s_hero_value = lv_label_create(s_ring);
-    lv_obj_set_style_text_font(s_hero_value, &lv_font_montserrat_20, 0);
+    lv_obj_set_style_text_font(s_hero_value, &lv_font_montserrat_24, 0);
     lv_obj_set_style_text_color(s_hero_value, lv_color_hex(0x3FE07A), 0);
     lv_obj_align(s_hero_value, LV_ALIGN_CENTER, 0, 22);
 
@@ -412,7 +438,7 @@ static void settings_on_enter(lv_obj_t *parent)
     lv_obj_add_event_cb(parent, tap_cb, LV_EVENT_CLICKED, NULL);
 
     hero_update();
-    chase_cb(NULL);
+    ring_layout();      /* not chase_cb: it returns early on a settled ring */
     s_chase_timer = lv_timer_create(chase_cb, CHASE_MS, NULL);
     ESP_LOGI(TAG, "entered");
 }

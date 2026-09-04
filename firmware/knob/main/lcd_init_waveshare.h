@@ -5,8 +5,9 @@
  * sh8601 component; the command structure (0xF0 page selects) is ST77916-style,
  * and the esp_lcd_st77916 component accepts it via vendor_config.init_cmds.
  *
- * Do not tune values here by hand - this is a manufacturer table. The final
- * 0x36 (MADCTL) entry is the no-rotation variant of the demo's two options.
+ * Do not tune values here by hand - this is a manufacturer table. The one
+ * exception is the final 0x36 (MADCTL) entry, which is the orientation and is
+ * ours to choose: the demo ships two variants and we set our own.
  */
 #pragma once
 
@@ -197,5 +198,9 @@ static const st77916_lcd_init_cmd_t waveshare_init_cmds[] = {
     {0x21, (uint8_t[]){0x00}, 1, 0},   /* display inversion ON - the pale-colour fix */
     {0x11, (uint8_t[]){0x00}, 1, 120}, /* sleep out, 120 ms */
     {0x29, (uint8_t[]){0x00}, 1, 0},   /* display on */
-    {0x36, (uint8_t[]){0x00}, 1, 0},   /* MADCTL: no rotation */
+    /* Back to 0x00. Setting MX|MY here (0xC0) is the textbook 180 degree
+     * rotation and the driver does transmit it, but the panel did not turn
+     * (tried 2026-09-03). Rotation is done in software in lvgl_init instead,
+     * and this stays at the vendor's value so only one thing controls it. */
+    {0x36, (uint8_t[]){0x00}, 1, 0},   /* MADCTL: vendor default */
 };

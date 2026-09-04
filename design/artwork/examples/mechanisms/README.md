@@ -1,123 +1,97 @@
-# Mechanism sections — the 60, v7.1
+# Mechanism sections — the 60, v9
 
-Nine views cut from the real v7.1 geometry, made to answer one question: **where does each bought
-component actually sit?** They are the pictures behind `../../MECHANISMS.html` — open that file for the
-same images with numbered balloons and a keyed parts list. This README is the plain-text version.
+Eleven views cut from the v9 geometry, made to answer one question: **where does each bought
+component actually sit?** They are the pictures behind `../../MECHANISMS.html` — open that file for
+the same images with numbered balloons and a keyed parts list. This README is the plain-text version.
+
+Rebuilt 4 September 2026 from `docs/v9/the60_v9`, which is the current model: 302 named bodies,
+0 check failures. Nothing here is carried over from v7.1 or v8.
 
 ## How to read them
 
-**Azimuth** is measured anticlockwise from the +X axis. The ports are at **90 deg**, which is the far
-side from you when the device is on the desk. In the two plan views, 90 deg is at the top of the image,
-+X is to the right.
+**z = 0** is the underside of the steel plate. The 1.5 mm pad is below it, and the top of the knob
+is at z 38.1, so the device is 39.6 mm tall.
+
+**Azimuth** is measured anticlockwise from the +X axis, which is the USB-C socket at the back. In
+the plan views 0 degrees is at the top of the frame, and azimuth increases anticlockwise from there.
+
+**A vertical section at azimuth A** cuts on the plane that holds A and A+180. The camera stands at
+A-90 and the half in front of it is removed, so the mechanism at A is cut through the middle and
+appears on the right of the frame; A+180 is on the left. `04-ports` is a plan, not a vertical cut,
+because the three back-panel parts sit side by side across a 32 mm face and any vertical plane hides
+two of them.
 
 **Colour tells you what a thing is:**
 
 | Colour | What |
 |---|---|
-| orange | self-turning drive: motor, shaft, tyre, solenoid |
-| amber | carrier gearmotor and worm |
-| red | the six detent magnets |
-| pale steel | the sixty Ø3 balls, and the 623ZZ wheel bearings |
+| orange | the gimbal motor |
+| deep orange | the flat drive band |
+| amber | the clutch: linear servo |
+| light amber | the sliding carriage — the one printed part that moves |
+| steel blue | 623ZZ bearings |
 | green | encoder |
 | violet | haptic LRA |
 | blue | speaker |
 | teal | supercapacitors |
-| yellow-green | port board, USB-C, 3.5 mm jack |
-| warm white | halo LED ring board |
-| slate blue | display disc and main PCB |
+| yellow-green | USB-C, 3.5 mm jack, light sensor, DAC |
+| warm white | halo LEDs, their flex ring, the diffuser |
+| slate | the display disc and its board |
+| dark green | circuit boards |
+| mid grey | the steel plate |
 | light grey | printed structure |
 | **dark grey** | **a cut face — where the section knife passed** |
 
 If a surface is dark grey it is not a part, it is the inside of something you are looking through.
+Bought parts keep their colour where they are cut; printed parts do not.
 
 ## The views
 
-### 00-plan-floor.png — the floor
-Horizontal section at **z 12**, looking down. Cut just below the inner roof (z 12.8) so the whole
-electronics bay is open. Everything visible here sits on the pad and is installed when the steel plate
-goes on, which is the last assembly step.
+| File | Cut | Shows |
+|---|---|---|
+| `00-plan-floor` | plan z 12 | motor, carriage, servo, speaker, driver board, supercaps, LRA, the three port parts, the perimeter sound ports |
+| `00b-plan-board` | plan z 26 | the display board and the three wheels that have to clear its corners |
+| `01-drive` | 90 deg | the gimbal motor engaged: band on the bore, carriage on the pad, commutation board underneath |
+| `01b-clutch` | 90 deg, retracted | the same with the carriage pulled back 2.4 mm and the knob free |
+| `02-encoder` | 330 deg | the AEDR-8300 reading the code band across its 2.00 mm gap |
+| `03-wheels` | 30 deg | a 623ZZ in its V-collar on an eccentric bush, running in the groove |
+| `04-ports` | plan z 3 | USB-C, jack and light sensor in one 32 mm slot through the plate |
+| `05-halo` | 200 deg | 90 LEDs lying flat on the plate firing outward into the diffuser |
+| `06-bay` | 152 deg | the whole vertical stack in one full-diameter cut |
+| `07-speaker` | 270 deg | the speaker cone-up in its cradle and the perimeter ports |
+| `08-display` | 42 deg | a support column, its 1.2 mm seat tab, and the 1.5 mm gap it works in |
 
-Drive motor at 180 deg, solenoid at 205 deg, carrier gearmotor at 350 deg with its worm, speaker on the
-axis, two supercapacitors at 105 and 119 deg, the port board and its two sockets at 90 deg. The LRA at
-105 deg is the odd one out — it hangs from the inner roof at z 9.2 to 12.8, above everything else on
-this level, so it appears here but lives higher.
+## What these views do not settle
 
-### 00b-plan-ring.png — the detent ring
-Horizontal section at **z 21**, looking down: the level where the knob meets the base. This is the view
-that shows the detent principle at a glance — six magnets at 60 deg spacing against sixty balls at 6 deg
-spacing.
-
-Magnets alternate between the two carrier rings: A holds 30/150/270 deg, B holds 90/210/330 deg. Also
-visible: the encoder at 60 deg, the three 623ZZ wheels at 0/120/240 deg, and the drive tyre at 180 deg
-pressing into the bore.
-
-### 01-drive.png — self-turning drive
-Vertical section at **180 deg**. The motor sits in a Ø19 hole in the steel plate, on the pad; its shaft
-runs up to a hub carrying an O-ring tyre that presses 0.15 mm into the knob's Ø116 bore. The printed
-drive arm pivots 14 mm along the tangent, so swinging it moves the tyre almost purely radially — 1.0 mm
-of lift is enough to disengage and let the knob spin free.
-
-The solenoid at 205 deg is not on this section plane; see the floor plan for it.
-
-### 02-detent.png — adaptive detent
-Vertical section at **30 deg**, through one magnet tower. The knob wall is on the left. The magnet face
-sits at r 57.0 and the ball tips at r 57.8, giving the 0.8 mm gap (0.4 mm lip plus 0.4 mm air) that the
-detent research is based on.
-
-### 02b-carrier.png — carrier drive
-Vertical section at **350 deg**, through the gearmotor. This is the mechanism that makes the detent
-adjustable: the Ø8 gearmotor lies flat on the pad, its worm drives a toothed tab under carrier ring A,
-and a rocker at 255 deg turns ring B the opposite way. Ring A goes +1.5 deg and ring B goes -1.5 deg,
-which puts the two groups of three magnets half a peg pitch apart so their clicks cancel. Strength runs
-0 to 100 per cent in about 50 ms, and because it is a worm it holds position without power.
-
-### 03-wheels.png — knob support wheels
-Vertical section at **0 deg**, through one of the three wheels. The 623ZZ runs in a V-groove cut into
-the knob bore rather than on a ridge — that change is the whole reason v7.1 can have a one-piece knob,
-because a groove lets the Ø115 display pass down through the Ø116 bore during assembly.
-
-**Caveat:** the bearing is placed from the model, but the printed V-collar and eccentric bush are drawn
-from their print-orientation exports, so their position in this one section is indicative rather than
-exact. Treat the bearing as accurate and the two printed parts as a sketch.
-
-### 04-ports.png — ports and cable tunnel
-Vertical section at **90 deg**, the rear. Both sockets are on one 40 x 14 board on 1 mm standoffs, in a
-tunnel that runs beneath the full-360 halo. The jack is the tightest clearance in the device: its body
-top is at z 4.7 and carrier ring A sits at z 4.8.
-
-### 05-halo.png — halo light ring
-Vertical section at **225 deg**. The LED board is on the outer face of the LED wall at r 57 to 58.2,
-behind the translucent diffuser at r 58.5 to 62.5, firing down and outward at the desk. It is on the
-static base and never on the rotating knob.
-
-### 06-bay.png — electronics bay
-Vertical section at **112 deg**, through the supercapacitors. Shows the whole vertical stack in one
-picture: plate, supercaps and speaker on the floor, LRA under the inner roof, then the main PCB and the
-display disc above. The inner roof clears the board's components by 0.6 mm.
-
-## Open items these views make visible
-
-1. **Supercapacitor pocket.** The Ø8 x 16 pair drawn here is an assumed envelope. The real 10 F bank is
-   Ø10 x 30 and has no pocket yet. This is the largest unresolved item on the floor.
-2. **Drive motor.** Envelope only. Neither the motor nor its torque against the knob's inertia has been
-   chosen or checked.
-3. **Carrier torque.** The gearmotor's ability to turn ring A against the magnets is not sized — measure
-   it on the printed rings.
-4. **Display assumptions.** Standoff height, component height and hole PCD are carried over from v7 and
-   still unverified.
+1. **Motor base diameter and bell height.** The model assumes the stator base is Ø30 for its lowest
+   4.3 mm. At the full Ø35 the LED ring is interrupted at the motor; a lower bell fouls the diffuser
+   lip. Nothing published — measure it.
+2. **Which end of the shaft carries the magnet.** The commutation board sits under the motor inside
+   the carriage. If the magnet is at the top instead, the display rises about 3 mm and the device is
+   over its height limit.
+3. **Motor bolt pattern.** The carriage has a Ø36 locating rim and nothing else.
+4. **Servo lugs and pushrod.** The mount is a tray; the rod-to-tab joint is not drawn.
+5. **Band grip at 2.4 N.** If the flat band slips on the bore, add the 2 : 1 bell-crank.
+6. **Electrical layout.** The driver, port, encoder and commutation boards are outlines only.
 
 ## Regenerating them
 
-Blender scene `MECH` in `../../blender/the60_lineart.blend`. The bought components are rebuilt as
-primitives from the model's own `ref_*` placements in `src/params.py`, so no build123d install is
-needed. Three things will waste your time if you do not know them:
+`../../scripts/the60_v9_mech_sections.py` builds the scene and renders every view; it runs headless
+against the `bpy` module or from inside Blender. It reads `../../blender/v9/*.obj`, which are the
+302 named bodies of `docs/v9/the60_v9/the60_v9_assembly.step` tessellated straight out of the STEP —
+so the artwork cannot drift from the model.
 
-* The Boolean section **must use the EXACT solver.** The FLOAT solver silently fails on these meshes and
-  leaves the model uncut while still reporting success.
-* `material_mode='TRANSFER'` on the printed parts' Boolean is what gives the cut faces their dark
-  colour. Without it a section is unreadable.
-* Plan views must set `camera.rotation_euler=(0,0,0)` directly. Building a straight-down camera with
-  `to_track_quat` flips the frame 180 deg, which puts the ports at the bottom.
+`../../scripts/build_mechanisms_html.py` then writes `../../MECHANISMS.html`. Balloon positions are
+computed, not placed: each keyed item carries a point in model coordinates and the script projects it
+through the same camera that rendered the view, using `views.json` written by the renderer. Change a
+view's framing and the balloons follow.
 
-An interactive version of the same data — spin, isolate a mechanism, cut a wedge, pull the layers
-apart — is published as the **Mechanism Explorer** artifact.
+Three things will waste your time if you do not know them:
+
+* the section boolean **must use the EXACT solver**. The FLOAT solver silently leaves the model uncut
+  and still reports success.
+* `material_mode='TRANSFER'` on the printed parts' boolean is what gives the cut faces their dark
+  colour. Bought parts use `'INDEX'` so they keep their own colour where they are cut.
+* a plan camera must set `rotation_euler` directly, and the render background must come from a world
+  datablock — `shading.background_type='VIEWPORT'` renders black in a final render even though the
+  viewport shows it correctly.

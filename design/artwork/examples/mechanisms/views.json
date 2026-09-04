@@ -1,0 +1,156 @@
+{
+ "00-plan-floor": {
+  "kind": "plan",
+  "az": null,
+  "z": 12.0,
+  "off": 0.0,
+  "res": [
+   1500,
+   1100
+  ],
+  "scale": 180.0,
+  "cu": 0.0,
+  "cv": 0.0,
+  "src": "engaged"
+ },
+ "01-drive": {
+  "kind": "sect",
+  "az": 90.0,
+  "z": null,
+  "off": 0.0,
+  "res": [
+   1500,
+   620
+  ],
+  "scale": 70.0,
+  "cu": 27.0,
+  "cv": 10.0,
+  "src": "engaged"
+ },
+ "04-ports": {
+  "kind": "plan",
+  "az": null,
+  "z": 3.0,
+  "off": 0.0,
+  "res": [
+   1200,
+   900
+  ],
+  "scale": 48.0,
+  "cu": 0.0,
+  "cv": 48.0,
+  "src": "engaged"
+ },
+ "00b-plan-board": {
+  "kind": "plan",
+  "az": null,
+  "z": 26.0,
+  "off": 0.0,
+  "res": [
+   1500,
+   1100
+  ],
+  "scale": 180.0,
+  "cu": 0.0,
+  "cv": 0.0,
+  "src": "engaged"
+ },
+ "02-encoder": {
+  "kind": "sect",
+  "az": 330.0,
+  "z": null,
+  "off": 0.0,
+  "res": [
+   1200,
+   900
+  ],
+  "scale": 28.0,
+  "cu": 50.0,
+  "cv": 21.0,
+  "src": "engaged"
+ },
+ "03-wheels": {
+  "kind": "sect",
+  "az": 30.0,
+  "z": null,
+  "off": 0.0,
+  "res": [
+   1200,
+   900
+  ],
+  "scale": 28.0,
+  "cu": 53.0,
+  "cv": 25.0,
+  "src": "engaged"
+ },
+ "05-halo": {
+  "kind": "sect",
+  "az": 200.0,
+  "z": null,
+  "off": 0.0,
+  "res": [
+   1200,
+   900
+  ],
+  "scale": 24.0,
+  "cu": 56.0,
+  "cv": 5.0,
+  "src": "engaged"
+ },
+ "06-bay": {
+  "kind": "sect",
+  "az": 152.0,
+  "z": null,
+  "off": 0.0,
+  "res": [
+   1500,
+   620
+  ],
+  "scale": 140.0,
+  "cu": 0.0,
+  "cv": 18.3,
+  "src": "engaged"
+ },
+ "08-display": {
+  "kind": "sect",
+  "az": 42.0,
+  "z": null,
+  "off": 0.0,
+  "res": [
+   1200,
+   900
+  ],
+  "scale": 26.0,
+  "cu": 53.0,
+  "cv": 28.0,
+  "src": "engaged"
+ },
+ "01b-clutch": {
+  "kind": "sect",
+  "az": 90.0,
+  "z": null,
+  "off": 0.0,
+  "res": [
+   1500,
+   620
+  ],
+  "scale": 70.0,
+  "cu": 27.0,
+  "cv": 10.0,
+  "src": "free"
+ },
+ "07-speaker": {
+  "kind": "sect",
+  "az": 270.0,
+  "z": null,
+  "off": 0.0,
+  "res": [
+   1200,
+   900
+  ],
+  "scale": 60.0,
+  "cu": 33.0,
+  "cv": 11.0,
+  "src": "engaged"
+ }
+}

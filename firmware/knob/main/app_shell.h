@@ -14,6 +14,7 @@
 
 #include <stdbool.h>
 #include <stddef.h>
+#include <stdint.h>
 
 #include "esp_err.h"
 #include "lvgl.h"
@@ -27,6 +28,20 @@ typedef struct {
     void (*on_exit)(void);                /* free buffers, stop polling   */
     void (*on_dial)(int delta);           /* detents, signed              */
     void (*on_tick)(void);                /* ~1 Hz housekeeping           */
+
+    /* Optional. The menu has opened over you, or has closed again.
+     *
+     * You are still the active app and you keep every buffer - this is not a
+     * small on_exit. It means: stop animating. The menu covers you completely,
+     * so anything you draw is thrown away, and on this device that waste is
+     * not free. The Clock's bloom is 27 ms of work per render on the LVGL
+     * thread, and 27 ms landing in the middle of a 33 ms animation frame is a
+     * visible stutter in the ring the menu is trying to turn.
+     *
+     * Pause your timers, do not delete them. Leave polling alone: it costs the
+     * LVGL thread nothing and stopping it would make coming back slower. */
+    void (*on_pause)(void);
+    void (*on_resume)(void);
 } knob_app_t;
 
 /* Shell services available to apps. */
@@ -70,6 +85,11 @@ int  shell_timer_total_ms(void);
  * what a rotary encoder is actually good at (BUILD.md section 6). */
 int  shell_brightness(void);            /* 10..100, floor so it cannot be lost */
 void shell_brightness_set(int pct);     /* applies to the backlight immediately */
+
+/* A transient 0..256 scale over the chosen brightness, for fades. 256 is
+ * normal. Does not change the Settings value and is never written to NVS -
+ * whoever sets it owns putting it back to 256. */
+void shell_backlight_scale(int per256);
 int  shell_sleep_min(void);             /* 0 = never */
 void shell_sleep_min_set(int minutes);
 int  shell_haptics(void);               /* 0 off, 1 light, 2 firm */
@@ -77,6 +97,12 @@ void shell_haptics_set(int level);
 int  shell_dial_step(void);             /* volume % per detent: 2, 5 or 10 */
 void shell_dial_step_set(int pct);
 void shell_settings_save(void);
+
+/* Bumped every time the device acquires an IP. An app that has backed off
+ * after a network failure watches this to notice the network is back, instead
+ * of sitting out the rest of a backoff it no longer needs. The seam holds:
+ * this says the network changed, not what any app should do about it. */
+uint32_t shell_net_generation(void);
 
 /* Facts the Settings app displays and cannot compute for itself. */
 const char *shell_wifi_ssid(void);
@@ -95,3 +121,35 @@ int  shell_app_active_index(void);
 /* Exit the current app, enter the given one, and load its screen. Safe to
  * call from an LVGL callback; must not be called with the LVGL lock held. */
 void shell_switch_to(int index);
+
+/* Open the menu - the radial app selector, which is what every back
+ * affordance in the product leads to. Safe from an LVGL event callback: the
+ * open is deferred, because the menu builds objects over the screen the event
+ * is still being dispatched on. */
+void shell_open_menu(void);
+
+/* Called by the menu as it opens and closes, to drive on_pause / on_resume on
+ * whatever is underneath. Not for apps to call on themselves. */
+void shell_active_app_set_paused(bool paused);
+
+/* The back affordance, in the same place on every screen: a chevron at the
+ * bottom of the ring, with a generous tap area around it. Tapping it opens
+ * the menu.
+ *
+ * An app with levels inside it - Spotify's CONTROLS, a Settings value, the
+ * Launcher's Task View - handles its own back first and only reaches this at
+ * its root. That two-level rule is written out in docs/USER-JOURNEY.md. */
+lv_obj_t *shell_back_button(lv_obj_t *parent);
+
+/* True while the screen is dark. The first touch or detent after that only
+ * wakes it and is not delivered to the app - reaching for a dark screen is
+ * how you turn it on, not how you press what happens to be under your
+ * finger. */
+bool shell_is_asleep(void);
+void shell_wake(void);
+
+/* Back to the default screen - app 0, which is what the device shows on boot
+ * and what an app returns to when its job is finished. Named rather than
+ * written as shell_switch_to(0) in five places, because the registry order is
+ * the shell's business and an app should not have to know it. */
+void shell_switch_home(void);

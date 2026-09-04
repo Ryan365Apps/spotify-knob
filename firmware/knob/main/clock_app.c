@@ -24,57 +24,23 @@
 #include "esp_log.h"
 #include "esp_timer.h"
 
+#include "albumart.h"
 #include "app_shell.h"
+#include "bloom.h"
 
 static const char *TAG = "clock";
 
 /* --- the bloom ----------------------------------------------------------
- * 300 rays on a phyllotaxis spiral. r, t and length never change, so they are
- * computed once on_enter; only the angle moves, and it moves in two ways:
+ * The field itself lives in bloom.c now, shared with the Spotify screen's
+ * dial wedge and progress rim. Same 300 segments, same packing, different
+ * segments lit - which is the argument screens.html rev W makes, and it only
+ * holds if there is one implementation rather than three that drift apart.
  *
- *   spin       a slow rotation of the whole field, one turn per 600 s
- *   divergence a drift of +/-0.07 deg either side of the golden angle
- *
- * The divergence figure is deliberately tiny. Push it further and the packing
- * degenerates into a few thick spokes - avoiding exactly that is what the
- * golden angle is for. The visible motion comes instead from a three-lobed
- * swell in ray length rotating through the field every ~34 s, which cannot
- * degenerate because it does not touch the packing.
+ * What stays here is the Clock's use of it: 5 fps, tinted by the last cover.
  */
-#define BLOOM_N      300
-#define BLOOM_RI     86.0f
-#define BLOOM_RO     170.0f
-#define BLOOM_CX     180.0f
-#define BLOOM_CY     180.0f
-#define GOLDEN_RAD   2.39996323f          /* 137.507764 degrees */
-#define DRIFT_RAD    0.00122173f          /* 0.07 degrees */
 #define CANVAS_W     360
 #define CANVAS_H     360
 #define BLOOM_MS     200                  /* 5 fps - slower than the eye tracks */
-
-static float s_ray_r[BLOOM_N];            /* radius of each ray's midpoint */
-static float s_ray_t[BLOOM_N];            /* 0 at the inner edge, 1 at the rim */
-static float s_ray_len[BLOOM_N];          /* half-length, before the swell */
-
-/* The scatter that gives the field its grain. Deterministic, so the bloom is
- * the same figure on every boot. */
-static float ray_hash(int i)
-{
-    const float v = sinf((float) i * 12.9898f) * 43758.5453f;
-    return v - floorf(v);
-}
-
-static void bloom_precompute(void)
-{
-    for (int i = 0; i < BLOOM_N; i++) {
-        const float frac = (float) i / (float) BLOOM_N;
-        const float r = sqrtf(BLOOM_RI * BLOOM_RI +
-                              frac * (BLOOM_RO * BLOOM_RO - BLOOM_RI * BLOOM_RI));
-        s_ray_r[i] = r;
-        s_ray_t[i] = (r - BLOOM_RI) / (BLOOM_RO - BLOOM_RI);
-        s_ray_len[i] = (2.2f + r * 0.045f) * (0.4f + 1.35f * ray_hash(i));
-    }
-}
 
 /* --- widgets, owned by this app between on_enter and on_exit ------------- */
 
@@ -95,42 +61,11 @@ static bool s_winding = false;
 static int  s_wind_min = 0;
 static int64_t s_entered_us = 0;
 
-/* The tint the bloom is drawn in. Wave 5 averages this from the last cover;
- * until then it is the warm default the design uses for placeholder art. */
+/* The tint the bloom is drawn in: the average of the last decoded cover, so
+ * the whole field shifts with the music exactly as idle-patterns.html
+ * describes. Falls back to the design's warm placeholder before any cover has
+ * been decoded, and after an app switch has dropped the last one. */
 static lv_color_t s_tint;
-
-/* The rays are drawn straight into the canvas buffer rather than through
- * lv_draw_line.
- *
- * The first attempt used LVGL's line drawing, one call per ray. That
- * machinery - a draw-task dispatch and a blend pass each time - is built for
- * a few shapes per frame, not three hundred into a PSRAM buffer, and it
- * starved the LVGL task so completely that the idle task never ran and the
- * task watchdog fired (measured on hardware, 2026-09-03). A ray is a handful
- * of pixels; writing them directly is both faster and less code.
- */
-static int s_px_written;      /* diagnostic: proves the loop reached the buffer */
-static uint16_t s_px_max;     /* brightest pixel actually written, RGB565 */
-
-static inline void px_blend(uint16_t *buf, int x, int y,
-                            int r5, int g6, int b5, int alpha)
-{
-    if (x < 0 || x >= CANVAS_W || y < 0 || y >= CANVAS_H) {
-        return;
-    }
-    s_px_written++;
-    uint16_t *p = &buf[y * CANVAS_W + x];
-    const uint16_t c = *p;
-    int dr = (c >> 11) & 0x1F, dg = (c >> 5) & 0x3F, db = c & 0x1F;
-    dr += ((r5 - dr) * alpha) >> 8;
-    dg += ((g6 - dg) * alpha) >> 8;
-    db += ((b5 - db) * alpha) >> 8;
-    const uint16_t out = (uint16_t)((dr << 11) | (dg << 5) | db);
-    *p = out;
-    if (out > s_px_max) {
-        s_px_max = out;
-    }
-}
 
 static void bloom_render(lv_timer_t *t)
 {
@@ -139,61 +74,17 @@ static void bloom_render(lv_timer_t *t)
         return;   /* the wind screen covers the bloom; do not pay for it */
     }
     const float secs = (float)((esp_timer_get_time() - s_entered_us) / 1000) / 1000.0f;
-    const float div  = GOLDEN_RAD + DRIFT_RAD * sinf(secs / 240.0f * 2.0f * (float) M_PI);
-    const float spin = secs / 600.0f * 2.0f * (float) M_PI;
-    const float swell_phase = secs / 34.0f * 2.0f * (float) M_PI;
 
     const int64_t t0 = esp_timer_get_time();
-    uint16_t *buf = (uint16_t *) s_canvas_buf;
-    memset(buf, 0, (size_t) CANVAS_W * CANVAS_H * 2);
-    s_px_written = 0;
-    s_px_max = 0;
-
-    const int r5 = s_tint.red >> 3, g6 = s_tint.green >> 2, b5 = s_tint.blue >> 3;
-
-    for (int i = 0; i < BLOOM_N; i++) {
-        const float a = (float) i * div + spin - (float) M_PI_2;
-        const float ca = cosf(a), sa = sinf(a);
-        const float swell = 0.72f + 0.42f * sinf(3.0f * a + swell_phase);
-        const float half = s_ray_len[i] * swell;
-        const float cx = BLOOM_CX + ca * s_ray_r[i];
-        const float cy = BLOOM_CY + sa * s_ray_r[i];
-
-        /* Rays thin and darken toward the centre: the field has grain rather
-         * than regularity, and the rim reads as the edge of something.
-         *
-         * The simulator's 0.05-0.31 opacity range was set against a bright
-         * monitor. On this panel at 40% backlight it came out invisible
-         * (2026-09-03) - peak rays landed around RGB(74,28,8). Roughly
-         * doubled here, which is a display-calibration difference, not a
-         * change of intent. */
-        const int alpha = (int)(255.0f * (0.10f + 0.55f * s_ray_t[i] * swell));
-        const bool thick = s_ray_t[i] > 0.55f;
-
-        const float x0 = cx - ca * half, y0 = cy - sa * half;
-        const float dx = 2.0f * ca * half, dy = 2.0f * sa * half;
-        const float adx = fabsf(dx), ady = fabsf(dy);
-        const int steps = (int)((adx > ady) ? adx : ady) + 1;
-        const float sx = dx / (float) steps, sy = dy / (float) steps;
-
-        float px = x0, py = y0;
-        for (int s = 0; s <= steps; s++) {
-            const int xi = (int)(px + 0.5f), yi = (int)(py + 0.5f);
-            px_blend(buf, xi, yi, r5, g6, b5, alpha);
-            if (thick) {
-                px_blend(buf, xi + 1, yi, r5, g6, b5, alpha);
-            }
-            px += sx;
-            py += sy;
-        }
-    }
+    bloom_draw_idle((uint16_t *) s_canvas_buf, s_tint, secs);
     lv_obj_invalidate(s_canvas);
 
     static bool timed = false;
     if (!timed) {
         timed = true;
         ESP_LOGI(TAG, "bloom: %d rays in %lld ms, %d px written, brightest 0x%04X",
-                 BLOOM_N, (esp_timer_get_time() - t0) / 1000, s_px_written, s_px_max);
+                 BLOOM_N, (esp_timer_get_time() - t0) / 1000,
+                 bloom_last_px_written(), bloom_last_px_max());
     }
 }
 
@@ -331,8 +222,8 @@ static void clock_on_enter(lv_obj_t *parent)
 {
     s_entered_us = esp_timer_get_time();
     s_winding = false;
-    s_tint = lv_color_hex(0xE4572E);
-    bloom_precompute();
+    s_tint = albumart_tint();
+    bloom_init();
 
     lv_obj_set_style_bg_color(parent, lv_color_black(), 0);
 
@@ -432,6 +323,11 @@ static void clock_on_enter(lv_obj_t *parent)
     lv_label_set_text(hint, "ONE DETENT  ONE MINUTE");
     lv_obj_align(hint, LV_ALIGN_CENTER, 0, 96);
 
+    /* The way out. Until 2026-09-04 the only one was a long-press nobody had
+     * been told about, which is not an exit. It goes on the face group rather
+     * than the screen so the winding overlay covers it. */
+    shell_back_button(s_face_group);
+
     s_bloom_timer = lv_timer_create(bloom_render, BLOOM_MS, NULL);
     s_face_timer = lv_timer_create(face_update, 500, NULL);
     face_update(NULL);
@@ -463,6 +359,30 @@ static void clock_on_tick(void)
     /* The face has its own 500 ms timer; nothing to do at 1 Hz. */
 }
 
+/* The bloom is 300 rays and 27 ms of work per render, measured on hardware
+ * 2026-09-03. Running that under a menu that is trying to animate a ring at
+ * 33 ms a frame is the single worst thing this app could do to it. */
+static void clock_on_pause(void)
+{
+    if (s_bloom_timer != NULL) {
+        lv_timer_pause(s_bloom_timer);
+    }
+    if (s_face_timer != NULL) {
+        lv_timer_pause(s_face_timer);
+    }
+}
+
+static void clock_on_resume(void)
+{
+    if (s_bloom_timer != NULL) {
+        lv_timer_resume(s_bloom_timer);
+    }
+    if (s_face_timer != NULL) {
+        lv_timer_resume(s_face_timer);
+        face_update(NULL);       /* the time moved on while we were covered */
+    }
+}
+
 const knob_app_t clock_app = {
     .name = "Clock",
     .glyph = LV_SYMBOL_BELL,
@@ -470,5 +390,7 @@ const knob_app_t clock_app = {
     .on_enter = clock_on_enter,
     .on_exit = clock_on_exit,
     .on_dial = clock_on_dial,
+    .on_pause = clock_on_pause,
+    .on_resume = clock_on_resume,
     .on_tick = clock_on_tick,
 };

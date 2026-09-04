@@ -53,25 +53,32 @@ verified live on Blender 5.2.1 LTS on 2026-09-02.
 
 * Halo light pass (emissive diffuser + glow) - deliberately left out of the blueprint style so far.
 * Title block / callouts / legend belong in the vector editor, not Blender.
-* Disclosure: an exploded view of the detent mechanism is a public disclosure; file or simplify before publishing.
+* Disclosure: an exploded view of the drive and its clutch is a public disclosure; file or simplify before publishing.
 
-## Mechanism sections (2026-09-03)
+## Mechanism sections (2026-09-04, v9)
 
 `MECHANISMS.html` — open it in a browser; it loads the PNGs from `examples/mechanisms/` beside it.
-Nine views cut from the real v7.1 geometry: two plan sections (the floor at z 12, the detent ring at z 21)
-and seven vertical sections through each mechanism. Bought parts are colour-coded solids placed from
-`src/params.py`; printed parts are light grey; section faces are dark grey.
+Eleven views cut from the v9 geometry: three plan sections (the floor at z 12, the display board at
+z 26, the ports at z 3) and eight vertical sections. Bought parts are colour-coded solids and keep
+their colour where they are cut; printed parts are light grey and their cut faces go dark. See
+`examples/mechanisms/README.md` for the view list, the colour key and the open items.
 
-Built in Blender scene `MECH` inside `blender/the60_lineart.blend`:
-* Bought components are rebuilt as primitives from the model's own `ref_*` placements — no build123d needed.
-* `SECT_CUT` is a 600 mm cube with a Boolean DIFFERENCE modifier on every object. **Use the EXACT solver** —
-  the FLOAT solver silently fails on these meshes and leaves the model uncut.
-* `material_mode='TRANSFER'` on the printed parts' Boolean gives the cut faces the cutter's dark material,
-  which is what makes them read as sections.
-* Plan views must set `camera.rotation_euler=(0,0,0)` directly; `to_track_quat` on a straight-down vector
+The v7.1 renders that used to sit here are gone. They showed a magnet-and-ball detent, a carrier
+gearmotor and a separate drive motor with a tyre, none of which exist in v9.
+
+Built by `scripts/the60_v9_mech_sections.py`, which runs headless against the `bpy` module or from
+inside Blender. It imports `blender/v9/*.obj` — the 302 named bodies of
+`docs/v9/the60_v9/the60_v9_assembly.step`, tessellated by `scripts/step2obj.py` — so the artwork
+cannot drift from the model. `scripts/build_mechanisms_html.py` then writes the HTML, projecting
+every balloon's model-space anchor through the same camera that rendered its view.
+
+* The section Boolean **must use the EXACT solver**. The FLOAT solver silently fails on these meshes
+  and leaves the model uncut while still reporting success.
+* `material_mode='TRANSFER'` on the printed parts' Boolean gives the cut faces the cutter's dark
+  material; bought parts use `'INDEX'` so they stay readable where they are cut.
+* Plan views must set `camera.rotation_euler` directly; `to_track_quat` on a straight-down vector
   flips the frame 180°.
-* A hidden helper (`FOCUS`) is used to frame tight sections — it must have `hide_viewport=False`
-  (only `hide_render=True`) or it drops out of the depsgraph and the framing collapses to the origin.
+* The render background must come from a world datablock. `shading.background_type='VIEWPORT'` looks
+  right in the viewport and renders black in a final render.
 
-Interactive version: the Mechanism Explorer artifact (three.js, geometry generated procedurally from the
-same parameters, so it stays a single small file).
+Interactive version: the Mechanism Explorer artifact, which is still on v8 geometry.

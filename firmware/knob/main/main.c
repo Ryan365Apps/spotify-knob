@@ -1,12 +1,15 @@
 /*
- * Radial - dependency check only.
+ * Radial - the TorqueOS shell.
  *
- * This program deliberately does almost nothing. Its whole job is to prove that
- * every library the real firmware depends on downloads, compiles and links
- * against the installed ESP-IDF - before the hardware arrives.
+ * This file started life as a dependency check and is now the shell described
+ * in BUILD.md section 6: it brings up the panel, touch, the dial and haptics,
+ * owns Wi-Fi and the Spotify token, owns the clock, the backlight and the
+ * sleep timer, and hosts apps behind the knob_app_t contract. Apps own their
+ * own screen, their own network calls and their own buffers.
  *
- * No driver is initialised here. Bring-up belongs in Wave 2, one peripheral at
- * a time, so that a failure points at one thing.
+ * Nothing Spotify-specific belongs here except the token module, which is in
+ * the shell deliberately - refresh has to keep running while you are looking
+ * at the Clock. See the tension recorded under Wave 4 in BUILD.md section 8.
  */
 
 #include <stdio.h>
@@ -44,13 +47,17 @@
 #include "app_shell.h"
 #include "bidi_knob.h"
 #include "clock_app.h"
+#include "hid.h"
+#include "launcher_app.h"
 #include "lcd_init_waveshare.h"
 #include "secrets_local.h"
 #include "selector.h"
 #include "settings_app.h"
 #include "spotify_app.h"
+#include "wispr_app.h"
 
 #include "esp_netif_sntp.h"
+#include "esp_task_wdt.h"
 #include "esp_timer.h"
 #include "freertos/queue.h"
 #include "freertos/semphr.h"
@@ -142,6 +149,9 @@ static esp_lcd_panel_handle_t panel_init(esp_lcd_panel_io_handle_t *out_io)
     ESP_ERROR_CHECK(esp_lcd_new_panel_st77916(io, &panel_cfg, &panel));
     ESP_ERROR_CHECK(esp_lcd_panel_reset(panel));
     ESP_ERROR_CHECK(esp_lcd_panel_init(panel));
+
+    /* Orientation is set in lvgl_init, in software - see the note there for
+     * why the panel's own MADCTL was abandoned. */
     ESP_ERROR_CHECK(esp_lcd_panel_disp_on_off(panel, true));
     *out_io = io;
     return panel;
@@ -152,7 +162,15 @@ static esp_lcd_panel_handle_t panel_init(esp_lcd_panel_io_handle_t *out_io)
  * B5's manual test proved necessary. */
 static lv_display_t *lvgl_init(esp_lcd_panel_io_handle_t io, esp_lcd_panel_handle_t panel)
 {
-    const lvgl_port_cfg_t port_cfg = ESP_LVGL_PORT_INIT_CONFIG();
+    /* LVGL on core 0, explicitly.
+     *
+     * The default is no affinity, which left the scheduler free to put the
+     * compositor and the JPEG decode on the same core - and it did, while the
+     * other one idled. Pinning both, in opposite directions, is what makes the
+     * split deterministic rather than a matter of luck: this on 0, the art
+     * task on 1 (see albumart.c). */
+    lvgl_port_cfg_t port_cfg = ESP_LVGL_PORT_INIT_CONFIG();
+    port_cfg.task_affinity = 0;
     ESP_ERROR_CHECK(lvgl_port_init(&port_cfg));
 
     const lvgl_port_display_cfg_t disp_cfg = {
@@ -169,10 +187,33 @@ static lv_display_t *lvgl_init(esp_lcd_panel_io_handle_t io, esp_lcd_panel_handl
         .vres          = LCD_V_RES,
         .color_format  = LV_COLOR_FORMAT_RGB565,
         .rotation      = { .swap_xy = false, .mirror_x = false, .mirror_y = false },
-        .flags         = { .buff_dma = true, .swap_bytes = true },
+        .flags         = { .buff_dma = true, .swap_bytes = true, .sw_rotate = true },
     };
     lv_display_t *disp = lvgl_port_add_disp(&disp_cfg);
     assert(disp != NULL);
+
+    /* 180 degrees, so the cable points away from you.
+     *
+     * Done in software, after two attempts at the panel register did nothing.
+     * MADCTL 0xC0 - MX and MY - is the textbook way and costs no CPU, and the
+     * driver demonstrably transmits it: the vendor table carries the byte and
+     * the "36h command has been used" warning proves the code reaches that
+     * entry. The panel simply did not turn. Either this module's scan order is
+     * fixed in the 0xF0 page registers regardless of MADCTL, or something else
+     * is overriding it; either way, two goes at a register that reports
+     * success while doing nothing is enough.
+     *
+     * Software rotation cannot silently no-op. The cost is a reversal of each
+     * flush chunk, and those live in internal DMA RAM at 1/18 of the screen -
+     * about 7200 pixels per chunk, which is small next to the SPI transfer it
+     * is already waiting on. esp_lvgl_port rotates the touch coordinates to
+     * match (esp_lvgl_port_disp.c, "Solve rotation screen and touch"), which
+     * is why touch_init sets no mirror flags of its own. */
+    lvgl_port_lock(0);
+    lv_display_set_rotation(disp, LV_DISPLAY_ROTATION_180);
+    lvgl_port_unlock();
+    ESP_LOGI(TAG, "display rotated 180 degrees (software, cable away from you)");
+
     return disp;
 }
 
@@ -208,6 +249,9 @@ static void touch_init(lv_display_t *disp)
             .reset = 0,
             .interrupt = 0,
         },
+        /* No mirror flags here: esp_lvgl_port rotates touch to match the
+         * display rotation itself. Setting them as well would flip twice and
+         * land back where it started. */
     };
     esp_lcd_touch_handle_t tp = NULL;
     ESP_ERROR_CHECK(esp_lcd_touch_new_i2c_cst816s(tp_io, &tp_cfg, &tp));
@@ -427,21 +471,89 @@ static void token_task(void *arg)
 }
 
 
+/* Wave 8: reconnect with backoff.
+ *
+ * The disconnect handler used to call esp_wifi_connect() again immediately,
+ * every time. Against a router that is still booting - which is the failure
+ * this device is most likely to meet on an ordinary day - that is a flat-out
+ * retry loop for as long as the router takes. The first retry stays immediate,
+ * because a momentary blip should not cost a second; after that it doubles
+ * 1, 2, 4 ... to a 30 s ceiling, and an IP arriving resets it.
+ *
+ * The retry is scheduled on a one-shot esp_timer rather than slept for,
+ * because this handler runs on the system event task. Wave 3 already
+ * overflowed that task's stack, and a handler that blocks stalls every other
+ * event behind it. */
+#define WIFI_BACKOFF_MIN_MS  1000
+#define WIFI_BACKOFF_MAX_MS 30000
+static esp_timer_handle_t s_wifi_retry_timer = NULL;
+static int s_wifi_backoff_ms = 0;
+static int s_wifi_fail_count = 0;
+
+/* Bumped on every IP acquisition. An app that has backed off after a network
+ * failure watches this so a router coming back does not leave it sitting out
+ * the rest of a sixty-second wait it no longer needs. */
+static volatile uint32_t s_net_generation = 0;
+
+uint32_t shell_net_generation(void)
+{
+    return s_net_generation;
+}
+
+static void wifi_retry_cb(void *arg)
+{
+    esp_wifi_connect();
+}
+
+static void wifi_retry_schedule(void)
+{
+    const int delay_ms = s_wifi_backoff_ms;
+    s_wifi_backoff_ms = (s_wifi_backoff_ms == 0) ? WIFI_BACKOFF_MIN_MS
+                                                 : s_wifi_backoff_ms * 2;
+    if (s_wifi_backoff_ms > WIFI_BACKOFF_MAX_MS) {
+        s_wifi_backoff_ms = WIFI_BACKOFF_MAX_MS;
+    }
+
+    if (s_wifi_retry_timer == NULL) {
+        const esp_timer_create_args_t args = {
+            .callback = wifi_retry_cb,
+            .name = "wifi_retry",
+        };
+        if (esp_timer_create(&args, &s_wifi_retry_timer) != ESP_OK) {
+            /* No timer means no retry at all, which is worse than a flat-out
+             * one. Fall back to the old behaviour and say so. */
+            ESP_LOGE(TAG, "no wifi retry timer - reconnecting immediately");
+            esp_wifi_connect();
+            return;
+        }
+    }
+    esp_timer_stop(s_wifi_retry_timer);      /* harmless if it is not running */
+    if (esp_timer_start_once(s_wifi_retry_timer, (uint64_t) delay_ms * 1000) != ESP_OK) {
+        ESP_LOGE(TAG, "wifi retry timer would not start - reconnecting immediately");
+        esp_wifi_connect();
+        return;
+    }
+    ESP_LOGW(TAG, "wifi retry in %d ms", delay_ms);
+}
+
 static void wifi_event_cb(void *arg, esp_event_base_t base, int32_t id, void *data)
 {
     if (base == WIFI_EVENT && id == WIFI_EVENT_STA_START) {
         esp_wifi_connect();
     } else if (base == WIFI_EVENT && id == WIFI_EVENT_STA_DISCONNECTED) {
-        static int fail_count = 0;
         const wifi_event_sta_disconnected_t *ev = data;
-        ESP_LOGW(TAG, "wifi disconnected (reason %d), retrying", ev->reason);
-        if (++fail_count == 3) {
-            /* Diagnostic: show what the 2.4 GHz radio can actually see. */
-            ESP_LOGW(TAG, "three failures - scanning for visible networks");
+        ESP_LOGW(TAG, "wifi disconnected (reason %d)", ev->reason);
+        if (++s_wifi_fail_count % 3 == 0) {
+            /* Diagnostic: show what the 2.4 GHz radio can actually see. Every
+             * third consecutive failure, not only the third ever - a device
+             * that has been up for a month and then loses its router deserves
+             * the same diagnostic a fresh one gets. */
+            ESP_LOGW(TAG, "%d failures in a row - scanning for visible networks",
+                     s_wifi_fail_count);
             esp_wifi_scan_start(NULL, false);
             return;  /* reconnect resumes from SCAN_DONE */
         }
-        esp_wifi_connect();
+        wifi_retry_schedule();
     } else if (base == WIFI_EVENT && id == WIFI_EVENT_SCAN_DONE) {
         /* Static: the event task's stack is small, and this array is ~1.3 KB. */
         static wifi_ap_record_t recs[10];
@@ -452,11 +564,16 @@ static void wifi_event_cb(void *arg, esp_event_base_t base, int32_t id, void *da
                          recs[i].primary, recs[i].rssi);
             }
         }
-        esp_wifi_connect();
+        wifi_retry_schedule();
     } else if (base == IP_EVENT && id == IP_EVENT_STA_GOT_IP) {
         static bool token_task_started = false;
         const ip_event_got_ip_t *ev = data;
         ESP_LOGI(TAG, "wifi connected, ip " IPSTR, IP2STR(&ev->ip_info.ip));
+        /* Connected, so the next disconnection starts from an immediate retry
+         * again rather than from wherever the last outage left the backoff. */
+        s_wifi_backoff_ms = 0;
+        s_wifi_fail_count = 0;
+        s_net_generation++;
         if (!token_task_started) {
             token_task_started = true;
             xTaskCreate(token_task, "token", 8192, NULL, 5, NULL);
@@ -534,10 +651,38 @@ static int s_haptics = 2;       /* firm */
 static int s_dial_step = 5;
 static bool s_settings_dirty = false;
 
+/* A transient scale on top of the brightness setting, 0..256.
+ *
+ * Apps use this for fades. It deliberately does not touch s_brightness: the
+ * value in Settings is what the user chose and an animation has no business
+ * overwriting it, nor writing it to NVS. Anything that reads the brightness
+ * back still sees their number. */
+static int s_dim_scale = 256;
+
 static void backlight_duty(int pct)
 {
-    ledc_set_duty(LEDC_LOW_SPEED_MODE, LEDC_CHANNEL_0, (1023 * pct) / 100);
+    const int scaled = (pct * s_dim_scale) >> 8;
+    ledc_set_duty(LEDC_LOW_SPEED_MODE, LEDC_CHANNEL_0, (1023 * scaled) / 100);
     ledc_update_duty(LEDC_LOW_SPEED_MODE, LEDC_CHANNEL_0);
+}
+
+/* Fading the backlight rather than the pixels.
+ *
+ * Dimming in the framebuffer would mean recompositing the whole screen every
+ * frame of the fade - a 259 KB memcpy plus the bloom, at 16 fps, on the task
+ * that has already tripped the watchdog twice today. The backlight is a PWM
+ * register write. It also fades the text, which pixel dimming would have to
+ * handle separately, and it cannot band: an RGB565 fade to black runs out of
+ * levels long before it gets there. */
+void shell_backlight_scale(int per256)
+{
+    if (per256 < 0) {
+        per256 = 0;
+    } else if (per256 > 256) {
+        per256 = 256;
+    }
+    s_dim_scale = per256;
+    backlight_duty(s_brightness);
 }
 
 int  shell_brightness(void)   { return s_brightness; }
@@ -705,7 +850,13 @@ static bidi_knob_handle_t s_knob = NULL;
 /* --- the app registry ----------------------------------------------------
  * The shell owns the list, the screen lifecycle and the selector. An app
  * never switches itself. */
-static const knob_app_t *const s_apps[] = { &spotify_app, &clock_app, &settings_app };
+/* Five apps and only five (BUILD.md section 1, R9 - the requirement that the
+ * device is an app shell rather than a Spotify screen). Spotify is app 0
+ * because it is what the device shows on boot and what everything returns
+ * to. */
+static const knob_app_t *const s_apps[] = {
+    &spotify_app, &clock_app, &wispr_app, &launcher_app, &settings_app,
+};
 #define APP_COUNT (sizeof(s_apps) / sizeof(s_apps[0]))
 
 static int s_active_index = 0;
@@ -727,6 +878,11 @@ int shell_app_active_index(void)
     return s_active_index;
 }
 
+void shell_switch_home(void)
+{
+    shell_switch_to(0);
+}
+
 /* Long-press from anywhere opens the selector. The handler is attached by the
  * shell to every app screen it creates, so an app cannot forget it and cannot
  * override it. */
@@ -739,10 +895,138 @@ static void open_selector_async(void *unused)
 static void app_screen_event(lv_event_t *e)
 {
     if (lv_event_get_code(e) == LV_EVENT_LONG_PRESSED && !selector_is_open()) {
-        ESP_LOGI(TAG, "long-press - opening the selector");
+        ESP_LOGI(TAG, "long-press - opening the menu");
         shell_haptic_firm();
         lv_async_call(open_selector_async, NULL);
     }
+}
+
+void shell_active_app_set_paused(bool paused)
+{
+    if (s_active_app == NULL) {
+        return;
+    }
+    void (*fn)(void) = paused ? s_active_app->on_pause : s_active_app->on_resume;
+    if (fn != NULL) {
+        fn();
+    }
+}
+
+void shell_open_menu(void)
+{
+    if (selector_is_open()) {
+        return;
+    }
+    /* Deferred, because a caller is usually inside an event being dispatched
+     * on the screen the menu is about to cover. */
+    lv_async_call(open_selector_async, NULL);
+}
+
+/* --- sleep and waking ----------------------------------------------------
+ *
+ * The screen going dark used to be the whole of sleep, which meant a touch on
+ * a dark screen both lit it and pressed whatever happened to be under the
+ * finger. Reaching for a dark knob is how you turn it on; it is not how you
+ * skip a track you cannot see.
+ *
+ * So going dark also raises an invisible shield on LVGL's system layer. It
+ * takes the press, lights the screen, and absorbs the whole gesture through
+ * to the release before removing itself - LVGL delivers RELEASED and CLICKED
+ * to whatever was pressed, so the app underneath never learns the touch
+ * happened. The dial is handled in input_task, which is simpler: it is not an
+ * LVGL input device, so there is nothing to absorb. */
+static bool      s_asleep = false;
+static lv_obj_t *s_wake_shield = NULL;
+
+bool shell_is_asleep(void)
+{
+    return s_asleep;
+}
+
+static void wake_shield_delete_async(void *unused)
+{
+    (void) unused;
+    if (s_wake_shield != NULL) {
+        lv_obj_delete(s_wake_shield);
+        s_wake_shield = NULL;
+    }
+}
+
+/* Deferred, because this is usually called from inside the shield's own event
+ * callback and deleting an object mid-dispatch frees what LVGL is standing
+ * on. Queueing it twice is harmless: the second call finds NULL. */
+static void wake_shield_drop(void)
+{
+    if (s_wake_shield != NULL) {
+        lv_async_call(wake_shield_delete_async, NULL);
+    }
+}
+
+void shell_wake(void)
+{
+    if (!s_asleep) {
+        return;
+    }
+    s_asleep = false;
+    backlight_duty(s_brightness);
+    lv_display_trigger_activity(NULL);
+    ESP_LOGI(TAG, "awake");
+}
+
+static void wake_shield_cb(lv_event_t *e)
+{
+    if (lv_event_get_code(e) == LV_EVENT_PRESSED) {
+        shell_wake();            /* light it the instant the finger lands */
+    } else {
+        wake_shield_drop();      /* released: the gesture is spent, stand down */
+    }
+}
+
+/* Caller holds the LVGL lock. */
+static void sleep_enter(void)
+{
+    if (s_asleep) {
+        return;
+    }
+    s_asleep = true;
+    backlight_duty(0);
+    if (s_wake_shield == NULL) {
+        s_wake_shield = lv_obj_create(lv_layer_sys());
+        lv_obj_remove_style_all(s_wake_shield);
+        lv_obj_set_size(s_wake_shield, 360, 360);
+        lv_obj_center(s_wake_shield);
+        lv_obj_remove_flag(s_wake_shield, LV_OBJ_FLAG_SCROLLABLE);
+        lv_obj_add_flag(s_wake_shield, LV_OBJ_FLAG_CLICKABLE);
+        lv_obj_add_event_cb(s_wake_shield, wake_shield_cb, LV_EVENT_PRESSED, NULL);
+        lv_obj_add_event_cb(s_wake_shield, wake_shield_cb, LV_EVENT_RELEASED, NULL);
+    }
+    ESP_LOGI(TAG, "screen off (%d min idle)", s_sleep_min);
+}
+
+static void back_button_cb(lv_event_t *e)
+{
+    (void) e;
+    shell_haptic_click();
+    shell_open_menu();
+}
+
+/*
+ * One back affordance, built in one place, so it sits in the same spot on
+ * every screen and cannot drift. A gesture nobody can see is not an exit, and
+ * until 2026-09-04 the only way out of the Clock or Dictation was a long-press
+ * you had to have been told about.
+ */
+lv_obj_t *shell_back_button(lv_obj_t *parent)
+{
+    lv_obj_t *back = lv_label_create(parent);
+    lv_obj_set_style_text_font(back, &lv_font_montserrat_20, 0);
+    lv_obj_set_style_text_color(back, lv_color_hex(0x5C6068), 0);
+    lv_label_set_text(back, LV_SYMBOL_LEFT);
+    lv_obj_align(back, LV_ALIGN_CENTER, 0, 138);
+    lv_obj_add_flag(back, LV_OBJ_FLAG_CLICKABLE);
+    lv_obj_set_ext_click_area(back, 40);
+    lv_obj_add_event_cb(back, back_button_cb, LV_EVENT_CLICKED, NULL);
+    return back;
 }
 
 static lv_obj_t *app_screen_create(void)
@@ -903,6 +1187,14 @@ static void input_task(void *arg)
         /* The dial is not an LVGL input device, so tell LVGL it happened -
          * that is what the sleep timer measures. */
         lv_display_trigger_activity(NULL);
+        if (shell_is_asleep()) {
+            /* A brief spin of a dark screen turns it on and does nothing
+             * else. Adjusting the volume of something you cannot see is not
+             * what anybody reaching for a dark knob meant. */
+            shell_wake();
+            lvgl_port_unlock();
+            continue;
+        }
         if (selector_is_open()) {
             selector_dial(delta);
         } else if (s_active_app != NULL && s_active_app->on_dial != NULL) {
@@ -927,9 +1219,58 @@ static void dial_init(void)
     ESP_LOGI(TAG, "encoder registered");
 }
 
+/* Wave 8: name the last reset out loud.
+ *
+ * A device that reboots on its own and comes back looking fine is a device
+ * that is hiding something, and a twelve-hour soak is unreadable without this
+ * line. It is also the only honest way to tell a panic reboot from someone
+ * pulling the cable. ESP_LOGI's format argument has to be a string literal -
+ * the macro concatenates it - so this returns a name to pass as %s rather
+ * than being a ternary at the call site. */
+static const char *reset_reason_name(esp_reset_reason_t r)
+{
+    switch (r) {
+    case ESP_RST_POWERON:   return "power-on";
+    case ESP_RST_EXT:       return "external reset";
+    case ESP_RST_SW:        return "software restart";
+    case ESP_RST_PANIC:     return "PANIC - the previous run crashed";
+    case ESP_RST_INT_WDT:   return "INTERRUPT WATCHDOG";
+    case ESP_RST_TASK_WDT:  return "TASK WATCHDOG - a task stopped feeding it";
+    case ESP_RST_WDT:       return "watchdog";
+    case ESP_RST_BROWNOUT:  return "BROWNOUT - the supply sagged";
+    case ESP_RST_DEEPSLEEP: return "deep sleep wake";
+    case ESP_RST_SDIO:      return "SDIO reset";
+    /* This board has no BOOT or RESET button and flashes over the S3's native
+     * USB-Serial-JTAG, so a reset at the end of idf.py flash arrives through
+     * the USB peripheral rather than through a pin. Naming it keeps the most
+     * common reset on this desk out of the "unknown" bucket. */
+    case ESP_RST_USB:       return "USB peripheral (a flash, most likely)";
+    case ESP_RST_JTAG:      return "JTAG";
+    case ESP_RST_EFUSE:     return "EFUSE ERROR";
+    case ESP_RST_PWR_GLITCH: return "POWER GLITCH";
+    case ESP_RST_CPU_LOCKUP: return "CPU LOCKUP - double exception";
+    default:                return "unknown";
+    }
+}
+
+static bool reset_was_a_fault(esp_reset_reason_t r)
+{
+    return r == ESP_RST_PANIC || r == ESP_RST_TASK_WDT ||
+           r == ESP_RST_INT_WDT || r == ESP_RST_WDT || r == ESP_RST_BROWNOUT ||
+           r == ESP_RST_CPU_LOCKUP || r == ESP_RST_PWR_GLITCH ||
+           r == ESP_RST_EFUSE;
+}
+
 void app_main(void)
 {
     backlight_init(40);
+
+    const esp_reset_reason_t reset_reason = esp_reset_reason();
+    if (reset_was_a_fault(reset_reason)) {
+        ESP_LOGE(TAG, "last reset: %s", reset_reason_name(reset_reason));
+    } else {
+        ESP_LOGI(TAG, "last reset: %s", reset_reason_name(reset_reason));
+    }
 
     esp_err_t err = nvs_flash_init();
     if (err == ESP_ERR_NVS_NO_FREE_PAGES || err == ESP_ERR_NVS_NEW_VERSION_FOUND) {
@@ -993,38 +1334,63 @@ void app_main(void)
      * selector that moves between them. Each app builds its own screen and
      * frees its own buffers; the shell owns the switch. */
     spotify_app_init();
+    /* The HID transport. Wave 10 puts NimBLE behind this; today it logs what
+     * it would have sent so the Wispr and Launcher screens can be judged on
+     * glass without a BLE stack existing. Nothing here touches the radio. */
+    hid_init();
     lvgl_port_lock(0);
     alarm_overlay_create();
     lvgl_port_unlock();
     shell_switch_to(0);
     ESP_LOGI(TAG, "shell up, %d apps, long-press for the selector", shell_app_count());
 
+    /* Wave 8: the shell's own loop is watched.
+     *
+     * The idle tasks on both cores are already subscribed by default, and that
+     * is what caught the first bloom implementation starving LVGL. What was
+     * missing is that the watchdog only printed a backtrace - so the device
+     * wedged and stayed wedged. CONFIG_ESP_TASK_WDT_PANIC now makes it a
+     * panic, and the panic handler reboots, so a wedge recovers on its own.
+     *
+     * Subscribing this loop as well catches the other shape of failure: the
+     * idle tasks running happily while the shell has stopped ticking, which is
+     * what a deadlock on the LVGL lock would look like. This loop sleeps a
+     * second at a time and does tens of milliseconds of work, so a ten-second
+     * timeout has an order of magnitude of headroom. */
+    ESP_ERROR_CHECK(esp_task_wdt_add(NULL));
+
     /* ~1 Hz housekeeping: the timer and sleep are the shell's, the tick is the
      * app's. */
-    bool asleep = false;
     for (;;) {
         vTaskDelay(pdMS_TO_TICKS(1000));
+        esp_task_wdt_reset();
 
         /* Sleep: a permanently-powered desk object should not be a
          * permanently-lit one. LVGL already tracks touch inactivity; the input
-         * task feeds dial movement into the same counter. */
+         * task feeds dial movement into the same counter.
+         *
+         * This loop only ever puts the device to sleep. Waking is event-driven
+         * - the shield on a touch, input_task on a detent - because a wake
+         * that waited up to a second for the next tick would feel broken. The
+         * idle_ms check below is the belt and braces for any path that resets
+         * the activity counter without going through shell_wake. */
         if (!s_alarm_ringing && s_sleep_min > 0) {
             lvgl_port_lock(0);
             const uint32_t idle_ms = lv_display_get_inactive_time(NULL);
-            lvgl_port_unlock();
-            const bool should_sleep = idle_ms > (uint32_t) s_sleep_min * 60000;
-            if (should_sleep != asleep) {
-                asleep = should_sleep;
-                backlight_duty(asleep ? 0 : s_brightness);
-                if (asleep) {
-                    ESP_LOGI(TAG, "screen off (%d min idle)", s_sleep_min);
-                } else {
-                    ESP_LOGI(TAG, "awake");
-                }
+            if (!s_asleep && idle_ms > (uint32_t) s_sleep_min * 60000) {
+                sleep_enter();
+            } else if (s_asleep && idle_ms < 1000) {
+                shell_wake();
+                wake_shield_drop();
             }
-        } else if (asleep) {
-            asleep = false;
-            backlight_duty(s_brightness);
+            lvgl_port_unlock();
+        } else if (s_asleep) {
+            /* The alarm, or sleep turned off in Settings. Either way it should
+             * be lit. */
+            lvgl_port_lock(0);
+            shell_wake();
+            wake_shield_drop();
+            lvgl_port_unlock();
         }
 
         if (s_timer_end_us != 0 && esp_timer_get_time() >= s_timer_end_us) {
