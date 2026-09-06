@@ -1,0 +1,182 @@
+
+[build]  (0s)
+  26 made, 289 bought bodies
+
+[solidity]  (42s)
+  ok    base_plate             83.78 cm3
+  ok    internal_structure     27.52 cm3
+  ok    halo_diffuser           1.56 cm3
+  ok    knob_body              63.82 cm3
+  ok    deck                   23.63 cm3
+  ok    carriage                4.90 cm3
+  ok    servo_mount             0.94 cm3
+  ok    speaker_cradle          1.36 cm3
+  ok    port_face               0.63 cm3
+  ok    adapter_board           6.66 cm3
+  ok    audio_board             1.60 cm3
+  ok    motion_board            1.44 cm3
+  ok    encoder_board           0.03 cm3
+  ok    usbc_board              0.12 cm3
+  ok    jack_board              0.56 cm3
+  ok    barrel_board            0.20 cm3
+  ok    light_board             0.05 cm3
+  ok    commutation_board       0.23 cm3
+  ok    led_flex                0.21 cm3
+  ok    bond_tape               0.58 cm3
+  ok    collar_0                0.15 cm3
+  ok    bush_0                  0.16 cm3
+  ok    collar_1                0.15 cm3
+  ok    bush_1                  0.16 cm3
+  ok    collar_2                0.15 cm3
+  ok    bush_2                  0.16 cm3
+
+[interference, clutch engaged]  (49s)
+  env   carriage x servo_pushrod_ASSUMED: 2.7 mm3 — ASSUMED pushrod / 9 mm stroke keep-out: the carriage tab is the stop
+  env   carriage x servo_stroke_keepout_9mm_ASSUMED: 21.2 mm3 — ASSUMED pushrod / 9 mm stroke keep-out: the carriage tab is the stop
+  env   port_face x barrel_jack_ENVELOPE: 88.9 mm3 — jack on its vertical board, bushing at the face
+  env   adapter_board x hdmi_plug_A_ENVELOPE: 9.6 mm3 — on the adapter board
+  env   panel_components_ENVELOPE x panel_flex_1: 4.2 mm3 — flex leaves the component area
+  env   panel_flex_4 x adapter_flex_connector_ENVELOPE: 2.1 mm3 — flex into the adapter's connector
+  env   pi_pcb x pi_hdmi0_ENVELOPE: 1.2 mm3 — vendor assembly internals
+  env   pi_pcb x pi_hdmi1_ENVELOPE: 1.2 mm3 — vendor assembly internals
+  env   pi_pcb x usbc_plug_pi_ENVELOPE: 5.3 mm3 — vendor assembly internals
+  env   pi_pcb x hdmi_plug_micro_ENVELOPE: 0.2 mm3 — vendor assembly internals
+  env   pi_header x header_housing_ENVELOPE: 6.0 mm3 — vendor assembly internals
+  env   pi_part_06_8x6x3.8 x usbc_plug_pi_ENVELOPE: 3.3 mm3 — vendor assembly internals
+  env   pi_part_08_2x16x3.9 x cooler_heatsink_ENVELOPE: 8.0 mm3 — vendor assembly internals
+  env   pi_part_09_2x16x3.8 x cooler_heatsink_ENVELOPE: 8.0 mm3 — vendor assembly internals
+  env   pi_part_11_2x13x3.8 x cooler_heatsink_ENVELOPE: 7.6 mm3 — vendor assembly internals
+  env   pi_part_13_3x6x4.2 x cooler_heatsink_ENVELOPE: 0.3 mm3 — vendor assembly internals
+  env   pi_usbc x usbc_plug_pi_ENVELOPE: 8.9 mm3 — vendor assembly internals
+  env   pi_hdmi0_ENVELOPE x cooler_heatsink_ENVELOPE: 0.2 mm3 — vendor assembly internals
+  env   pi_hdmi0_ENVELOPE x hdmi_plug_micro_ENVELOPE: 17.0 mm3 — vendor assembly internals
+  env   pi_hdmi1_ENVELOPE x cooler_heatsink_ENVELOPE: 0.2 mm3 — vendor assembly internals
+  env   hdmi_ribbon_2 x hdmi_plug_A_ENVELOPE: 1.9 mm3 — ribbon segments and plugs
+  env   hdmi_plug_A_ENVELOPE x adapter_hdmi_socket_ENVELOPE: 21.6 mm3 — HDMI-A plug in the adapter's socket, on the deck
+  env   motor_motor_ENVELOPE x motor_magnet: 70.7 mm3 — magnet inside the hollow shaft the envelope does not model
+  env   servo_pushrod_ASSUMED x servo_stroke_keepout_9mm_ASSUMED: 8.0 mm3 — ASSUMED pushrod / 9 mm stroke keep-out: the carriage tab is the stop
+  env   jack_bushing_M6x0p5 x jack_plug_ENVELOPE: 27.1 mm3 — plug in the jack, through the slot
+  env   barrel_plug_ENVELOPE x barrel_plug_ENVELOPE_cable: 241.2 mm3 — plug in the socket, through the slot, over the pad pocket
+  ok    engaged: no unintended interference (1374 bbox-overlapping pairs tested)
+
+[interference, clutch released]  (101s)
+  env   carriage x servo_pushrod_ASSUMED: 5.3 mm3 — ASSUMED pushrod / 9 mm stroke keep-out: the carriage tab is the stop
+  env   carriage x servo_stroke_keepout_9mm_ASSUMED: 21.2 mm3 — ASSUMED pushrod / 9 mm stroke keep-out: the carriage tab is the stop
+  env   pi_pcb x pi_hdmi0_ENVELOPE: 1.2 mm3 — vendor assembly internals
+  env   pi_pcb x pi_hdmi1_ENVELOPE: 1.2 mm3 — vendor assembly internals
+  env   pi_pcb x hdmi_plug_micro_ENVELOPE: 0.2 mm3 — vendor assembly internals
+  env   pi_header x header_housing_ENVELOPE: 6.0 mm3 — vendor assembly internals
+  env   pi_part_08_2x16x3.9 x cooler_heatsink_ENVELOPE: 8.0 mm3 — vendor assembly internals
+  env   pi_part_09_2x16x3.8 x cooler_heatsink_ENVELOPE: 8.0 mm3 — vendor assembly internals
+  env   pi_part_11_2x13x3.8 x cooler_heatsink_ENVELOPE: 7.6 mm3 — vendor assembly internals
+  env   pi_part_13_3x6x4.2 x cooler_heatsink_ENVELOPE: 0.3 mm3 — vendor assembly internals
+  env   pi_hdmi0_ENVELOPE x cooler_heatsink_ENVELOPE: 0.2 mm3 — vendor assembly internals
+  env   pi_hdmi0_ENVELOPE x hdmi_plug_micro_ENVELOPE: 17.0 mm3 — vendor assembly internals
+  env   pi_hdmi1_ENVELOPE x cooler_heatsink_ENVELOPE: 0.2 mm3 — vendor assembly internals
+  env   hdmi_ribbon_2 x hdmi_plug_A_ENVELOPE: 1.9 mm3 — ribbon segments and plugs
+  env   motor_motor_ENVELOPE x motor_magnet: 70.7 mm3 — magnet inside the hollow shaft the envelope does not model
+  env   servo_pushrod_ASSUMED x servo_stroke_keepout_9mm_ASSUMED: 8.0 mm3 — ASSUMED pushrod / 9 mm stroke keep-out: the carriage tab is the stop
+  ok    released: no unintended interference (545 bbox-overlapping pairs tested)
+
+[clutch]  (134s)
+  ok    bell to bore, engaged 0.00 mm (band 0.6 thick, so it presses)
+  ok    bell to bore, released 2.40 mm (>= 0.8)
+  ok    servo on the deck: body to the tall tab 3.00 mm (the pushrod bridges it); lift 2.4 mm, 2.4 N
+
+[knob rotation]  (134s)
+  ok    knob clear of every static part at 0/17/45/73 deg
+  ok    knob to panel_glass: 0.45 mm (>= 0.4)
+  ok    knob to lens_ASSUMED: 0.40 mm (>= 0.4)
+  ok    knob to internal_structure: 0.40 mm (>= 0.4)
+  ok    knob to halo_diffuser: 1.40 mm (>= 0.4)
+
+[stack and containment]  (158s)
+  ok    height 40.3 mm incl. pad (no limit in v10; spec estimate 41.7 before the glue ruling); knob 69 % of the visible side
+  ok    knob is the majority of the visible side
+  ok    motor top 18.2 under the deck 19.48
+  ok    bell bottom 8.5 (ASSUMED base 4.3); halo 8.0-10.6, lip to 11.4 — the halo sits on the 8 mm plate, above the bell's start: the bell passes the halo band inside the wall (the wall is relieved there)
+  ok    cooler fan NOT fitted (build change): heatsink fins top 12.58, deck underside 19.48 — 6.9 mm of air over the fins, open at both long sides
+  ok    drive band on the bore z 9.0-17.8; code band 18.5-22.7; groove 24.3-27.5; deck 19.48-20.98; seat 30.4; glass 30.90-32.88; lens top 35.38; knob top 38.78
+  ok    panel's furthest point r 72.05 vs bore r 72.5: 0.45 mm
+
+[assembly: the display module drops straight through the bore; the structure follows it from below]  (163s)
+  ok    panel + lens pass the bore on a straight drop: clear
+  ok    the structure (with its posts, pillars, tower and lip) enters the knob from below on a straight path: clear
+
+[assembly: deck screws and Pi screws from above / below]  (164s)
+  ok    Ø6 driver path at pillar 50 deg above the deck: clear
+  ok    Ø6 driver path at pillar 120 deg above the deck: clear
+  ok    Ø6 driver path at pillar 180 deg above the deck: clear
+  ok    Ø6 driver path at pillar 240 deg above the deck: clear
+  ok    Ø6 driver path at pillar 320 deg above the deck: clear
+  ok    Ø6 driver path to the Pi screw at (-39, -24) from below the plate: clear
+  ok    Ø6 driver path to the Pi screw at (-39, 24) from below the plate: clear
+  ok    Ø6 driver path to the Pi screw at (19, 24) from below the plate: clear
+
+[cables against the mechanism, both clutch states]  (180s)
+  ok    13 cable / plug bodies clear of the carriage, bell, band, wheels in both clutch states
+  ok    nearest cable to the carriage 17.62 mm
+
+[wall ports, halo, vent]  (180s)
+  ok    16 of 24 perimeter ports cut, Ø4.0 at z 15.0: [22.5, 37.5, 67.5, 112.5, 127.5, 142.5, 157.5, 172.5, 187.5, 202.5, 217.5, 232.5, 247.5, 277.5, 292.5, 337.5]
+  ok    port area 201 mm2; rim gap 176 mm2 — passive convection only (no fan)
+  ok    halo z 8.0-10.6; 90 LEDs at r 74.3 = 5.19 mm pitch; diffuser r 75.5-76.6/77.0
+
+[mass]  (180s)
+  base_plate             657.7 g
+  internal_structure      35.0 g
+  halo_diffuser            2.0 g
+  knob_body               81.1 g  (Al 172 g)
+  deck                    30.0 g
+  carriage                 6.2 g
+  servo_mount              1.2 g
+  speaker_cradle           1.7 g
+  adapter_board            8.5 g
+  audio_board              2.0 g
+  motion_board             1.8 g
+  ok    made parts 832 g (plate 658 g) + panel 70 g, Pi ~45 g, cooler, motor, servo, speaker, boards
+
+==============================================================
+0 failures, 0 warnings, 42 expected envelope contacts  (180s)
+  ENV  carriage x servo_pushrod_ASSUMED: 2.7 mm3 — ASSUMED pushrod / 9 mm stroke keep-out: the carriage tab is the stop
+  ENV  carriage x servo_stroke_keepout_9mm_ASSUMED: 21.2 mm3 — ASSUMED pushrod / 9 mm stroke keep-out: the carriage tab is the stop
+  ENV  port_face x barrel_jack_ENVELOPE: 88.9 mm3 — jack on its vertical board, bushing at the face
+  ENV  adapter_board x hdmi_plug_A_ENVELOPE: 9.6 mm3 — on the adapter board
+  ENV  panel_components_ENVELOPE x panel_flex_1: 4.2 mm3 — flex leaves the component area
+  ENV  panel_flex_4 x adapter_flex_connector_ENVELOPE: 2.1 mm3 — flex into the adapter's connector
+  ENV  pi_pcb x pi_hdmi0_ENVELOPE: 1.2 mm3 — vendor assembly internals
+  ENV  pi_pcb x pi_hdmi1_ENVELOPE: 1.2 mm3 — vendor assembly internals
+  ENV  pi_pcb x usbc_plug_pi_ENVELOPE: 5.3 mm3 — vendor assembly internals
+  ENV  pi_pcb x hdmi_plug_micro_ENVELOPE: 0.2 mm3 — vendor assembly internals
+  ENV  pi_header x header_housing_ENVELOPE: 6.0 mm3 — vendor assembly internals
+  ENV  pi_part_06_8x6x3.8 x usbc_plug_pi_ENVELOPE: 3.3 mm3 — vendor assembly internals
+  ENV  pi_part_08_2x16x3.9 x cooler_heatsink_ENVELOPE: 8.0 mm3 — vendor assembly internals
+  ENV  pi_part_09_2x16x3.8 x cooler_heatsink_ENVELOPE: 8.0 mm3 — vendor assembly internals
+  ENV  pi_part_11_2x13x3.8 x cooler_heatsink_ENVELOPE: 7.6 mm3 — vendor assembly internals
+  ENV  pi_part_13_3x6x4.2 x cooler_heatsink_ENVELOPE: 0.3 mm3 — vendor assembly internals
+  ENV  pi_usbc x usbc_plug_pi_ENVELOPE: 8.9 mm3 — vendor assembly internals
+  ENV  pi_hdmi0_ENVELOPE x cooler_heatsink_ENVELOPE: 0.2 mm3 — vendor assembly internals
+  ENV  pi_hdmi0_ENVELOPE x hdmi_plug_micro_ENVELOPE: 17.0 mm3 — vendor assembly internals
+  ENV  pi_hdmi1_ENVELOPE x cooler_heatsink_ENVELOPE: 0.2 mm3 — vendor assembly internals
+  ENV  hdmi_ribbon_2 x hdmi_plug_A_ENVELOPE: 1.9 mm3 — ribbon segments and plugs
+  ENV  hdmi_plug_A_ENVELOPE x adapter_hdmi_socket_ENVELOPE: 21.6 mm3 — HDMI-A plug in the adapter's socket, on the deck
+  ENV  motor_motor_ENVELOPE x motor_magnet: 70.7 mm3 — magnet inside the hollow shaft the envelope does not model
+  ENV  servo_pushrod_ASSUMED x servo_stroke_keepout_9mm_ASSUMED: 8.0 mm3 — ASSUMED pushrod / 9 mm stroke keep-out: the carriage tab is the stop
+  ENV  jack_bushing_M6x0p5 x jack_plug_ENVELOPE: 27.1 mm3 — plug in the jack, through the slot
+  ENV  barrel_plug_ENVELOPE x barrel_plug_ENVELOPE_cable: 241.2 mm3 — plug in the socket, through the slot, over the pad pocket
+  ENV  carriage x servo_pushrod_ASSUMED: 5.3 mm3 — ASSUMED pushrod / 9 mm stroke keep-out: the carriage tab is the stop
+  ENV  carriage x servo_stroke_keepout_9mm_ASSUMED: 21.2 mm3 — ASSUMED pushrod / 9 mm stroke keep-out: the carriage tab is the stop
+  ENV  pi_pcb x pi_hdmi0_ENVELOPE: 1.2 mm3 — vendor assembly internals
+  ENV  pi_pcb x pi_hdmi1_ENVELOPE: 1.2 mm3 — vendor assembly internals
+  ENV  pi_pcb x hdmi_plug_micro_ENVELOPE: 0.2 mm3 — vendor assembly internals
+  ENV  pi_header x header_housing_ENVELOPE: 6.0 mm3 — vendor assembly internals
+  ENV  pi_part_08_2x16x3.9 x cooler_heatsink_ENVELOPE: 8.0 mm3 — vendor assembly internals
+  ENV  pi_part_09_2x16x3.8 x cooler_heatsink_ENVELOPE: 8.0 mm3 — vendor assembly internals
+  ENV  pi_part_11_2x13x3.8 x cooler_heatsink_ENVELOPE: 7.6 mm3 — vendor assembly internals
+  ENV  pi_part_13_3x6x4.2 x cooler_heatsink_ENVELOPE: 0.3 mm3 — vendor assembly internals
+  ENV  pi_hdmi0_ENVELOPE x cooler_heatsink_ENVELOPE: 0.2 mm3 — vendor assembly internals
+  ENV  pi_hdmi0_ENVELOPE x hdmi_plug_micro_ENVELOPE: 17.0 mm3 — vendor assembly internals
+  ENV  pi_hdmi1_ENVELOPE x cooler_heatsink_ENVELOPE: 0.2 mm3 — vendor assembly internals
+  ENV  hdmi_ribbon_2 x hdmi_plug_A_ENVELOPE: 1.9 mm3 — ribbon segments and plugs
+  ENV  motor_motor_ENVELOPE x motor_magnet: 70.7 mm3 — magnet inside the hollow shaft the envelope does not model
+  ENV  servo_pushrod_ASSUMED x servo_stroke_keepout_9mm_ASSUMED: 8.0 mm3 — ASSUMED pushrod / 9 mm stroke keep-out: the carriage tab is the stop

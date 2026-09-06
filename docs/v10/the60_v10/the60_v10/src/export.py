@@ -1,0 +1,73 @@
+import os, sys, time, math
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from model import *
+from build123d import export_step, export_stl, Compound
+T0 = time.time()
+knurled = None
+try:
+    from knurl import CACHE
+    if os.path.exists(CACHE):
+        knurled = import_step(CACHE).solids()[0]
+except Exception as e:
+    print("knurl not available:", e)
+made = made_parts(knurl=False); bought = bought_parts(True)
+if knurled is not None:
+    made["knob_body"] = knurled; print("knob: knurled body from cache")
+else:
+    print("knob: SMOOTH body (knurl cache missing)")
+
+PRINT = {
+    "knob_body":          (lambda s: Pos(0, 0, Z_KNOB_TOP) * Rot(180, 0, 0) * s, "0.16", "ONE PIECE. top face down, no supports. bore smooth except the 0.15 code-band recess and the V-groove"),
+    "internal_structure": (lambda s: Pos(0, 0, -Z_PLATE_TOP) * s, "0.20", "upright on the wall foot; SUPPORT the seat flange's underside and the three wheel windows' tops"),
+    "deck":               (lambda s: Pos(0, 0, -Z_DECK0 - 1.5) * Rot(180, 0, 0) * s, "0.20", "upside down (legs up), flat on its top face; no supports"),
+    "halo_diffuser":      (lambda s: Pos(0, 0, -HALO_Z0) * s, "0.20", "on its underside; natural / translucent PETG"),
+    "carriage":           (lambda s: s, "0.16", "flat; Ø37 shoe, sensor pocket underneath, 28 mm tall push tab (print it standing; brace the tab)"),
+    "servo_mount":        (lambda s: s, "0.20", "flat; tray for the AGFRC servo envelope, open toward the tab; sits on the deck"),
+    "speaker_cradle":     (lambda s: s, "0.20", "flat; ring under the speaker flange with three snap fingers"),
+    "port_face":          (lambda s: s, "0.16", "standing as modelled; barrel, USB-C, jack openings, light-sensor aperture, two ears"),
+    "collar_0":           (lambda s: s, "0.12", "x3, axis vertical; press over a 623ZZ"),
+    "bush_0":             (lambda s: s, "0.12", "x3, pin up; brass in production"),
+}
+BOARDS = ["adapter_board", "audio_board", "motion_board", "encoder_board", "usbc_board", "jack_board", "barrel_board", "light_board", "commutation_board", "led_flex"]
+def centred(s):
+    bb = s.bounding_box()
+    return Pos(-(bb.min.X + bb.max.X)/2, -(bb.min.Y + bb.max.Y)/2, -bb.min.Z) * s
+pd = os.path.join(OUT, "parts"); os.makedirs(pd, exist_ok=True)
+bd = os.path.join(OUT, "boards"); os.makedirs(bd, exist_ok=True)
+for n, (fn, layer, note) in PRINT.items():
+    base = {"collar_0": wheel_collar(), "bush_0": ecc_bush()}.get(n, made[n])
+    shape = fn(base)
+    if n not in ("knob_body", "internal_structure", "halo_diffuser", "collar_0", "bush_0", "deck"):
+        shape = centred(shape)
+    export_step(shape, os.path.join(pd, f"{n}.step"), write_pcurves=False)
+    export_stl(shape, os.path.join(pd, f"{n}.stl"), tolerance=0.02, angular_tolerance=0.1)
+    print(f"  {n:20s} {shape.volume/1000:7.2f} cm3  layer {layer}  {note}", flush=True)
+export_step(made["base_plate"], os.path.join(pd, "base_plate_STEEL.step"), write_pcurves=False)
+export_stl(made["base_plate"], os.path.join(pd, "base_plate_STEEL.stl"), tolerance=0.02, angular_tolerance=0.1)
+print("  base_plate_STEEL      laser/waterjet-cut 8 mm steel (print a stand-in if needed)")
+for n in BOARDS:
+    export_step(centred(made[n]), os.path.join(bd, f"{n}.step"), write_pcurves=False)
+print("  boards: outlines exported to boards/")
+def assembly(engaged, name):
+    m = made_parts(knurl=False, engaged=engaged); b = bought_parts(engaged)
+    if knurled is not None: m["knob_body"] = knurled
+    kids = []
+    for n, s in {**m, **b}.items():
+        try: s.label = n
+        except Exception: pass
+        kids.append(s)
+    asm = Compound(children=kids); asm.label = name
+    export_step(asm, os.path.join(OUT, f"{name}.step"), write_pcurves=False)
+    print(f"  {name}.step: {len(kids)} named bodies", flush=True)
+assembly(True, "the60_v10_assembly")
+assembly(False, "the60_v10_assembly_free_spin")
+with open(os.path.join(pd, "README.txt"), "w") as f:
+    f.write("the 60 - v10 - printable parts (print orientation; they will not assemble as exported)\n\n")
+    for n, (fn, layer, note) in PRINT.items(): f.write(f"{n:20s} {layer} mm  {note}\n")
+    f.write(f"base_plate_STEEL      laser/waterjet-cut 8 mm mild steel, powder-coated; Ø{2*PLATE_R:.0f}; Pi window, carriage hole, port slot\n")
+    f.write("\nBought: DisplayModule DM-TFTR50-413 panel + cover lens (bonded to the seat); Raspberry Pi 5 + Active Cooler heatsink (fan OFF);\n"
+            "DM-ADTTR-014 HDMI-to-DSI adapter; JD-Power MY-3514C gimbal (envelope); AGFRC C1.5CLS PRO servo (envelope); 3x 623ZZ;\n"
+            "Soberton SP-4005-1; TMC6300; MT6701 + D6x2.5 magnet; AEDR-8300 + 0.15 code strip; DRV2605L + VLV101040A; ES9219Q;\n"
+            "Switchcraft 35RAPC4BH3; GCT USB4520; CUI PJ-063AH barrel jack; VEML7700; 90x SK6812SIDE-A; 12 V -> 5 V 10 A converter module.\n")
+    f.write("\nOpen the60_v10_assembly.step (every body named, assembled position) in Fusion, not the parts.\n")
+print(f"done in {time.time()-T0:.0f}s")
