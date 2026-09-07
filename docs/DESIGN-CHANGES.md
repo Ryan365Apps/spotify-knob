@@ -48,6 +48,40 @@ Report back which of the three sockets pass today, and what blocks the ones that
 
 ---
 
+## 4. The gimbal motor's hollow shaft is no longer required (Ryan, 7 September)
+
+**Decision: the hollow shaft comes out of the requirement.** The JD-Power MY-3514C is £56 and its hollow shaft was inherited from the old centre-mounted layout, where something passed through the motor. Nothing does now — the motor is off-axis at azimuth 90°, r 55.0, driving the bore through a silicone band, with nothing passing through it at all. Dropping that one requirement opens the field to generic 2804/2805 gimbal motors at a fraction of the price. Three are being bought and measured.
+
+**Do not expect height from this, and here is why.** The as-built stack (section 8.3) already says it: the seat sits at 26.0 because **the display adapter's HDMI socket reaches 23.68**, and that is *"the deciding part"*. The wheels alone would allow 24.2. The motor's own stack allows 23.4–24.2. So the motor is **1.8 mm below the binding constraint**, and a shorter motor buys nothing until the adapter's socket is dealt with — which is question 19, flipping the adapter, worth +0.6 rather than +1.8. Height comes from the adapter first and the wheels second. The motor is third in that queue.
+
+**What a different motor genuinely changes, and what the model should be ready for:**
+
+1. **The bell diameter, and with it the drive ratio.** Today it is 4.14 : 1 from the bore at r 72.5 to the bell. A generic motor with a different bell changes that ratio and may change the motor centre from r 55.0. **Carry the bell diameter and the motor centre as parameters** rather than constants, so a measured motor drops in without a rebuild.
+2. **Plate area in the motor sector**, if the frame or the bell is smaller. That is lateral room, not vertical.
+3. **The carriage and its 2.4 mm travel**, if the mounting pattern differs. The carriage is a printed part and can follow.
+
+**What the model should report back:** with the bell as a parameter, how much lateral room in the motor sector is freed per millimetre of bell diameter, and what the drive ratio becomes across a plausible range. That tells us what to look for when the three motors are measured, rather than measuring first and asking afterwards.
+
+## 5. The clutch servo is not committed to the AGFRC part (Ryan, 7 September)
+
+**Decision: the AGFRC C1.5CLS PRO is not the chosen part.** It is £47 and is a premium badge on a commodity class of 1.5 gram linear servos — the Spektrum SPMAS2000 is £11.95 and Hobbypower and Flash Hobby generics go lower again. Three are being bought and measured.
+
+**This matters to the model because the servo frame is dimensioned to one specific part.** The floorless frame on the plate — walls 1.0, 6.5 tall, two ears at t ±12.5 for M2.5 into the web, a lead notch in its end wall — was drawn around the AGFRC's 21.4 × 15.2 × 6.0 envelope, and the carriage's 3 × 10 × 14.5 push tab meets its pushrod at one particular height.
+
+**What the CAD session should do:** carry the servo's envelope and its pushrod height as parameters, and report the clearance the frame currently has in each direction. A part 2 mm longer or 1 mm taller should be a number change, not a redraw. The mechanism needs **2.4 mm of travel** and every servo in this class delivers 7–9 mm, so travel is not the risk; envelope and pushrod position are.
+
+Also note for the record: the **2.4 N force figure has never been measured** — it is the AGFRC's published output, not a requirement the clutch was ever tested against. Nothing in the model should be built as though 2.4 N is a specification.
+
+## 6. Three sourcing exercises are running that may change board envelopes (7 September)
+
+**Not a change to make — a reason not to tighten around the current numbers.** Three handoff prompts have gone out asking whether bought boards can replace the custom ones: `MOTION-BOARD-SOURCING-PROMPT.md`, `SMALL-PARTS-SOURCING-PROMPT.md`, and `CARRIER-BOARD-SOURCING-PROMPT.md` (that last one is parked — it is production-only). The premise across all three is **one working prototype, and buy convenience over elegance**.
+
+The likely consequence for the model is that **some board envelopes grow**. The motion board is budgeted at 30 × 30 × 3.6 on the blower's saddle; almost any bought development board is bigger than that. The six small boards — light sensor, USB-C carrier, jack carrier, actuator contacts, rotor sensor, knob encoder — may each become a bought breakout with its own dimensions rather than a board drawn to fit.
+
+**What the CAD session should do now:** nothing structural. But when a choice arises between two arrangements, prefer the one with slack in the rear sector and on the port face, and **report how much room could be freed in each if asked** — how far the motion board's envelope could grow before something collides, and what the port face could hold. When the sourcing answers land, that number is what decides whether a bought board is acceptable or whether the mechanical design has to move. Ryan's stated position is that he would sooner re-cut the mechanical design than commission a circuit board.
+
+---
+
 ## What does not change
 
 So the model is not over-corrected: the plate's ducted construction with the blower on its +y side, the fin channels' direction, the ring's groove and openings, the boards mounting to the plate (the motion board on the blower's saddle), the stainless ring, the pad as a plain ring, the structure's inverted print, and every dimension in `THERMAL-PLAN.md` section 14 as rewritten for v15 all stand as built.
