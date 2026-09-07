@@ -1,3 +1,17 @@
+# PARKED — do not run this yet
+
+**Status, 7 September 2026: this is a production-phase document. It should not be handed to a session while the goal is one working prototype.**
+
+**Why.** The carrier board exists to host a **Compute Module 5** — a bare module with no ports that has to be soldered onto a custom board. The prototype does not use one. It uses a **whole Raspberry Pi 5**, bought as a finished product, which arrives with its own ports, power management and storage. The v15 specification says this plainly in its own words: *"It is not the product: the product runs a Compute Module 5 on a custom carrier, and every dimension that exists only to hold a full Pi 5, its cooler, the HDMI adapter and their cables is tagged v10-ONLY."*
+
+So the design has always carried both computers on purpose — the Pi 5 for the prototype, the Compute Module on a carrier for production. `docs/boards/BOARD-CARRIER.md` is **not out of date**; it describes the second of those two. An earlier draft of this document claimed the carrier had been superseded. That was wrong and has been corrected here.
+
+**When to run this.** When the decision is made to move from the Pi 5 to the Compute Module — which is a production decision, not a prototype one.
+
+**What is genuinely needed for the prototype instead.** A handful of small functions that exist whichever computer is fitted, and none of which amount to a carrier board: the mains inlet and the 12 V to 5 V converter, the star distribution of that 5 V, the two-parallel-5-volt-sources problem (specification question 6), the ambient light sensor, the external USB-C socket and the 3.5 mm jack. Those are the six "small boards" in the bill of materials, listed there with no briefs written. **That is the exercise worth running now, and it is a different and much smaller one than this document.**
+
+---
+
 # Handoff prompt — what is left of the carrier board, and can I buy it?
 
 Copy everything below the line into a new session.
