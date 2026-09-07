@@ -14,7 +14,7 @@ port_face            0.16 mm  lying on its outer face (the socket openings print
 collar_0             0.12 mm  x3, axis vertical; press over a 623ZZ
 bush_0               0.12 mm  x3, stem down / pin up; the 1 mm flange ledge is the only overhang; brass in production
 base_plate_AL         CNC 6082 aluminium core r < 75.2: 2 web, 5 duct with 3 x 5 fin channels on a 4 pitch, ribs 6 tall on top; external faces black hard anodised, internal faces chromate or bare - no masked pads
-rim_ring_STEEL        machined STAINLESS ring r 75.2-87.7 x 8: 108 obround openings 1.8 x 4.5 on 3 deg through the 3.7 outer wall into an underside groove the pad closes, 0.8 undercut under the outer wall, 17 intake + 3 exhaust passages across the inner land, the blower trench's notch, 3 reeds, 0.3 polished chamfers; bare, brushed axially
+rim_ring_STEEL        machined STAINLESS ring r 75.2-87.7 x 8: 92 obround openings 2.0 x 4.5 on 3 deg through the 3.7 outer wall into an underside groove the pad closes, 0.8 undercut under the outer wall, 17 intake + 3 exhaust passages across the inner land, the blower trench's notch, 0.3 polished chamfers; bare, brushed axially
 closing_plate_AL      1 mm laser-cut aluminium disc r < 72.2, 9 x M2.5 csk, flush in the core's recess (unscrew to clean the duct)
 
 Bought: DisplayModule DM-TFTR50-413 panel + cover lens (bonded to the seat); Raspberry Pi 5 + Active Cooler heatsink (fan OFF); 4x M2.5 x 12 standoffs;

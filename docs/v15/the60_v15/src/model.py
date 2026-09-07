@@ -389,16 +389,26 @@ def base_plate():
         p -= Pos(x, y, PLATE_T - BLIND_D) * Cylinder(0.8, BLIND_D + 0.1, align=(Align.CENTER, Align.CENTER, Align.MIN))
     p -= Pos(GND_BOND_XY[0], GND_BOND_XY[1], PLATE_T - BLIND_D) * Cylinder(1.25, BLIND_D + 0.1, align=(Align.CENTER, Align.CENTER, Align.MIN))   # chassis ground: M3 tapped blind into its pier
     for az in RIB_AZ:                                                                   # ribs on the top face
-        p += blk(RIB_R1 - RIB_R0, RIB_T, PLATE_T - 0.01, PLATE_T + RIB_H, az, (RIB_R0 + RIB_R1)/2)
+        r0 = RIB_R0_BY_AZ.get(az, RIB_R0)
+        p += blk(RIB_R1 - r0, RIB_T, PLATE_T - 0.01, PLATE_T + RIB_H, az, (r0 + RIB_R1)/2)
     return p
 def vent_azs():
-    """the 120 positions az 1.5 + 3k; returns (az, kind) for those with a groove behind them"""
+    """the 120 positions az 1.5 + 3k; returns (az, kind) for those with the groove behind them (not the port face, not the
+    carriage hole's arc, not its mirror)"""
     out = []
     for k in range(VENT_N):
         az = (360.0 / VENT_N) * (k + 0.5)
+        if any(a0 < az < a1 for a0, a1 in VENT_SKIP_ARCS): continue
         if INTAKE_AZ0 + 1.0 < az < INTAKE_AZ1 - 1.0: out.append((az, "intake"))
         elif any(a0 + 1.0 < az < a1 - 1.0 for a0, a1 in EXHAUST_ARCS): out.append((az, "exhaust"))
     return out
+def groove_arcs():
+    """the underside groove's arcs: the intake arc split round the carriage hole, plus the two exhaust arcs; (az0, az1, r_inner)"""
+    w = GROOVE_WALL_DEG / 2
+    m0, m1 = VENT_SKIP_ARCS[0]
+    arcs = [(INTAKE_AZ0 + w, m0, GROOVE_R0), (m1, INTAKE_AZ1 - w, GROOVE_R0)]
+    arcs += [(a0, a1, GROOVE_R0_EXH) for a0, a1 in EXHAUST_ARCS]
+    return arcs
 def vent_cutter(az):
     """one obround opening through the outer wall (r 83 to beyond the edge), with its 0.3 x 45 mouth chamfer as a taper on the outer face"""
     zc = VENT_Z0 + VENT_H/2
@@ -406,40 +416,45 @@ def vent_cutter(az):
     mouth = Pos(PLATE_R + 0.01, 0, 0) * extrude(Plane.YZ * SlotOverall(VENT_H + 2*VENT_CHAMFER, VENT_W + 2*VENT_CHAMFER, rotation=90), -VENT_CHAMFER, taper=45)
     return Pos(0, 0, zc) * Rot(0, 0, az) * (body + mouth)
 def ring_groove():
-    """the underside groove behind the openings: the intake arc r 79.5-84, the exhaust arcs r 76.5-84, z 0-6.55, walls between"""
-    w = GROOVE_WALL_DEG / 2
-    g = sector(INTAKE_AZ0 + w, INTAKE_AZ1 - w, GROOVE_R1, -1, GROOVE_Z1) - cyl(GROOVE_R0, -2, GROOVE_Z1 + 1)
-    for a0, a1 in EXHAUST_ARCS:
-        g += sector(a0, a1, GROOVE_R1, -1, GROOVE_Z1) - cyl(GROOVE_R0_EXH, -2, GROOVE_Z1 + 1)
+    """the underside groove behind the openings: the intake arcs r 79.5-84 (interrupted over the carriage hole), the exhaust arcs
+    r 76.5-84, z 0-6.55, walls between; a Ø9 land left standing round each of the structure's three plate screws"""
+    g = None
+    for a0, a1, r0 in groove_arcs():
+        s = sector(a0, a1, GROOVE_R1, -1, GROOVE_Z1) - cyl(r0, -2, GROOVE_Z1 + 1)
+        g = s if g is None else g + s
+    for az in PLATE_SCREW_AZ:
+        g -= zbore(PILLAR_LAND_D, -2, GROOVE_Z1 + 1, az, PILLAR_R)
     return g
 def rim_ring():
     """the stainless ring (v15): 120 obround openings through its outer wall into an underside groove (the pad closes it), the
     undercut under the outer wall into the same groove, the passages in its inner land, the notch and open groove top under the
-    blower's hood, the reeding, 0.3 chamfers, the flange onto the core, the fixing holes, the bond screw's hole, the hood's two taps"""
+    blower's hood, 0.3 chamfers (no reeding: Ryan, 7 Sep), the flange onto the core, the fixing holes, the bond screw's hole, the hood's two taps"""
     p = cyl(PLATE_R, 0, PLATE_T)
     c = PLATE_CHAMFER
     p -= revolve_profile([(PLATE_R, PLATE_T - c), (PLATE_R + 1, PLATE_T - c - 0.01), (PLATE_R + 1, PLATE_T + 0.01), (PLATE_R - c, PLATE_T + 0.01)])   # top outer edge
     p -= cyl(RIM_IN, -1, PLATE_T + 1)
     p += tube(RIM_IN + 0.01, R_CORE_DUCT, RIM_STEP_Z, PLATE_T)                             # the inward flange, in the core's rebate
     p -= ring_groove()
-    arcs = [(INTAKE_AZ0, INTAKE_AZ1)] + EXHAUST_ARCS
-    for a0, a1 in arcs:                                                                  # the undercut: under the outer wall, straight into the groove, over both kinds of arc
+    arcs = [(a0, a1) for a0, a1, r0 in groove_arcs()]
+    for a0, a1 in arcs:                                                                  # the undercut: under the outer wall, straight into the groove, over every groove arc
         p -= sector(a0, a1, PLATE_R + 2, -1, INTAKE_UNDERCUT_H) - cyl(RING_WALL_R0 - 0.01, -2, INTAKE_UNDERCUT_H + 1)
         u = INTAKE_UNDERCUT_H
         p -= (revolve_profile([(PLATE_R - c, u - 0.01), (PLATE_R + 1, u - 0.01), (PLATE_R + 1, u + c + 0.01), (PLATE_R, u + c)])
               & sector(a0, a1, PLATE_R + 2, -1, PLATE_T))                                # bottom outer edge chamfer, on the wall's foot
-    p -= revolve_profile([(PLATE_R - c, -0.01), (PLATE_R + 1, -0.01), (PLATE_R + 1, c + 0.01), (PLATE_R, c)]) - (sector(arcs[0][0], arcs[0][1], 100, -2, 9) + sector(arcs[1][0], arcs[1][1], 100, -2, 9) + sector(arcs[2][0], arcs[2][1], 100, -2, 9))   # ... and on the plain arc at z 0
+    plain = revolve_profile([(PLATE_R - c, -0.01), (PLATE_R + 1, -0.01), (PLATE_R + 1, c + 0.01), (PLATE_R, c)])
+    for a0, a1 in arcs: plain -= sector(a0, a1, 100, -2, 9)
+    p -= plain                                                                           # ... and on the plain arcs at z 0
     vents = None
     for az, kind in vent_azs():
         v = vent_cutter(az); vents = v if vents is None else vents + v
     p -= vents
-    for z in (REED_Z[:REED_N] if REED_N else []):                                        # the reeding: turned grooves in the upper land of the edge face
-        p -= tube(PLATE_R + 1, PLATE_R - REED_D, z - REED_W/2, z + REED_W/2)
     p -= ring_land_grooves()                                                             # the passages across the inner land
     p -= trench(-1, PLATE_T + 1) & cyl(TRENCH_R1, -2, PLATE_T + 2)                        # v15: the blower's trench: flange notch, inner land cut away, groove top open, between TRENCH_FOOT_AZ out to TRENCH_R1
     p -= port_slot(); p -= carriage_hole()                                            # the carriage's shoe drops through the ring at 90 deg too (r 46-85.5)
-    for az in PLATE_SCREW_AZ:                                                           # the structure's plate screws, csk from below
+    for az in PLATE_SCREW_AZ:                                                           # the structure's plate screws, csk from below (through the Ø9 lands in the groove)
         p -= csk_hole(3.4, 0, PLATE_T, az, PILLAR_R)
+    for az in RING_SCREW_AZ:                                                            # the ring screws' countersinks (in the core's shoulder) reach 1.7 past the core's edge into the ring's inner land: the same cone here
+        p -= polar(az, RING_SCREW_R, -0.01) * Cone(6.5/2, 3.4/2, 1.6, align=(Align.CENTER, Align.CENTER, Align.MIN))
     for t in (-PORT_TAB_T, PORT_TAB_T):                                                 # port-face rail: Ø1.6, tapped M2
         p -= zbore(1.6, -1, PLATE_T + 1, 0.0, PORT_TAB_R, t)
     for az in RING_SCREW_AZ:                                                            # M3 tapped in the flange, blind from below
@@ -514,9 +529,9 @@ def hood_gasket():
     for az in HOOD_SCREW_AZ: g -= zbore(2.2, PLATE_T - 1, PLATE_T + 1, az, HOOD_SCREW_R)
     return {"hood_gasket_ASSUMED": g}
 def fan_lead_bodies():
-    """the blower's two AWG 30 leads, 145 long, drawn as their route to the Pi 5's fan connector (ASSUMED position on the board, at its
-    edge beside the GPIO header's end, at the USB side): out beside the outlet at the blower's -t corner, down to the plate, along the
-    plate top and the Pi window's +y rim (1.5 outside the window's edge), then down onto the Pi; a crimped JST SH housing on the end.
+    """the blower's two AWG 30 leads, 145 long, drawn as their route to the Pi 5's fan connector (in the vendor STEP: pi_part_13 at the
+    board's +y edge between the corner standoff and the USB-A stack): out beside the outlet at the blower's -t corner, down to the plate,
+    along the blower's -t face, west over the Pi window's edge, then down onto the connector; a crimped JST SH housing on the end.
     1.4 x 1.4 for the pair. Pi's fan header: JST SH 1.0 mm, 4-way (5 V, GND, PWM, tach); the pair connects 5 V and GND"""
     out = {}
     x0, y0 = rot_xy(0, 0, BLOWER_R + BLOWER_L/2 - 2.0, -BLOWER_W/2 - 1.2, BLOWER_AZ)       # beside the outlet, just off the -t face
@@ -525,9 +540,9 @@ def fan_lead_bodies():
     out["fan_lead_2"] = blk(29.5, 1.4, Z_PLATE_TOP + 1.5, Z_PLATE_TOP + 2.9, BLOWER_AZ, BLOWER_R - 1.25, t=-BLOWER_W/2 - 1.2)   # along the blower's -t face, 1.2 off it, to its inner corner
     xe, ye = rot_xy(0, 0, BLOWER_R - 16.0, -BLOWER_W/2 - 1.2, BLOWER_AZ)                 # (34.6, 17.0)
     out["fan_lead_3"] = box_at(fx - 0.7, xe + 0.7, ye - 0.4, ye + 1.0, Z_PLATE_TOP + 1.5, Z_PLATE_TOP + 2.9)                     # west over the Pi window's +y edge (0.4 off the USB-A stack's top face region, under the window's edge at 18.75)
-    out["fan_lead_4"] = box_at(fx - 0.7, fx + 0.7, fy + 2.5, ye + 1.0, Z_PLATE_TOP + 1.5, Z_PLATE_TOP + 2.9)                     # in to the header, between the GPIO header's end and the USB-A stack
-    out["fan_lead_5"] = box_at(fx - 0.7, fx + 0.7, fy + 2.5, fy + 3.9, PI_Z_TOP + 4.0, Z_PLATE_TOP + 2.9)                        # down to the housing
-    out["fan_lead_housing_JST_SH_4"] = box_at(fx - 3.0, fx + 3.0, fy - 2.0, fy + 2.5, PI_Z_TOP, PI_Z_TOP + 4.0)
+    out["fan_lead_4"] = box_at(fx - 0.7, fx + 0.7, fy + 3.0, ye + 1.0, Z_PLATE_TOP + 1.5, Z_PLATE_TOP + 2.9)                     # in to the connector, between the corner standoff and the USB-A stack
+    out["fan_lead_5"] = box_at(fx - 0.7, fx + 0.7, fy + 3.0, fy + 4.4, PI_Z_TOP + 4.5, Z_PLATE_TOP + 2.9)                        # down to the housing's top
+    out["fan_lead_housing_JST_SH_4"] = box_at(fx - 1.5, fx + 1.5, fy - 2.8, fy + 3.0, PI_Z_TOP, PI_Z_TOP + 5.0)   # mated on the Pi's connector (pi_part_13, 3 x 6 with its pin row along y), 0.8 off the corner standoff
     return out
 # ---------------------------------------------------------------- the internal structure
 def motor_relief(engaged=True):

@@ -22,7 +22,7 @@
 | 17 | Adapter to panel flex | the adapter is a **kit** (datasheet, 6 Sep): driver board + 150 mm flat cable + a display **connect board** that takes the panel's flex — Ryan to confirm the 45-way mates with its CN2 and to **measure the connect board** (modelled 30 × 46 from its photograph, corner holes assumed; the bracket's bosses follow) |
 | 18 | Board envelopes | audio 25 × 40 × **3.6** and motion 30 × 30 × **3.6** (1.6 board + 2.0 Pico-Lock connectors; v14) plus a 4.0 moulded USB plug each; converter 38 × 25 × **8**; touch 30 × 20 × 3 stacked on the adapter |
 | 19 | Adapter flipped? | **not yet.** v13: the encoder faces up at a code ring under the crown (Ryan's idea, better than the turret), the code band is off the bore and the seat is now set by the adapter's HDMI socket (26.0; the wheels would allow 24.2). Flipping the adapter would make the touch board the ceiling and bring the seat to 24.8 — 1.2 mm — for a downward-facing cable entry. Ryan's call |
-| 23 | Rim edge treatment | **closed** (v15, design-changes items 3 and 5): the venting is the decoration — 108 obround openings 1.8 × 4.5 on 3°, mirrored, three reeds above, 0.3 polished chamfers, bare brushed stainless |
+| 23 | Rim edge treatment | **closed** (v15, design-changes items 3 and 5): the venting is the decoration — 92 obround openings 2.0 × 4.5 on 3°, mirrored, a plain band above, 0.3 polished chamfers, bare brushed stainless |
 | 24 | Rim ring finish | **closed** (v15): stainless, bare — electropolished after machining, brushed axially; no masking, the star washer cuts through |
 | 25 | Bleed leaf | form built as a leaf with its foot flat on the seat flange at 200° (v15: the insert in a boss under the flange), bearing on the crown at r 71.5 (ASSUMED 4 × 0.2 phosphor bronze); bench: its drag must not be felt; the encoder's shims serve under its foot if more preload is wanted |
 | 26 | Pogo pins and sensor lead | the LRA's pogo board 7 × 8 (ASSUMED) and pins (Ø1.5, 2.2 compressed, ASSUMED): confirm against the flex tail's real pads; the rotor sensor lead: specify the flex-rated cable (10⁵ cycles at 2.4 mm) |
@@ -31,10 +31,10 @@
 | 21 | Bell band | **closed** (v13): back to v11's 9.0–17.8 (2.9 of bore contact) — the code band no longer sits above it |
 | — | Glue | **allowed for the display** (Ryan, 5 Sep): the panel bonds to the seat on 0.5 mm foam tape; the screwed carrier ring is dropped |
 | 27 | The blower running | **bench**: flow / pressure at the trench, noise at 1 m with the object closed at full speed and at the Pi's PWM, skin temperature at 13 W; the −y arc's reverse flow vs re-ingestion of the 18–60 exhaust (40 mm apart across the port face). The model's estimate: ~0.5 L/s at ~25 Pa, ~1.0 W/K, 38 °C at 25 °C |
-| 28 | The Pi 5's fan header | **bench**: its position on the board (the model ASSUMES beside the GPIO header's end at the USB side, (10, 14)) and its current rating against the blower's 0.13 A (0.20 max) |
+| 28 | The Pi 5's fan header | **bench**: its current rating against the blower's 0.13 A (0.20 max); its position is in the Pi 5 STEP (between the corner standoff and the USB-A stack) and the housing sits on it |
 | 29 | Encoder shim | **bench**: which of 0.7 / 0.8 / 0.9 / 1.0 / 1.1 gives the 2.0 optical gap on the real parts; the radial slot's use for centring over the code ring |
 | 30 | Dowel pins | **bench**: the Ø2 H7 ream in printed PETG and the press fit of a 2 m6 dowel; the glass locating on three Ø2 pins (0.15 off its edge) |
-| 31 | The stainless ring's machining | **supplier**: 120 obround plunges 1.8 wide through a 3.7 wall on a rotary (or laser), the four-arc underside groove, electropolish then brush; whether 0.3 chamfers survive the brushing; cost against the v14 mild-steel ring |
+| 31 | The stainless ring's machining | **supplier**: 92 obround plunges 2.0 wide through a 3.7 wall on a rotary (or laser), the four-arc underside groove, electropolish then brush; whether 0.3 chamfers survive the brushing; cost against the v14 mild-steel ring |
 
 The questions as they were put, for the record:
 

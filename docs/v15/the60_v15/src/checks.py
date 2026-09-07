@@ -60,7 +60,8 @@ def allowed(a, b):
         (lambda: has("hood_gasket_ASSUMED") and has("base_plate", "rim_ring_STEEL", "blower_saddle", "hood_lid"), "the hood's gasket between the saddle / lid and the plate / ring"),
         (lambda: has("hood_lid") and has("rim_ring_STEEL"), "the lid's screws' spot faces on the ring (0.3 gasket)"),
         (lambda: anyp("motion_washer") and has("motion_board", "blower_saddle") or anyp("motion_washer") and anyp("blower_screw"), "the motion board on its 0.5 washers on the saddle"),
-        (lambda: has("fan_lead_housing_JST_SH_4") and anyp("pi_"), "the fan lead's housing on the Pi's fan header"),
+        (lambda: has("fan_lead_housing_JST_SH_4") and has("pi_pcb", "pi_part_13_3x6x4.2"), "the fan lead's housing mated on the Pi's fan connector (pi_part_13 in the vendor STEP)"),
+        (lambda: has("fan_lead_5") and has("pi_part_13_3x6x4.2"), "the lead entering its housing on the connector"),
         (lambda: a.startswith("fan_lead") and b.startswith("fan_lead"), "the fan lead's segments join"),
         (lambda: anyp("fan_lead") and has("base_plate", "blower_BFB0305HA-C", "pi_pcb"), "the fan lead: down the blower's corner, along the plate top, onto the Pi"),
         (lambda: anyp("locating_pin") and has("panel_glass"), "the pin's surface 0.15 from the glass disc's edge (the vendor outline is faceted there)"),
@@ -99,7 +100,7 @@ def allowed(a, b):
         (lambda: has("touch_board_ASSUMED") and (has("touch_parts_ENVELOPE") or anyp("touch_standoff")), "touch controller on its standoffs"),
         (lambda: has("panel_components_ENVELOPE") and anyp("panel_flex"), "flex leaves the component area"),
         # the Pi and its cooler, plugs and cables
-        (lambda: anyp("pi_") and anyp("pi_") and a != b, "vendor assembly internals"),
+        (lambda: a.startswith("pi_") and b.startswith("pi_") and not (a.startswith("pi_standoff") or b.startswith("pi_standoff") or a.startswith("pi_washer") or b.startswith("pi_washer")), "vendor assembly internals"),
         (lambda: anyp("cooler_") and (anyp("pi_") or anyp("cooler_")), "cooler on the Pi (heatsink pads on the SoC)"),
         (lambda: has("usbc_plug_pi_ENVELOPE") and (anyp("pi_usbc") or has("pi_pcb")), "PC cable plug in the Pi's USB-C"),
         (lambda: has("hdmi_plug_micro_ENVELOPE") and (has("pi_hdmi0_ENVELOPE", "pi_hdmi1_ENVELOPE", "pi_pcb") or has("hdmi_ribbon_1")), "ribbon plug in the micro-HDMI"),
@@ -278,7 +279,7 @@ ok(f"vent area {len(ports)*SLIT_W*(SLIT_Z1 - SLIT_Z0):.0f} mm2 at z {SLIT_Z0:.1f
 ok(f"halo z {HALO_Z0}-{HALO_Z1}: {LED_STRIP_W} mm LED strip on the wall's band at r {R_STRIP_IN}-{R_STRIP_OUT} (bell + band reach {MOTOR_R + MOTOR_OD/2 + MOTOR_BAND_T:.1f}); diffuser r {R_DIFF_IN}-{R_DIFF_OUT_BOT}/{R_DIFF_OUT_TOP}")
 seat_r = PLATE_R - PLATE_CHAMFER
 (ok if seat_r >= R_DIFF_OUT_BOT - 1e-6 else fail)(f"diffuser seat r {R_DIFF_IN}-{R_DIFF_OUT_BOT} on solid plate: the top chamfer and the groove floors start at r {seat_r:.1f}")
-ok(f"rim edge (v15): {len(vent_azs())} obround openings {VENT_W} x {VENT_H} on 3 deg are the decoration (design-changes items 3 and 5), {REED_N} reeds above them, {PLATE_CHAMFER} polished chamfers; stainless, bare, brushed axially; plate Ø{2*PLATE_R:.0f} flush with the knob")
+ok(f"rim edge (v15): {len(vent_azs())} obround openings {VENT_W} x {VENT_H} on 3 deg are the decoration (design-changes items 3 and 5), a plain upper land, {PLATE_CHAMFER} polished chamfers; stainless, bare, brushed axially; plate Ø{2*PLATE_R:.0f} flush with the knob")
 d_strip = bought_on["led_strip_ENVELOPE"].distance_to(bought_on["motor_band"])
 (ok if d_strip >= 0.1 else fail)(f"strip to the band on the bell, engaged: {d_strip:.2f} mm")
 ok(f"drive contact on the bore: z {max(Z_DRIVE0, Z_SKIRT_BOT):.1f}-{Z_DRIVE1:.1f} ({Z_DRIVE1 - max(Z_DRIVE0, Z_SKIRT_BOT):.1f} mm of the band's {Z_DRIVE1 - Z_DRIVE0:.1f})")
@@ -325,13 +326,19 @@ complete = (len(plus) == 1 and inter(plus[0], ig) > 1 and inter(plus[0], eg) > 1
 (ok if complete and not scraps else fail)(f"the air: {n_air} bodies inside the ring's wall - " + "; ".join(desc) + f"; {len(scraps)} dead scraps. Expected two: the SUCTION network (the whole intake groove 60-300 and its {len(intake_azs())} passages, the collector, all {len(channel_ys())} channels, both plenums, the blower's inlet hole - the -y side's 300-342 openings and passages are pulled in reverse by the blower, so its {sum(1 for y in channel_ys() if y < 0)} channels see forced flow too) and the DISCHARGE (the trench and the 18-60 groove with its openings)")
 va = vent_azs(); n_in = sum(1 for a, k in va if k == "intake"); n_ex = sum(1 for a, k in va if k == "exhaust")
 a_open = VENT_W * VENT_H - (4 - math.pi) * (VENT_W/2)**2
-under_in = 2*math.pi*(RING_WALL_R0 + 1.85)*(INTAKE_AZ1 - INTAKE_AZ0)/360*INTAKE_UNDERCUT_H
+under_in = sum(2*math.pi*(RING_WALL_R0 + 1.85)*(a1 - a0)/360*INTAKE_UNDERCUT_H for a0, a1, r0 in groove_arcs() if r0 == GROOVE_R0)
 under_ex = sum(2*math.pi*(RING_WALL_R0 + 1.85)*(a1 - a0)/360*INTAKE_UNDERCUT_H for a0, a1 in EXHAUST_ARCS)
 th_in = len(intake_azs()) * INTAKE_W * INTAKE_H
 (ok if n_in * a_open >= 500 and th_in >= 500 else warn)(f"INTAKE: {n_in} openings {VENT_W} x {VENT_H} obround = {n_in * a_open:.0f} mm2 through the edge face over az {INTAKE_AZ0:.0f}-{INTAKE_AZ1:.0f} + the {INTAKE_UNDERCUT_H} undercut {under_in:.0f} mm2; behind them the groove r {GROOVE_R0}-{GROOVE_R1} x {GROOVE_Z1} and {len(intake_azs())} passages {INTAKE_W} x {INTAKE_H} = {th_in:.0f} mm2 of throat (target 500-700)")
 th_ex_y = TRENCH_W * (PLATE_T - CLOSING_T); th_ex_my = len(EXHAUST_AZ) * EXHAUST_W * INTAKE_H
 (ok if n_ex * a_open >= 200 else warn)(f"EXHAUST: {n_ex} openings = {n_ex * a_open:.0f} mm2 through the edge face on az {EXHAUST_ARCS} (item 4: at least 200 - what a desk mat cannot block) + the undercut {under_ex:.0f} mm2 downward/outward = {n_ex * a_open + under_ex:.0f} total (target about 400); throats: the +y trench {th_ex_y:.0f} mm2, the -y passages {th_ex_my:.0f} mm2; the exhaust groove is r {GROOVE_R0_EXH}-{GROOVE_R1} = {(GROOVE_R1 - GROOVE_R0_EXH) * GROOVE_Z1:.0f} mm2 in section")
-ok(f"positions: {VENT_N} on {360/VENT_N:.0f} deg, az 1.5 + 3k, mirrored about 0-180 by construction; {VENT_N - n_in - n_ex} not cut (the port face 342-18 and the 1 deg either side of the groove walls at 60 and 300) - no blind openings: every cut one has the groove behind it")
+ok(f"positions: {VENT_N} on {360/VENT_N:.0f} deg, az 1.5 + 3k, mirrored about 0-180 by construction; {VENT_N - n_in - n_ex} not cut (the port face 342-18, the carriage hole's arc {VENT_SKIP_ARCS[0]} and its mirror {VENT_SKIP_ARCS[1]}, and the 1 deg either side of the groove walls at 60 and 300) - no blind openings: every cut one has the groove behind it")
+# nothing from outside reaches the cavity: every opening and the undercut must see ring material or the groove, never the carriage hole / cavity
+leak = []
+for az, kind in va:
+    probe = polar(az, RING_WALL_R0 - 2.5, VENT_Z0 + VENT_H/2) * Box(0.4, 0.8, 0.8)
+    if inter(probe, made["rim_ring_STEEL"]) < 0.01 and inter(probe, ring_groove()) < 0.01: leak.append(f"{az:.1f}")
+(ok if not leak else fail)("no opening looks through into the carriage hole or the cavity (2.5 behind the wall is ring or groove)" + ("" if not leak else ": " + ", ".join(leak)))
 blind = []
 for az, kind in va:
     probe = polar(az, RING_WALL_R0 - 0.3, VENT_Z0 + VENT_H/2) * Box(0.4, 0.8, 0.8)

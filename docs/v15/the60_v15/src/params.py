@@ -238,7 +238,7 @@ TRENCH_R1            = 79.0                            # the trench (and the exh
 HOOD_W, HOOD_T       = 24.0, 1.2                       # the hood over the outlet: 24 wide (tangential) x 6 (radial) x to the blower's top, walls 1.2; its lid over the trench foot 1.5 thick
 HOOD_SCREW_AZ, HOOD_SCREW_R = [35.0, 58.0], 74.5       # the lid's two M2 into tapped holes 3 deep in the ring's flange (r 72.2-75.2, z 5-8) and the root of its inner land, 2 deg outside the flange notch's walls, inboard of the exhaust groove (r 76.5)
 HOOD_LID_AZ          = (33.5, 59.5)                    # the lid's extent: 1.5 mm clear of the wheel post's web at 30 and of the groove wall at 60
-FAN_HEADER_XY        = (PI_X0 + 62.0, PI_Y0 + PI_W - 4.0)   # (10, 14) ASSUMED: the Pi 5's 4-pin fan connector, beside the GPIO header's end at the USB side, on the board's edge (JST SH 1.0 mm: 5 V, GND, PWM, tach) - position on the board to confirm; the blower's 2-wire lead gets a crimped SH housing on 5 V and GND, PWM speed control comes from the Pi (bench: the header's current rating)
+FAN_HEADER_XY        = (PI_X0 + 66.75, PI_Y0 + PI_W - 4.0)   # (14.75, 14): the Pi 5's 4-pin fan connector - the vendor STEP carries it (pi_part_13, 3 x 6 x 4.2 at x 13.3-16.2, y 11-17), between the corner standoff and the USB-A stack. v15 review: the first guess (10, 14) sat on the standoff (JST SH 1.0 mm: 5 V, GND, PWM, tach) - position on the board to confirm; the blower's 2-wire lead gets a crimped SH housing on 5 V and GND, PWM speed control comes from the Pi (bench: the header's current rating)
 INTAKE_AZ0, INTAKE_AZ1 = 60.0, 300.0                   # v15 (design-changes item 3): the intake arc - the ring's groove and its openings run 60-300; exhaust arcs either side of the port face
 INTAKE_UNDERCUT_H, INTAKE_UNDERCUT_R = 0.8, PAD_R      # v15: the undercut under the ring's outer wall, r 84.0-87.7, 0.8 tall (v14 1.5): it opens straight into the underside groove all round both arcs, so it is the supplementary intake AND the downward exhaust (rule 7 and 10) - no pad voids needed. Shorter so the openings above keep 0.75 of wall under them
 INTAKE_N, INTAKE_W, INTAKE_H = 24, 9.0, 3.5            # the THROAT passages (v15: 9 wide; v14 7): 24 positions on 11.25 deg over 45-315, cut only inside the intake arc (17 of them, 535 mm2): radial grooves 3.5 deep in the ring's inner land (the pad closes them) joining the groove, and closed tunnels z 1-4.5 through the core's shoulder into the collector. 9 wide leaves 5.5 of land for the ring screws' countersinks (Ø4.6 where the tunnel starts)
@@ -247,18 +247,20 @@ EXHAUST_AZ           = [311.0, 320.0, 329.0]           # v15: the -y (passive, 7
 EXHAUST_W            = 10.0
 EXHAUST_ARCS         = [(18.0, 60.0), (300.0, 342.0)]  # the ring's exhaust grooves and openings (design-changes item 3: 16-60 and 300-344, pulled in 2 deg so the groove ends 1.5 clear of the port slot's walls)
 # v15 ring (design-changes items 3, 5, 6): 120 openings on 3 deg through the ring's outer wall into an underside groove the pad closes
-VENT_N, VENT_W, VENT_H = 120, 1.8, 4.5                 # obround openings 1.8 (tangential) x 4.5 (z), on az 1.5 + 3k, mirrored about 0-180; cut only where a groove lies behind them (80 intake, 28 exhaust; none across the port face 342-18)
-VENT_Z0              = 1.55                            # z 1.55-6.05 (item 3 said 1.25-5.75 against a 5 mm duct; the groove decouples them - raised so 0.75 of wall stays under each opening above the undercut)
+VENT_N, VENT_W, VENT_H = 120, 2.0, 4.5                 # obround openings 2.0 (tangential) x 4.5 (z), on az 1.5 + 3k, mirrored about 0-180; cut only where the groove lies behind them (64 intake, 28 exhaust; none across the port face 342-18 or over the motor's carriage hole and its mirror)
+VENT_SKIP_ARCS       = [(79.0, 101.0), (259.0, 281.0)] # v15 review: the carriage hole (the motor's shoe, Ø38.5 at r 65.7) reaches r 85 and cuts the groove over az 81-99, so openings there would open into the cavity, not the duct - eight are not cut, and the eight opposite are not cut either so the two side views stay identical (Ryan: mirrored). The groove and the undercut are interrupted over 79-101 (solid) for the same reason
+PILLAR_LAND_D        = 9.0                             # the structure's three M3 plate screws (r 77.2, az 160/240/320) come up through the ring's inner land: a Ø9 land is left standing in the groove round each so the countersunk head bears on metal
+VENT_Z0              = 1.55                            # z 1.55-6.05 (item 3 said 1.25-5.75 against a 5 mm duct; the groove decouples them - raised so 0.75 of wall stays under each opening above the undercut); the chamfered mouth reaches 6.35, the top chamfer starts at 7.7
 VENT_CHAMFER         = 0.3                             # 0.3 x 45 deg at every mouth and both of the ring's edges, polished (item 5) - modelled as a 45 deg taper on the mouth
 RING_WALL_R0         = 84.0                            # the ring's outer wall r 84.0-87.7 (3.7 thick): what the openings pass through
 GROOVE_R0, GROOVE_R0_EXH, GROOVE_R1 = 79.5, 76.5, 84.0 # the underside groove r 79.5-84 (intake arc) and r 76.5-84 (exhaust arcs, wider: they are fed from one end); open at the bottom, the pad closes it
-GROOVE_Z1            = 6.55                            # the groove's roof at 6.55 (0.5 over the openings' top; 1.45 of roof, 1.0 under the reeding)
+GROOVE_Z1            = 6.55                            # the groove's roof at 6.55 (0.5 over the openings' top; 1.45 of roof)
 GROOVE_WALL_DEG      = 1.2                             # the wall left between the intake and exhaust arcs at 60 and 300 (about 1.7 mm at r 82)
-REED_N, REED_W, REED_D = 3, 0.45, 0.45                 # item 5: three reeded grooves turned in the upper land of the edge face, REED_N = 0 turns them off
-REED_Z               = [6.35, 6.95, 7.55]              # their centres: 6.1-7.8, between the openings' top and the top chamfer
+# v15 review (Ryan, 7 Sep): NO reeding on the edge face - the three grooves left 0.15 mm lands between them ("razor blades") and their lowest one clipped the openings' chamfered tops. The upper land is plain.
 RIB_T, RIB_H         = 2.0, 6.0                        # rule 13: tall sparse ribs on the plate's top face
 RIB_R0, RIB_R1       = 56.0, 70.0                      # inside r 70: clear of the pillars (73.7-80.7) and posts, so the structure still enters from below
 RIB_AZ               = [158, 212]                      # v12: the plate top is nearly full - two free radial lines: between the speaker and the converter, and between the converter and the USB-C plug (v11 had ten)
+RIB_R0_BY_AZ         = {212: 63.5}                     # v15 review: the 212 rib started at r 56, through the Pi's corner standoff at r 59.5 (hidden by a checker rule since v12) - it now starts at 63.5
 CLOSING_SCREW_XY     = [(-60.0, 0.0), (-56.0, 16.0), (-56.0, -16.0), (44.0, 10.0), (44.0, -6.0), (56.0, 31.0), (56.0, -31.0), (0.0, 45.0), (0.0, -57.0)]   # 9 x M2.5 csk from below (v15: three more, so the 1 mm plate's free span is about 30 mm, not 60): the front crescent beyond the Pi window, the rear wedge inside the port slot's walls, one island in each rear plenum, and one in each channel band on a full-depth island the channels are linked round
 ISLAND_LINK_L        = 6.0                             # the cross-cut either side of a channel-band island, joining the blocked channel to its neighbours
 RING_SCREW_AZ, RING_SCREW_R = [22.5, 78.75, 135, 191.25, 247.5, 303.75, 337.5], 73.7   # 7 x M3 csk from below through the core's shoulder into the ring's flange, on lands between the passages (the openings never reach r 73.7: they stop at the groove)
@@ -376,6 +378,6 @@ ASSUMED_LIST = [
     ("blower inlet and outlet", f"inlet Ø{BLOWER_INLET_D} in the face, outlet {BLOWER_OUTLET_W} x {BLOWER_OUTLET_H} from {BLOWER_OUTLET_Z0} up", "from the datasheet drawing (outline, holes and leads PUBLISHED)"),
     ("blower gaskets", f"{BLOWER_GASKET_T} closed-cell foam", "under the inlet face and the hood"),
     ("closing-plate gasket", f"{GASKET_T} die-cut", "in a groove of the recess floor, on every sealing wall"),
-    ("Pi 5 fan connector", f"at {FAN_HEADER_XY} on the board", "JST SH 4-pin; position and current rating to confirm"),
+    ("Pi 5 fan connector current rating", "0.13 A drawn (0.20 max)", "the connector sits in the vendor STEP; its rating is not published"),
     ("encoder shim family", f"{ENC_SHIM_FAMILY}", "printed; the height is chosen on the bench"),
 ]

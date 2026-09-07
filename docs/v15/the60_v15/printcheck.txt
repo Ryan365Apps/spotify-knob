@@ -88,7 +88,7 @@
    OVERHANG flat 7.0 wide           18.8 mm2  z 6.0-6.0 above the bed, r 4.9-4.9 (centre r 0.0, 0 deg), 7.0 x 7.0
    BRIDGE 2.2 mm                     3.8 mm2  z 2.9-2.9 above the bed, r 1.6-1.6 (centre r 0.0, 0 deg), 2.2 x 2.2
 
--- summary (133s)
+-- summary (134s)
    knob_body            no supports                          unsupported downward area     8.9 mm2; bridges  0 (longest  0.0 mm); side holes 0
    internal_structure   SUPPORTS NEEDED                      unsupported downward area  2490.5 mm2; bridges 97 (longest 15.2 mm); side holes 0
    halo_diffuser        no supports                          unsupported downward area     0.0 mm2; bridges  0 (longest  0.0 mm); side holes 0
