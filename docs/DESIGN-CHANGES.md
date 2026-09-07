@@ -31,6 +31,23 @@ Not decisions — things the model had to guess to build the items above, each t
 
 ---
 
+## 3. The eccentric bushes are not reachable with a driver (Ryan, 7 September)
+
+**Reported against the v15 model: the three bush sockets cannot be got at from the plate side — the internal structure is in the way.** The specification says they can. Section 5.2: *"three wheel posts Ø8 at r 76.9, az 30/150/270 (bush sockets open to the plate side)"*, and assembly step 4: *"Bushes half-turned from the plate side to seat the wheels; locked; shim out through the rim gap."* If a 2 mm hex key on a straight shaft cannot reach all three sockets and turn a full half-revolution, the model and the specification disagree and the model is what gets built.
+
+This is not a preference. The bushes are the only adjustment in the machine: they set the knob's preload against the V-groove, and they are the thing to reach for when the knob feels loose or notchy. Losing access to them means the knob's fit is fixed at the moment the structure is printed.
+
+**What the CAD session should do:**
+
+1. **Prove it, don't assume it.** Add a check that puts a Ø4 cylinder (a 2 mm hex key's shaft plus clearance) on each bush's axis, running from the socket face down through the plate side, and reports the first thing it hits. A pass is a clear path to outside the assembly; anything else is a fail with the blocking body named.
+2. **Say at which step it must be clear.** Two different requirements are hiding in one sentence. *Seating* the wheels happens at step 4, knob-side, before the plate exists — the driver only has to clear the structure itself. *Re-adjusting* preload later, on a built object, means the path must also clear the base plate, its ducting, the closing plate and the foot. Decide which one is required. If it is only the first, the specification's wording should stop implying the second.
+3. **If the path is blocked, move the obstruction rather than the bush.** The wheels are at 30/150/270° and their radius sets the knob's geometry; the webs, the pillars at 160/240/320° and the wall's local thickness are free to move. A clearance bore straight through whatever sits below each socket is acceptable — it is a printed part.
+4. **If later adjustment is wanted, it costs three holes in the base plate** on the bush axes, plugged or left open under the foot. Note the cost and let Ryan choose; do not add them unilaterally.
+
+Report back which of the three sockets pass today, and what blocks the ones that do not.
+
+---
+
 ## What does not change
 
 So the model is not over-corrected: the plate's ducted construction with the blower on its +y side, the fin channels' direction, the ring's groove and openings, the boards mounting to the plate (the motion board on the blower's saddle), the stainless ring, the pad as a plain ring, the structure's inverted print, and every dimension in `THERMAL-PLAN.md` section 14 as rewritten for v15 all stand as built.

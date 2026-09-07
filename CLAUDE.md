@@ -30,6 +30,19 @@ The simulator leads; the docs follow. UX is designed by iterating [design/simula
 
 `BUILD.md` is edited in place, not appended to — it describes the current plan, never a changelog.
 
+## Order of work (Ryan, 7 September 2026)
+
+Work the 60 in this order. Anything further down the list waits, however interesting it looks.
+
+1. **Display and compute** — the panel, the touch sensor, the compute module, and getting a picture on the screen.
+2. **Mechanical assembly** — how every part is fixed to every other part, and whether each fixing can actually be reached in the assembly order.
+3. **Mechanical movement** — the motor, the clutch, the wheels, the encoder, the feel.
+4. **Everything else.**
+5. **Lights** — the halo, the strip choice, the diffuser.
+6. **Audio.**
+
+This order overrides curiosity. A cheap part found for something at position 5 is worth buying as a bench sample and nothing more until the list reaches it.
+
 ## Commands
 
 Simulator (mock playback by default, Live mode does Spotify PKCE):
