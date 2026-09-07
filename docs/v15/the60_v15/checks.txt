@@ -1,17 +1,17 @@
 
 [build]  (0s)
-  31 made, 291 bought bodies
+  31 made, 296 bought bodies
 
-[solidity]  (276s)
-  ok    base_plate             40.76 cm3
+[solidity]  (271s)
+  ok    base_plate             40.20 cm3
   ok    rim_ring_STEEL         26.17 cm3
-  ok    closing_plate_AL        9.30 cm3
-  ok    internal_structure     35.73 cm3
+  ok    closing_plate_AL        9.31 cm3
+  ok    internal_structure     35.70 cm3
   ok    halo_diffuser           4.12 cm3
   ok    knob_body              69.36 cm3
   ok    carriage                4.44 cm3
   ok    servo_mount             0.64 cm3
-  ok    connect_bracket         2.92 cm3
+  ok    connect_bracket         2.76 cm3
   ok    speaker_cradle          1.44 cm3
   ok    port_face               1.01 cm3
   ok    adapter_board           6.62 cm3
@@ -20,7 +20,7 @@
   ok    motion_board            1.42 cm3
   ok    encoder_board           0.09 cm3
   ok    encoder_shim            0.09 cm3
-  ok    blower_saddle           1.95 cm3
+  ok    blower_saddle           2.10 cm3
   ok    hood_lid                0.61 cm3
   ok    usbc_board              0.12 cm3
   ok    jack_board              0.31 cm3
@@ -35,7 +35,7 @@
   ok    collar_2                0.15 cm3
   ok    bush_2                  0.16 cm3
 
-[interference, clutch engaged]  (283s)
+[interference, clutch engaged]  (278s)
   env   closing_plate_AL x usbc_plug_pi_ENVELOPE: 0.6 mm3 — the up-angle plug's head and its lead
   env   carriage x servo_pushrod_ASSUMED: 2.7 mm3 — ASSUMED pushrod / 9 mm stroke keep-out: the carriage tab is the stop
   env   carriage x servo_stroke_keepout_9mm_ASSUMED: 21.2 mm3 — ASSUMED pushrod / 9 mm stroke keep-out: the carriage tab is the stop
@@ -72,12 +72,14 @@
   env   adapter_parts_ENVELOPE x touch_standoff_1-1: 25.3 mm3 — touch controller's standoffs on the adapter (through its ASSUMED parts envelope)
   env   adapter_parts_ENVELOPE x touch_standoff_11: 31.4 mm3 — touch controller's standoffs on the adapter (through its ASSUMED parts envelope)
   env   motion_connectors_ENVELOPE x sensor_cable_5: 0.8 mm3 — the rotor sensor lead: out of the carriage's notch, up beside the tab, its loop over the servo frame, up beside the blower into the motion board's edge connector
+  env   motion_connectors_ENVELOPE x halo_tail_5: 5.7 mm3 — the halo's tail: from the strip's back, through the wall's notch, along the plate, into the motion board's edge connector
   env   jack_bushing_M6x0p5 x jack_plug_ENVELOPE: 27.1 mm3 — plug in the jack, through the slot
+  env   led_strip_ENVELOPE x halo_tail_1: 1.3 mm3 — the halo's tail: from the strip's back, through the wall's notch, along the plate, into the motion board's edge connector
   env   barrel_plug_ENVELOPE x barrel_plug_ENVELOPE_cable: 241.2 mm3 — plug in the socket, through the slot, over the pad pocket
   env   knob_bleed_leaf_ASSUMED x knob_bleed_screw: 0.1 mm3 — the bleed leaf bears on the crown, its foot flat on the flange, under its screw
-  ok    engaged: no unintended interference (1585 bbox-overlapping pairs tested)
+  ok    engaged: no unintended interference (1617 bbox-overlapping pairs tested)
 
-[interference, clutch released]  (412s)
+[interference, clutch released]  (422s)
   env   carriage x servo_pushrod_ASSUMED: 5.3 mm3 — ASSUMED pushrod / 9 mm stroke keep-out: the carriage tab is the stop
   env   carriage x servo_stroke_keepout_9mm_ASSUMED: 21.2 mm3 — ASSUMED pushrod / 9 mm stroke keep-out: the carriage tab is the stop
   env   servo_mount x servo_body_ENVELOPE: 159.6 mm3 — servo in its tray
@@ -104,39 +106,39 @@
   env   servo_stroke_keepout_9mm_ASSUMED x motor_bond_wire_3: 2.7 mm3 — ASSUMED pushrod / 9 mm stroke keep-out: the carriage tab is the stop
   ok    released: no unintended interference (303 bbox-overlapping pairs tested)
 
-[clutch]  (481s)
+[clutch]  (500s)
   ok    bell to bore, engaged 0.00 mm (band 0.6 thick, so it presses)
   ok    bell to bore, released 2.40 mm (>= 0.8)
   ok    servo on the plate: body to the tab 3.00 mm (the pushrod bridges it); tab to z 14.5 (v11: 28.5 through the deck); lift 2.4 mm, 2.4 N
 
-[knob rotation]  (481s)
+[knob rotation]  (500s)
   ok    knob clear of every static part at 0/17/45/73 deg
   ok    knob to panel_glass: 2.90 mm (>= 0.4)
   ok    knob to lens_ASSUMED: 0.40 mm (>= 0.4)
   ok    knob to internal_structure: 0.40 mm (>= 0.4)
   ok    knob to halo_diffuser: 1.40 mm (>= 0.4)
 
-[stack and containment]  (508s)
+[stack and containment]  (533s)
   ok    height 35.9 mm incl. pad (no limit; the v10 spec estimated 41.7 before the glue ruling); knob 57 % of the visible side
   ok    knob is the majority of the visible side
-  ok    under the seat (highest first): adapter_hdmi_socket 23.7, motion_connectors_ENVELOPE 23.6, usbc_plug_pi_ENVELOPE_cable 23.5, hdmi_plug_A_ENVELOPE 23.0, motor_bond_wire_5 23.0, sensor_cable_5 23.0
+  ok    under the seat (highest first): adapter_hdmi_socket 23.7, motion_connectors_ENVELOPE 23.6, halo_tail_5 23.6, halo_tail_4 23.6, usbc_plug_pi_ENVELOPE_cable 23.5, hdmi_plug_A_ENVELOPE 23.0
   ok    seat floor: the wheels' groove over the drive band allows 24.2; the adapter's HDMI socket (23.68) needs 26.0; seat top 26.0 (v12 28.0 with the code band on the bore)
   ok    adapter underside 14.78: 1.2 mm over the heatsink's fins (with 1.0 of underside parts), 0.28 over the servo's frame, -4.2 below the USB-A shells' top (it does not reach them: adapter x to 13, shells from 15)
   ok    drive band on the bore z 14.9-17.8; groove 19.9-23.1; seat 26.0; glass 26.50-28.48; lens top 30.98; crown underside 31.38 with the code ring's face at 31.53; knob top 34.38 (v12 36.38, v11 39.18)
   ok    panel's furthest point r 72.05 vs bore r 83.204: 11.15 mm
 
-[assembly: the display module drops straight through the bore; the structure follows it from below]  (517s)
+[assembly: the display module drops straight through the bore; the structure follows it from below]  (542s)
   ok    panel + lens pass the bore on a straight drop: clear
   ok    the structure (with its posts, pillars, bosses and lip) enters the knob from below on a straight path: clear
 
-[the encoder facing up at the crown's code ring]  (520s)
+[the encoder facing up at the crown's code ring]  (544s)
   ok    sensor face z 29.53 to the code ring's face 31.53: 2.00 mm (AEDR-8300 typical 2.0); crown underside 31.38
   ok    the sensor's footprint r 74.1-78.0 lies inside the code ring r 72.5-79.5 (0.15 recess in the crown's underside)
   ok    the sensor's 2 mm reflective-gap keep-out reaches the ring's face and no further: 0.00 mm3 into the knob
   ok    knob to the encoder board 2.98, to its screw heads 2.03; lens edge r 70.0 vs the board's inner edge r 72
   ok    code ring: 478 mm round at r 76 = 5969 lines at the sensor's 0.08 mm pitch (v12's bore strip: 5,700); axial play of the knob on the V-wheels is what varies the gap now, not the bore's run-out
 
-[the Pi stack: closing-plate lands / washers / Pi / standoffs / adapter (screws from below and above)]  (520s)
+[the Pi stack: closing-plate lands / washers / Pi / standoffs / adapter (screws from below and above)]  (544s)
   ok    Ø6 driver to the M2.5 csk screw at (-48.5, -34.5) under the closing plate: clear
   ok    Ø6 driver to the adapter's screw at (-48.5, -34.5) from above (before the structure goes on; the flat cable is plugged in after): clear
   ok    Ø6 driver to the M2.5 csk screw at (9.5, -34.5) under the closing plate: clear
@@ -147,16 +149,16 @@
   ok    Ø6 driver to the adapter's screw at (9.5, 14.5) from above (before the structure goes on; the flat cable is plugged in after): clear
   ok    stack: land (closing plate 0-1.0) / washer 0.5 / Pi board 1.5-2.78 / M2.5 x 12 standoffs / adapter 14.78-16.38 / M2.5 x 5 pan heads to 18.38; M2.5 x 6 csk from below through the land and washer into the standoff
 
-[boards on the plate: blind tapped holes stop in the web + pier (v15: 2 mm web, Ø7 piers 2.5 into the duct under every top screw)]  (538s)
+[boards on the plate: blind tapped holes stop in the web + pier (v15: 2 mm web, Ø7 piers 2.5 into the duct under every top screw)]  (561s)
   ok    12 x M2.5 + 2 x M2 (blower) + 1 x M3 (chassis bond) blind holes 3.5 deep from the top face: 2.0 of web + 2.5 of pier = 4.5 of metal, 1.0 of floor left, 2.5 of duct under each pier (rule 5: thickening downward only; 9 closing screws from below have full-depth islands)
   ok    every top screw's hole is in the plate (not over a window): yes
   ok    a floor of metal under every blind hole (the pier is there): yes
 
-[cables against the mechanism, both clutch states]  (545s)
+[cables against the mechanism, both clutch states]  (568s)
   ok    26 cable / plug bodies clear of the carriage, bell, band, wheels in both clutch states
   ok    nearest cable to the carriage 5.34 mm
 
-[wall ports, halo, vent]  (547s)
+[wall ports, halo, vent]  (570s)
   ok    101 vertical vent slits 1.0 x 4.5 on a 2.5 deg grid (of 144 positions; skipped at the motor, webs, tower, LRA)
   ok    vent area 454 mm2 at z 18.5-23.0 (above the code band, under the seat); rim gap 176 mm2 — passive convection only (no fan)
   ok    halo z 8.0-13.5: 5.0 mm LED strip on the wall's band at r 84.00399999999998-85.60399999999997 (bell + band reach 83.8); diffuser r 85.80399999999997-86.704/87.704
@@ -165,34 +167,34 @@
   ok    strip to the band on the bell, engaged: 0.20 mm
   ok    drive contact on the bore: z 14.9-17.8 (2.9 mm of the band's 8.8)
 
-[grounding (GROUNDING.md): one chassis bond, the ring's dedicated bond, the knob's bleed, the shell wire]  (547s)
+[grounding (GROUNDING.md): one chassis bond, the ring's dedicated bond, the knob's bleed, the shell wire]  (570s)
   ok    the bleed leaf's dome touches the crown's underside at r 71.5 (gap 0.00); the lens ends at r 70.0, the code ring starts at 72.5
   ok    chassis bond at (48, 27), r 55.1, az 29: 53 mm from the barrel inlet; the rim ring's bond screw at az 67.5, r 73.7: 46 mm from it
   ok    the ring bond screw passes the flange's Ø3.4 clearance and threads 3.0 into the core's shoulder (no other feature in the way)
   ok    USB-C shell wire: 4 segments from the receptacle's board up out of the slot, under the connect bracket's slab (z 8.1-9.4 in its 1.5 gap) to the chassis terminal - the 3.5 mm jack's shell touches nothing metal (the port face is PETG: a stated requirement, GROUNDING 6)
   ok    halo: 53 LEDs at 100/m on the strip at r 84.8 = 2.54 A at full white (12.7 W) - the peak that sizes the converter and the halo feed; no sustained cap
 
-[mass]  (547s)
-  base_plate             110.1 g
+[mass]  (570s)
+  base_plate             108.5 g
   rim_ring_STEEL         206.8 g  (in Al 71 g)
   closing_plate_AL        25.1 g
-  internal_structure      45.4 g
+  internal_structure      45.3 g
   halo_diffuser            5.2 g
   knob_body               88.1 g  (Al 187 g)
   carriage                 5.6 g
-  connect_bracket          3.7 g
+  connect_bracket          3.5 g
   speaker_cradle           1.8 g
   port_face                1.3 g
   adapter_board            8.4 g
   connect_board            2.1 g
   audio_board              2.0 g
   motion_board             1.8 g
-  blower_saddle            2.5 g
-  ok    plate: aluminium core 110 g + stainless rim ring 205 g + closing plate 25 g = 341 g (all-aluminium would be 206 g; the v10 Ø154 steel plate was 660 g; v14: core 42 + ring 198 + plate 9)
-  ok    made parts 515 g + panel 70 g, Pi ~45 g, cooler, motor, servo, speaker, boards
+  blower_saddle            2.7 g
+  ok    plate: aluminium core 109 g + stainless rim ring 205 g + closing plate 25 g = 339 g (all-aluminium would be 204 g; the v10 Ø154 steel plate was 660 g; v14: core 42 + ring 198 + plate 9)
+  ok    made parts 513 g + panel 70 g, Pi ~45 g, cooler, motor, servo, speaker, boards
 
-[the plate as the heatsink (the60-thermal-plan.md section 14; v15: 2/5/1, the blower fitted, the ring's groove and openings)]  (548s)
-  ok    the air: 2 bodies inside the ring's wall - 42.6 cm3 (y -84..82; intake passages yes, blower inlet yes, trench NO, -y exhaust passages yes); 4.7 cm3 (y 24..73; intake passages NO, blower inlet NO, trench yes, -y exhaust passages NO); 0 dead scraps. Expected two: the SUCTION network (the whole intake groove 60-300 and its 17 passages, the collector, all 19 channels, both plenums, the blower's inlet hole - the -y side's 300-342 openings and passages are pulled in reverse by the blower, so its 7 channels see forced flow too) and the DISCHARGE (the trench and the 18-60 groove with its openings)
+[the plate as the heatsink (the60-thermal-plan.md section 14; v15: 2/5/1, the blower fitted, the ring's groove and openings)]  (571s)
+  ok    the air: 2 bodies inside the ring's wall - 43.2 cm3 (y -84..82; intake passages yes, blower inlet yes, trench NO, -y exhaust passages yes); 4.7 cm3 (y 24..73; intake passages NO, blower inlet NO, trench yes, -y exhaust passages NO); 0 dead scraps. Expected two: the SUCTION network (the whole intake groove 60-300 and its 17 passages, the collector, all 19 channels, both plenums, the blower's inlet hole - the -y side's 300-342 openings and passages are pulled in reverse by the blower, so its 7 channels see forced flow too) and the DISCHARGE (the trench and the 18-60 groove with its openings)
   ok    INTAKE: 64 openings 2.0 x 4.5 obround = 521 mm2 through the edge face over az 60-300 + the 0.8 undercut 260 mm2; behind them the groove r 79.5-84.0 x 6.55 and 17 passages 9.0 x 3.5 = 536 mm2 of throat (target 500-700)
   ok    EXHAUST: 28 openings = 228 mm2 through the edge face on az [(18.0, 60.0), (300.0, 342.0)] (item 4: at least 200 - what a desk mat cannot block) + the undercut 101 mm2 downward/outward = 329 total (target about 400); throats: the +y trench 126 mm2, the -y passages 105 mm2; the exhaust groove is r 76.5-84.0 = 49 mm2 in section
   ok    positions: 120 on 3 deg, az 1.5 + 3k, mirrored about 0-180 by construction; 28 not cut (the port face 342-18, the carriage hole's arc (79.0, 101.0) and its mirror (259.0, 281.0), and the 1 deg either side of the groove walls at 60 and 300) - no blind openings: every cut one has the groove behind it
@@ -210,7 +212,7 @@
   ok    first drum mode (plain clamped disc, for the record): 2 mm web Ø144 about 970 Hz (the Pi window, fins and piers stiffen it well above that; v14's 4 mm web: 1939 Hz); the 1 mm closing plate on a 30 mm free span about 11234 Hz (on its v14 60 mm span: 2809 Hz) - the fins bear on it every 4 mm through the gasket's preload
 
 ==============================================================
-0 failures, 0 warnings, 63 expected envelope contacts  (669s)
+0 failures, 0 warnings, 65 expected envelope contacts  (700s)
   ENV  closing_plate_AL x usbc_plug_pi_ENVELOPE: 0.6 mm3 — the up-angle plug's head and its lead
   ENV  carriage x servo_pushrod_ASSUMED: 2.7 mm3 — ASSUMED pushrod / 9 mm stroke keep-out: the carriage tab is the stop
   ENV  carriage x servo_stroke_keepout_9mm_ASSUMED: 21.2 mm3 — ASSUMED pushrod / 9 mm stroke keep-out: the carriage tab is the stop
@@ -247,7 +249,9 @@
   ENV  adapter_parts_ENVELOPE x touch_standoff_1-1: 25.3 mm3 — touch controller's standoffs on the adapter (through its ASSUMED parts envelope)
   ENV  adapter_parts_ENVELOPE x touch_standoff_11: 31.4 mm3 — touch controller's standoffs on the adapter (through its ASSUMED parts envelope)
   ENV  motion_connectors_ENVELOPE x sensor_cable_5: 0.8 mm3 — the rotor sensor lead: out of the carriage's notch, up beside the tab, its loop over the servo frame, up beside the blower into the motion board's edge connector
+  ENV  motion_connectors_ENVELOPE x halo_tail_5: 5.7 mm3 — the halo's tail: from the strip's back, through the wall's notch, along the plate, into the motion board's edge connector
   ENV  jack_bushing_M6x0p5 x jack_plug_ENVELOPE: 27.1 mm3 — plug in the jack, through the slot
+  ENV  led_strip_ENVELOPE x halo_tail_1: 1.3 mm3 — the halo's tail: from the strip's back, through the wall's notch, along the plate, into the motion board's edge connector
   ENV  barrel_plug_ENVELOPE x barrel_plug_ENVELOPE_cable: 241.2 mm3 — plug in the socket, through the slot, over the pad pocket
   ENV  knob_bleed_leaf_ASSUMED x knob_bleed_screw: 0.1 mm3 — the bleed leaf bears on the crown, its foot flat on the flange, under its screw
   ENV  carriage x servo_pushrod_ASSUMED: 5.3 mm3 — ASSUMED pushrod / 9 mm stroke keep-out: the carriage tab is the stop

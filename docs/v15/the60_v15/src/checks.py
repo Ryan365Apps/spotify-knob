@@ -66,6 +66,7 @@ def allowed(a, b):
         (lambda: anyp("fan_lead") and has("base_plate", "blower_BFB0305HA-C", "pi_pcb"), "the fan lead: down the blower's corner, along the plate top, onto the Pi"),
         (lambda: anyp("locating_pin") and has("panel_glass"), "the pin's surface 0.15 from the glass disc's edge (the vendor outline is faceted there)"),
         (lambda: has("closing_gasket_ASSUMED") and has("base_plate", "closing_plate_AL"), "the closing plate's gasket in its groove"),
+        (lambda: anyp("halo_tail") and (anyp("halo_tail") or has("led_strip_ENVELOPE", "base_plate", "motion_connectors_ENVELOPE", "motion_board")), "the halo's tail: from the strip's back, through the wall's notch, along the plate, into the motion board's edge connector"),
         (lambda: has("encoder_reflective_gap_2mm_typ") and has("knob_body"), "the sensor's 2 mm reflective gap ends at the code ring's face"),
         # v14: grounding features and the two homeless items
         (lambda: has("knob_bleed_leaf_ASSUMED") and has("knob_body", "internal_structure", "knob_bleed_screw"), "the bleed leaf bears on the crown, its foot flat on the flange, under its screw"),

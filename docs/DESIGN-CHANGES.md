@@ -22,6 +22,7 @@ Not decisions — things the model had to guess to build the items above, each t
 - The Pi 5's fan connector's current rating (its position is in the vendor STEP).
 - The three foam gaskets (0.3 under the blower's inlet face and the hood, 0.2 under the closing plate) and the groove for the last.
 - The motion board's holes at ±12 (so two of them are the blower's through-bolts).
+- The audio board's USB-A plug overmould (9 × 12 × 6.8) in the lower socket of the Pi's USB 3.0 stack; the halo strip's tail as a 3 × 1.4 ribbon to the motion board (its 5 V now through that board — question 32 in the questions file).
 - The encoder shim's fitted height (the family 0.7–1.1 is printed; 0.9 is nominal).
 - The bleed leaf: 4 wide, 0.2 thick phosphor bronze, bearing at r 71.5; its drag must not be felt.
 - The LRA's pogo-pin board (7 × 8 × 1) and pins (Ø1.5, 2.2 compressed) against the flex tail's pads at z 11.75 and 14.35.

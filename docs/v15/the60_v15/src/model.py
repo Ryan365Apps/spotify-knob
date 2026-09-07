@@ -165,8 +165,9 @@ def pi_plug_bodies():
     # header housing: 2 x 5 crimp housing on pins 1-10 (5 V, GND, UART) - ASSUMED 12.7 x 5.1 x 9 on the header's base
     hx0, hx1, hy0, hy1, hh = PI_HEADER
     out["header_housing_ENVELOPE"] = pi_place() * box_at(hx0, hx0 + 12.7, hy0, hy1, PI_T + 2.5, PI_T + 2.5 + 9.0)
-    # audio board's USB: right-angle USB-A plug in the upper socket of the rear stack nearest 270 deg (ASSUMED 9 protrusion x 14 x 8)
-    out["usba_plug_ENVELOPE"] = box_at(PI_X0 + PI_L + PI_OVERHANG, PI_X0 + PI_L + PI_OVERHANG + 9.0, PI_Y0 + 4.0, PI_Y0 + 16.5, PI_Z0 + 9.0, PI_Z0 + 16.0)
+    # audio board's USB: right-angle USB-A plug in the LOWER socket of the USB 3.0 stack (the middle stack; v15 review - it was drawn in the
+    # Ethernet jack, the stack nearest the HDMI edge). ASSUMED 9 protrusion x 12 x 6.8, under the flat cable's leg (z 14.9) and the bracket's slab (z 9.5)
+    out["usba_plug_ENVELOPE"] = box_at(PI_X0 + PI_L + PI_OVERHANG, PI_X0 + PI_L + PI_OVERHANG + 9.0, PI_Y0 + 23.0, PI_Y0 + 35.0, PI_Z0 + 1.0, PI_Z0 + 7.8)
     return out
 def pi_stack_bodies():
     """the four M2.5 x 12 hex standoffs on the Pi (PUBLISHED 5 AF) and the 0.5 washers under it"""
@@ -213,7 +214,7 @@ def pi_window(m=0.0, z0=-3, z1=PLATE_T + 1):
     w = box_at(PI_X0 - c, PI_X0 + PI_L + PI_OVERHANG + c, PI_Y0 - c, PI_Y0 + PI_W + c, z0, z1)
     w += box_at(USBC_XC - 7.0 - m, USBC_XC + 7.0 + m, PI_Y0 - 14.0 - m, PI_Y0 + 1, z0, z1)             # USB-C up-angle plug's head
     w += box_at(HDMI_X - 7 - m, HDMI_X + 7 + m, PI_Y0 - 9.5 - m, PI_Y0 + 1, z0, z1)                     # HDMI plug notch
-    w += box_at(PI_X0 + PI_L + PI_OVERHANG - 1, PI_X0 + PI_L + PI_OVERHANG + 10.0 + m, PI_Y0 + 3.0 - m, PI_Y0 + 17.5 + m, z0, z1)   # USB-A plug notch
+    w += box_at(PI_X0 + PI_L + PI_OVERHANG - 1, PI_X0 + PI_L + PI_OVERHANG + 10.0 + m, PI_Y0 + 22.0 - m, PI_Y0 + 36.0 + m, z0, z1)   # USB-A plug notch (v15: at the USB 3.0 stack)
     return w
 def sector(az0, az1, r_out, z0, z1):
     """a pie wedge from az0 to az1 (deg, anticlockwise) out to r_out"""
@@ -269,6 +270,10 @@ def trench(z0=CLOSING_T, z1=PLATE_T + 1):
     rebate (r 72.2) outward it widens along the arc to TRENCH_FOOT_AZ, to TRENCH_R1. Used on the core, the ring and the hood."""
     t = blk(R_CORE_DUCT + 0.02 - TRENCH_R0, TRENCH_W, z0, z1, BLOWER_AZ, (TRENCH_R0 + R_CORE_DUCT + 0.02)/2)
     t += sector(TRENCH_FOOT_AZ[0], TRENCH_FOOT_AZ[1], TRENCH_R1, z0, z1) - cyl(R_CORE_DUCT - 0.02, z0 - 1, z1 + 1)
+    try:                                                                                 # v15 review: every vertical corner of the trench rounded R2.5 (a Ø5 cutter's natural corner; the turns cost less)
+        t = t.fillet(TRENCH_FILLET, t.edges().filter_by(Axis.Z))
+    except Exception:
+        pass
     return t
 def suction_wall():
     """the 2 mm wall between the plenum's suction side and the trench (the trench's inner end): left solid in the duct"""
@@ -291,6 +296,7 @@ def duct():
     d -= duct_islands()
     d -= suction_wall()                                                                 # v15: the trench is walled off from the suction side
     d -= trench(z0 - 1, z1 + 1)                                                         # (the trench itself is cut separately, from the top)
+    d += zbore(WEB_INLET_D + 4.0, z0, z1, BLOWER_AZ, BLOWER_R)                            # v15 review: a clear Ø26 pocket under the blower's inlet - no fins across it (they earned ~5% of the surface and throttled the inlet)
     d -= piers()
     return d
 def intake_azs():
@@ -515,6 +521,12 @@ def blower_saddle():
     for (x, y) in blower_screw_xy(): s -= Pos(x, y, Z_BLOWER1 - 1) * Cylinder(1.1, SADDLE_T + 3, align=(Align.CENTER, Align.CENTER, Align.MIN))
     hood = hood_neck(PLATE_T + BLOWER_GASKET_T, z_top) - hood_neck(PLATE_T - 1, z_top - HOOD_T, HOOD_T)   # the neck's shell (open at the bottom, over the trench, and toward the blower)
     hood -= blower_place() * Box(BLOWER_L + 0.2, BLOWER_W + 0.2, BLOWER_H, align=(Align.CENTER, Align.CENTER, Align.MIN))   # the blower's outlet face opens into it
+    # v15 review: a turning vane in the neck's top outer corner - a concave R5.9 sweep from the roof at the blower's face down to the outer wall, so the
+    # outlet's horizontal jet is turned downward into the trench instead of hitting a square corner (about 10 Pa saved at 0.5 L/s)
+    r_face = BLOWER_R + BLOWER_L/2 + 0.1; r_wall = R_CORE_DUCT + 1.0 - HOOD_T; zc = PLATE_T + 4.3
+    vane = blk(r_wall - r_face, HOOD_W - 2*HOOD_T, zc, z_top - HOOD_T + 0.01, BLOWER_AZ, (r_face + r_wall)/2)
+    vane -= polar(BLOWER_AZ, r_face, zc) * Rot(90, 0, 0) * Cylinder(z_top - HOOD_T - zc, HOOD_W, align=(Align.CENTER, Align.CENTER, Align.CENTER))
+    hood += vane
     return s + hood
 def hood_lid():
     """printed, flat: the 2.5 lid over the trench's foot, butting against the neck's outer wall, two M2 into the ring's top; on a gasket"""
@@ -528,6 +540,23 @@ def hood_gasket():
     g -= trench(PLATE_T - 1, PLATE_T + 1)
     for az in HOOD_SCREW_AZ: g -= zbore(2.2, PLATE_T - 1, PLATE_T + 1, az, HOOD_SCREW_R)
     return {"hood_gasket_ASSUMED": g}
+def halo_tail_bodies():
+    """v15: the LED strip's three-wire tail (5 V, GND, data) at its joint (HALO_TAIL_AZ): out of the strip's back, through the notch in
+    the wall's foot, along the plate top just inside the wall to az 71 (round the ring bond screw's head), inward along az 71 to the
+    motion board's +t side, up beside the board, and over its edge into the Pico-Lock on its motor-side edge"""
+    out = {}
+    z0, z1 = Z_PLATE_TOP + 0.9, Z_PLATE_TOP + 0.9 + HALO_TAIL_T
+    az2 = 71.0; r_in = 62.0; r_lane = 79.3
+    out["halo_tail_1"] = blk(R_STRIP_IN + 0.3 - (r_lane - 1.5), HALO_TAIL_W, z0, z1, HALO_TAIL_AZ, (r_lane - 1.5 + R_STRIP_IN + 0.3)/2)   # from the strip's back through the notch
+    out["halo_tail_2"] = blk(HALO_TAIL_W, 2 * r_lane * math.sin(D((az2 - HALO_TAIL_AZ)/2)) + HALO_TAIL_W, z0, z1, (HALO_TAIL_AZ + az2)/2, r_lane)   # along the wall's foot, outside the bond screw's head
+    out["halo_tail_3"] = blk(r_lane + 1.5 - r_in, HALO_TAIL_W, z0, z1, az2, (r_in + r_lane + 1.5)/2)                   # inward along az 71
+    z_top = Z_MOTION0 + 1.6 + CONN_H
+    out["halo_tail_4"] = polar(az2, r_in, z1 - 0.01) * Box(HALO_TAIL_W, HALO_TAIL_T, z_top - z1 + 0.01, align=(Align.CENTER, Align.CENTER, Align.MIN))   # up beside the board's +t side
+    x, y = polar(az2, r_in).position.X, polar(az2, r_in).position.Y
+    xp = (x - MOTION_R * math.cos(D(MOTION_AZ))) * math.cos(D(MOTION_AZ)) + (y - MOTION_R * math.sin(D(MOTION_AZ))) * math.sin(D(MOTION_AZ))
+    tp = -(x - MOTION_R * math.cos(D(MOTION_AZ))) * math.sin(D(MOTION_AZ)) + (y - MOTION_R * math.sin(D(MOTION_AZ))) * math.cos(D(MOTION_AZ))
+    out["halo_tail_5"] = polar(MOTION_AZ, MOTION_R, z_top - HALO_TAIL_T) * Pos(xp, (tp + 12.5)/2, 0) * Box(HALO_TAIL_W, tp - 12.5 + 0.7, HALO_TAIL_T, align=(Align.CENTER, Align.CENTER, Align.MIN))   # over the board's edge onto the connector
+    return out
 def fan_lead_bodies():
     """the blower's two AWG 30 leads, 145 long, drawn as their route to the Pi 5's fan connector (in the vendor STEP: pi_part_13 at the
     board's +y edge between the corner standoff and the USB-A stack): out beside the outlet at the blower's -t corner, down to the plate,
@@ -611,6 +640,7 @@ def structure():
         s += zbore(UNDER_BOSS_D, Z_SEAT_BOT - UNDER_BOSS_H, Z_SEAT_BOT + 0.01, az, PANEL_DISC_R + 0.15 + 1.0)
         s -= zbore(PIN_D, Z_SEAT_BOT - UNDER_BOSS_H - 1, Z_SEAT_TOP + 1, az, PANEL_DISC_R + 0.15 + 1.0)
     s -= blk(2.5, 32.0, Z_SEAT_BOT - 1, Z_SEAT_TOP + 1, 0.0, 67.5, t=-4.0)     # flex slot through the seat at 0 deg (panel flex at t -12, touch tail at +6)
+    s -= blk(R_STRIP_BACK + 0.5 - (R_WALL_IN - 0.5), HALO_TAIL_W + 1.0, Z_PLATE_TOP - 0.1, Z_PLATE_TOP + 3.0, HALO_TAIL_AZ, (R_WALL_IN - 0.5 + R_STRIP_BACK + 0.5)/2)   # v15: the halo tail's notch through the wall's foot and the strip band at the strip's joint
     # PRINT (v15, inverted): 0.3 chamfers on the bed face's two circular edges against elephant's foot
     s -= revolve_profile([(R_SEAT_IN - 0.01, Z_SEAT_TOP + 0.01), (R_SEAT_IN + 0.3, Z_SEAT_TOP + 0.01), (R_SEAT_IN - 0.01, Z_SEAT_TOP - 0.3)])
     s -= revolve_profile([(R_WALL_OUT + 0.01, Z_SEAT_TOP + 0.01), (R_WALL_OUT - 0.3, Z_SEAT_TOP + 0.01), (R_WALL_OUT + 0.01, Z_SEAT_TOP - 0.3)])
@@ -800,11 +830,10 @@ def connect_bracket():
         b -= Pos(x, y, z1 + CB_BOSS_H - INSERT_M2_L) * Cylinder(INSERT_M2_D/2, INSERT_M2_L + 1, align=(Align.CENTER, Align.CENTER, Align.MIN))
     for (x, y) in CB_SCREW_XY:                                                                            # ears on the plate, csk from above
         b += Pos(x, y, Z_PLATE_TOP) * Cylinder(3.5, z1 - Z_PLATE_TOP, align=(Align.CENTER, Align.CENTER, Align.MIN))
-        b += box_at(x - 3.5, x + 3.5, min(y, CB_T0), max(y, CB_T0), Z_PLATE_TOP, z1) & clip & cyl(CB_R - CB_L/2 + 2.5, 0, 20)
         b -= Pos(x, y, Z_PLATE_TOP - 1) * Cylinder(1.4, 6, align=(Align.CENTER, Align.CENTER, Align.MIN))
         b -= Pos(x, y, z1 - 1.0) * Cone(1.4, 2.7, 1.01, align=(Align.CENTER, Align.CENTER, Align.MIN))
     b -= blk(3.0, 6.0, Z_PLATE_TOP - 1, z1 + 1, 0.0, PORT_TAB_R, t=-PORT_TAB_T)                            # clear of the rail's M2 screw head at t -26
-    b -= box_at(0, 45.5, -40, -21.0, 0, 20)                                                                # the -y inner corner is cut back to x 45.5: the audio's USB-A plug (to x 45, from z 10.5) sits there
+    b -= box_at(0, 46.0, PI_Y0 + 22.0, PI_Y0 + 36.0, 0, Z_PLATE_TOP + CB_FOOT + 0.01)                       # v15: the foot strip is notched over the audio's USB-A plug (x to 45, z to 9.3); the slab above it stands clear
     return b
 def cable_bodies():
     """the 150 x 30.6 flat cable from the connect board's CN1 to the adapter's flex connector (ASSUMED route, about 95 mm of it;
@@ -1029,6 +1058,6 @@ def bought_parts(engaged=True):
     b.update(usbc_bodies()); b.update(jack_bodies()); b.update(barrel_bodies()); b.update(light_bodies())
     b.update(led_strip()); b.update(plug_envelopes())
     b.update(lra_contact_bodies()); b.update(bleed_bodies()); b.update(bond_bodies()); b.update(wire_bodies()); b.update(sensor_cable_bodies())
-    b.update(blower_bodies()); b.update(hood_gasket()); b.update(fan_lead_bodies()); b.update(locating_pins()); b.update(closing_gasket())
+    b.update(blower_bodies()); b.update(hood_gasket()); b.update(fan_lead_bodies()); b.update(halo_tail_bodies()); b.update(locating_pins()); b.update(closing_gasket())
     b["pad"] = pad()
     return b

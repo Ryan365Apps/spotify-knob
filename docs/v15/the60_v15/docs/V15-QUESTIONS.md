@@ -34,6 +34,8 @@
 | 28 | The Pi 5's fan header | **bench**: its current rating against the blower's 0.13 A (0.20 max); its position is in the Pi 5 STEP (between the corner standoff and the USB-A stack) and the housing sits on it |
 | 29 | Encoder shim | **bench**: which of 0.7 / 0.8 / 0.9 / 1.0 / 1.1 gives the 2.0 optical gap on the real parts; the radial slot's use for centring over the code ring |
 | 30 | Dowel pins | **bench**: the Ø2 H7 ream in printed PETG and the press fit of a 2 m6 dowel; the glass locating on three Ø2 pins (0.15 off its edge) |
+| 32 | The halo's 5 V through the motion board | **Ryan to rule**: the strip's tail leaves the wall at az 64 and reaches the motion board in 60 mm; the converter is 250 mm away round the motor carriage. v15 feeds the halo's 5 V through the motion board (two paired Pico-Lock contacts per rail, 3 A each, for the 2.54 A peak). The alternative is a second notch near the converter and a power-only feed at the strip's far end — two tails |
+| 33 | The audio board's USB-A plug | **built**: lower socket of the Pi's USB 3.0 stack (the middle one); the bracket's −y ear moved to (46, −20) and its foot strip is notched over the plug; the plate's notch moved with it; the closing screw at (44, −6) moved to (44, −22). The plug's overmould (9 × 12 × 6.8) is ASSUMED — measure the lead |
 | 31 | The stainless ring's machining | **supplier**: 92 obround plunges 2.0 wide through a 3.7 wall on a rotary (or laser), the four-arc underside groove, electropolish then brush; whether 0.3 chamfers survive the brushing; cost against the v14 mild-steel ring |
 
 The questions as they were put, for the record:

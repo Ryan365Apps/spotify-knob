@@ -60,7 +60,7 @@ GROUPS = [   # (group name, predicate on the body name).  First match wins; unma
     ("port_module",         lambda n: n in ("port_face", "usbc_board", "jack_board", "barrel_board", "light_board", "barrel_jack_ENVELOPE") or n.startswith("usbc_") and "plug" not in n or n.startswith("jack_") and "plug" not in n or n.startswith("veml7700")),
     ("plugs_external",      lambda n: n in ("usbc_plug_ENVELOPE", "jack_plug_ENVELOPE") or n.startswith("barrel_plug")),
     ("cables_internal",     lambda n: n.startswith("hdmi_") or n.startswith("usbc_plug_pi") or n.startswith("cable_") or n.startswith("sensor_cable") or n in ("header_housing_ENVELOPE", "usba_plug_ENVELOPE")),
-    ("halo",                lambda n: n in ("led_strip_ENVELOPE", "halo_diffuser")),
+    ("halo",                lambda n: n in ("led_strip_ENVELOPE", "halo_diffuser", "halo_tail")),
     ("grounding",           lambda n: n.startswith("chassis_bond") or n.startswith("ring_bond") or n.startswith("usbc_shell_wire") or n.startswith("motor_bond") or n.startswith("knob_bleed")),
     ("lra_contact",         lambda n: n.startswith("lra_pogo")),
     ("blower_unit",         lambda n: n.startswith("blower_") or n.startswith("hood_") or n.startswith("fan_lead")),
@@ -75,7 +75,7 @@ FUSE = [("pi5_board", lambda n: n.startswith("pi_")), ("mt6701", lambda n: n.sta
         ("lra", lambda n: n.startswith("lra_")), ("servo", lambda n: n.startswith("servo_body")), ("panel_flex", lambda n: n.startswith("panel_flex")),
         ("touch_tail_ASSUMED", lambda n: n.startswith("touch_tail")), ("hdmi_ribbon", lambda n: n.startswith("hdmi_ribbon")),
         ("flat_cable_150", lambda n: n.startswith("cable_")), ("usbc_plug_pi_ENVELOPE", lambda n: n.startswith("usbc_plug_pi")),
-        ("usbc_shell_wire", lambda n: n.startswith("usbc_shell_wire")), ("motor_bond_wire", lambda n: n.startswith("motor_bond_wire")), ("sensor_cable", lambda n: n.startswith("sensor_cable")), ("fan_lead", lambda n: n.startswith("fan_lead_") and "housing" not in n)]
+        ("usbc_shell_wire", lambda n: n.startswith("usbc_shell_wire")), ("motor_bond_wire", lambda n: n.startswith("motor_bond_wire")), ("sensor_cable", lambda n: n.startswith("sensor_cable")), ("fan_lead", lambda n: n.startswith("fan_lead_") and "housing" not in n), ("halo_tail", lambda n: n.startswith("halo_tail"))]
 def fuse_all(shapes):
     out = shapes[0]
     for s in shapes[1:]:
