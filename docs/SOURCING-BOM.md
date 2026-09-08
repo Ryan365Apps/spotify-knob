@@ -24,6 +24,7 @@
 | `CM5104032` | Raspberry Pi Compute Module 5, 4 GB memory, 32 GB storage, wireless | 1 | 70 | Okdo / Farnell / RS for quantity; Pi Hut retail | £112 | ⏳ **supply risk — ask distribution for a real lead time before committing to a build date** |
 | `10164227-1004A1RLF` | Compute module board-to-board connector, 4.0 mm stack (or `-1001A1RLF` for 1.5 mm) | 2 | 145 | Amphenol | ~$2 ea | ✅ not the Hirose part used on the CM4 |
 | CR1220 + holder | Real-time clock backup cell | 1 | 70 | any | <£1 | ✅ |
+| USB-C data/power splitter | Separates power-delivery negotiation from the data pair, so the computer can be mains-powered **and** be a USB device at the same time. **The Pi 5's USB-C socket is both its power inlet and its only device port** | 1 | 5 | 8086 Consultancy, via The Pi Hut | £3.00 inc VAT | ✅ bench part; on the production carrier this becomes a wiring rule, not a component |
 
 ## 3 · Made boards
 
@@ -31,7 +32,7 @@
 |---|---|---|---|---|---|---|
 | Carrier | 6-layer. Compute module, hub, USB-C, display connector, light sensor, power distribution, panel rails and backlight driver | 1 | 65 | PCBWay turnkey | ~£35–75 across all three boards | ❓ design not started |
 | Audio | 6-layer | 1 | 65 | PCBWay turnkey | — | ❓ design not started |
-| Motion | 4-layer, thermal vias under the driver | 1 | 65 | PCBWay turnkey | — | ❓ design not started |
+| Motion | 4-layer, thermal vias under the driver | 1 | 65 | PCBWay turnkey | — | ❓ design not started — **and challenged, see §6** |
 | Small boards | Jack carrier, USB-C carrier, light sensor, commutation, encoder breakout, actuator contact bracket | 6 | 6 × 65 | panelise together | — | ❓ no briefs written |
 
 ## 4 · Carrier board parts
@@ -65,18 +66,20 @@
 
 ## 6 · Motion board parts
 
+> **⚠ 7 September 2026 — this board is challenged, not cancelled.** `the60-function-allocation.md` finds that **one prototype needs no custom board at all**: a bought microcontroller board and a bought driver breakout cover the motor, both angle sensors, the vibration actuator and the keyboard-and-mouse job, while the ninety LEDs and the clutch servo move onto the computer, where both are handled by hardware peripherals. If that holds on the bench, what remains of this board is a microcontroller, the driver, two level shifters and connectors — the halo level shifter, the servo drive and this board's own USB device role all leave, and with them the strongest argument for the RP2350. **Do not commission this board until the bench tests in §14 have run.** The parts below stand as the production specification in the meantime.
+
 | Part | Description | Per unit | Buy | Supplier | Price | Status |
 |---|---|---|---|---|---|---|
-| `RP2350B` | Microcontroller, 80-pin, 48 pins out | 1 | 70 | Raspberry Pi | $0.90 | ✅ |
+| `RP2350B` | Microcontroller, 80-pin, 48 pins out | 1 | 70 | Raspberry Pi | $0.90 | ⏳ **reopened** — the halo was reason one for this chip and the halo may move to the computer |
 | Flash + 12 MHz crystal | External boot flash and crystal | 1 | 70 | any | ~£1 | ✅ |
 | `TMC6300-LA-T` | Three-phase motor driver, QFN 3 × 3 mm | 1 | 70 | Analog Devices | ~$4 | ✅ 1.0 A continuous per bridge — set the stall limit in firmware |
-| `MT6701CT-STD` | Motor rotor angle sensor, serial mode | 1 | 70 | MagnTek | ~$2 | ✅ |
+| `MT6701CT-STD` | Motor rotor angle sensor, serial mode | 1 | 70 | MagnTek | ~$2 | ✅ **no reputable breakout of this part exists — not stocked by Mouser, DigiKey, Farnell or RS in any form. Bench modules are unbranded only** |
 | Ø6 × 2.5 magnet | Diametrically magnetised, for the above | 1 | 70 | — | <£1 | ⏳ the motor maker may fit it |
-| `AEDR-8300-1W2` | Knob encoder, reflective, 212 lines per inch, 3.0–5.5 V | 1 | 70 | Broadcom, via Mouser | ~$8 @100 | ⏳ **check stock at 70. The `-1K2` is 75 lines per inch, 5 V only, and Farnell list it as no longer stocked** |
-| Code ring | Chrome on polyester, reflective ≥60 %, dark <10 %, bonded into the crown's underside recess | 1 | 70 | MELTEC, PWB Encoders, Laser Lab or Optry Tech | quote | ❓ **thickness and substrate unsourced; 0.15 mm assumed** |
-| `DRV2605L` | Haptic driver, I²C address 0x5A | 1 | 70 | TI | $1.22 @100 | ✅ |
+| `AEDR-8300-1W2` | Knob encoder, reflective, 212 lines per inch, 3.0–5.5 V | 1 | 70 | Broadcom, via Farnell UK | £8.10 @1 ex VAT | ✅ **confirmed: 2,016 in stock at Farnell UK, but a 14-week manufacturer lead time once they go. The `-1K2` is confirmed no longer stocked.** Being 3.3 V native, this part also deletes the encoder level shifter |
+| Code ring | Chrome on polyester, reflective ≥60 %, dark <10 %, bonded into the crown's underside recess | 1 | 70 | MELTEC, PWB Encoders, Laser Lab or Optry Tech | quote | ❓ **the longest pole in the electronics.** No off-the-shelf reflective code ring exists for this sensor from any supplier, and no bought alternative measures a 150 mm circle — the largest standard magnetic ring on the market is 100 mm and its vendor does not ship to the UK. Thickness and substrate unsourced; 0.15 mm assumed |
+| `DRV2605L` | Haptic driver, I²C address 0x5A | 1 | 70 | TI | $1.22 @100 | ✅ stays on the microcontroller — its trigger is computed there, and the computer's worst-case scheduling delay is tens of milliseconds |
 | `VLV101040A` | Linear resonant actuator, 10 × 10 × 4 mm, 170 Hz | 1 | 70 | Vybronics | ~$5 | ✅ **must not be soldered — spring contacts only** |
-| `SN74AHCT1G125DBVR` | 5 V level shifter for the halo data line | 1 | 70 | TI | <£1 | ✅ must be HCT or AHCT, not HC/AHC |
+| `SN74AHCT1G125DBVR` | 5 V level shifter for the halo data line | 1 | 70 | TI | <£1 | ⏳ **still required, but probably not on this board** — it follows the halo to whichever processor drives it. Must be HCT or AHCT, not HC/AHC |
 | `USBLC6-2SC6` | USB port protection | 1 | 70 | ST | <£1 | ✅ |
 | `MAX98357A` | Class-D amplifier for the notification speaker | 1 | 70 | Analog Devices | £1.30 @100 | ⏳ **which board carries it is unresolved — not the audio board** |
 | `INA240A1` + 50 mΩ 2512 | In-line current sense, **footprints only, do not fit** | 0 | 10 | TI / Susumu | — | ✅ 0 Ω links fitted instead |
@@ -85,9 +88,9 @@
 
 | Part | Description | Per unit | Buy | Supplier | Price | Status |
 |---|---|---|---|---|---|---|
-| Gimbal motor, 2804 frame | Drives the knob's bore through a silicone band and renders the detents | 1 | 70 | JD-Power MY-3514C, or a generic 2804/2805 | £8–56 | ⏳ **almost nothing published — buy three now and measure them.** The MY-3514C is £56 and its hollow shaft is inherited from the old centre-mounted layout; the motor is now off-axis with nothing passing through it, so test whether a generic gimbal motor qualifies |
+| Gimbal motor, 2804 frame | Drives the knob's bore through a silicone band and renders the detents | 1 | 70 | JD-Power MY-3514C, or a generic 2804/2805 | £8–56 | ⏳ **almost nothing published — buy three now and measure them.** The MY-3514C is £56 and its hollow shaft is inherited from the old centre-mounted layout; the motor is now off-axis with nothing passing through it, so test whether a generic gimbal motor qualifies. **Nothing on the bench works without one — this is the item that stops the build.** SmartKnob's own maintainer warns most cheap gimbal motors have moderate to severe cogging, which fights virtual detents directly; his debugged alternative is SparkFun ROB-20441 at $45.95 |
 | Silicone friction band | ~0.6 × 8 mm, Shore 40–70, stretched onto the bell | 1 | 100 | — | <£1 | ❓ hardness chosen on the bench |
-| 1.5 g linear servo | Clutch actuator. **2.4 mm of travel is all the mechanism needs**; the 2.4 N figure is the AGFRC's published output, not a measured requirement | 1 | 70 | see note | £8–47 | ⏳ **AGFRC C1.5CLS PRO is £47 and is the premium badge on a commodity class.** Spektrum SPMAS2000 £11.95, Hobbypower/Flash Hobby GS-1502 cheaper. Buy all three and measure the force the clutch actually needs |
+| 1.5 g linear servo | Clutch actuator. **2.4 mm of travel is all the mechanism needs**; the 2.4 N figure is the AGFRC's published output, not a measured requirement | 1 | 70 | see note | £8–47 | ⏳ **AGFRC C1.5CLS PRO is £47 and is the premium badge on a commodity class.** Spektrum SPMAS2000 £11.95, Hobbypower/Flash Hobby GS-1502 cheaper. Buy all three and measure the force the clutch actually needs. AGFRC publish no current draw, pulse range, frame rate or dead band, so a UK-stocked equivalent is worth having on the bench first |
 | `623ZZ` | Wheel bearing, 3 × 10 × 4 | 3 | 200 | Simply Bearings | £1.92 @99 | ✅ |
 | V-collar | Turned, pressed onto the bearing | 3 | 200 | knob machinist | quote | ⏳ POM in production |
 | Eccentric bush | Turned brass, sets wheel preload | 3 | 200 | knob machinist | quote | ⏳ |
@@ -106,7 +109,7 @@
 | Knob | One-piece CNC 6082-T6 cup, milled diamond pattern, V-groove in the bore, code-ring recess in the crown | 1 | 65 | JLCCNC, Xometry UK, Hubs UK, Penta Precision | quote | ⏳ groove-to-bore concentricity 0.05 total — say so on the request |
 | Knob finish | Bead blast, Type II matte black anodise | 1 | 65 | Parallel Precision | £4 @50, £2.80 @100 | ✅ |
 | Knob bright chamfer | Diamond-cut after anodise, second setup, then protection | 1 | 65 | machining shop | quote | ⏳ sample lacquer and clear anodise on two parts first |
-| Base plate, aluminium core | 6082, ducted: 2 mm web with local thickening at every tapped hole, 3 × 5 mm fin channels, top-face ribs, Ø7 piers under the top screws | 1 | 65 | CNC shop | quote | ⏳ 341 g as built |
+| Base plate, aluminium core | 6082, ducted: 2 mm web with local thickening at every tapped hole, 3 × 5 mm fin channels, top-face ribs, Ø7 piers under the top screws | 1 | 65 | CNC shop | quote | ⏳ 341 g as built. **Re-cutting is now expected** — the bought boards are roughly three times the 30 × 30 mm area budgeted for the motion board |
 | Base plate finish | **Black hard anodise external faces only. Internal faces chromate conversion or bare** | 1 | 65 | anodiser | quote | ✅ no masking required |
 | Closing plate | 1 mm, closes the duct, outer face black anodised, 9 screws | 1 | 65 | CNC or laser | quote | ✅ |
 | Duct gasket | 0.2 mm, between the closing plate and the plate core | 1 | 70 | die-cut | ~£1 | ⏳ material to choose |
@@ -167,17 +170,60 @@ As built in v16 (`docs/v16/the60_v16/docs/V16-SPECIFICATION.md` 4.18 is the full
 |---|---|---|---|---|---|---|
 | Rigid box, insert, certificate | Black, magnetic closure, foil or blind deboss, foam or pulp insert | 1 | 120 | Packhelp (MOQ 120) or Tiny Box Company | £6–16 all in | ⏳ **re-quote at the current diameter.** Foil or deboss block £50–150 one-off |
 
-## 14 · Prototype and bench only — do not order in quantity
+---
 
-| Part | Description | Qty | Supplier | Price |
+## 14 · Prototype and bench — the current buy list
+
+**Read 7 September 2026.** This section is rewritten in place; it is not a history. It buys the electronics needed to prove the whole of the object's behaviour on a bench **without commissioning a single circuit board** — the case for which is in `the60-function-allocation.md`. Prices as shown by each supplier: The Pi Hut, Pimoroni, eBay and Amazon include VAT; Farnell excludes it.
+
+### Order today
+
+| Supplier | Part | Why | Qty | Price |
 |---|---|---|---|---|
-| Raspberry Pi 5 | Development machine, same processor and software as the compute module | 1 | The Pi Hut | £62.40 for 2 GB |
-| `DM-ADTTR-014` | HDMI-to-display adapter kit — driver board, 150 mm flat cable, display connect board | 1 | DisplayModule | $99 |
-| Waveshare 5 in HDMI round touch display | Bench display, 150 × 150 × 7 mm — cannot be enclosed | 1 | Waveshare | £124.80 inc VAT |
-| Compute module + official IO board + powered hub | For the gadget-mode and flashing bench test | 1 set | Pi Hut | ~£200 |
-| `TMC6300-BOB` | Motor driver breakout, to start the motor work without a board | 1 | Newark 70AH6601 | ~£30 |
-| SmartKnob development kit | Hand-feel benchmark | 1 | SeedLabs | ~£100 |
-| `XA-XTAG4` | XMOS 1.8 V debug adapter — older 3.3 V adapters will not work | 1 | XMOS | ~$28 |
+| The Pi Hut | **ESP32-S3-DevKitC-1** | The real-time core: motor, both angle sensors, the vibration actuator, and the keyboard-and-mouse job. Hardware quadrature counter, native USB, and the microcontroller family SmartKnob's own firmware is written for. **70 × 28 mm** | 1 | £28.90 |
+| The Pi Hut | **DRV2605L breakout** (Pimoroni-badged) | Drives the vibration actuator on headers. Adafruit's own board is sold out here | 1 | £14.10 |
+| The Pi Hut | **AS5600 magnetic angle sensor** | Stand-in second angle sensor, so the two-angle control problem can be proved before the code ring exists | 1 | £5.40 |
+| The Pi Hut | **USB-C data/power splitter** | Lets the computer be mains-powered and a USB device at once. Needed whatever is decided about the keyboard-and-mouse job, because the companion application's data link uses the same port | 1 | £3.00 |
+| The Pi Hut | **74AHCT125 quad level shifter** | Mandatory for the halo at 5 V. Correct logic family | 1 | £1.30 |
+| Farnell UK | **`TMC6300-BOB`** | The exact driver from §6, on headers. **Only four in stock — buy two today** | 2 | £19.96 ea ex VAT |
+| Farnell UK | **`AEDR-8300-1W2`** | 212 lines per inch, 3.3 V native. **14-week lead time once the current 2,016 are gone** | 3 | £8.10 ea ex VAT |
+| Pimoroni | **Raspberry Pi Pico 2** | The fallback core, and probably the production one. **51 × 21 × 1 mm** — the only option that plausibly fits the current plate | 1 | £3.60 |
+| eBay / Amazon UK | **MT6701 module** | No reputable breakout exists. Buy two, expect one to be poor | 2 | ~£6 ea |
+| eBay UK | **1.5 g linear servo, UK stock** | Proves pulse range and current draw, which AGFRC do not publish, while the real part is in transit from China | 1 | £20.99 |
+
+**≈ £166 including VAT.** Everything except the MT6701 modules is UK next-day.
+
+### Check the drawer before ordering
+
+| | Note |
+|---|---|
+| **Gimbal motor** | Nothing on the bench works without one — see §7. If three are not already on order, this is the item that stops the build |
+| **Addressable LED strip** | §8. The 144-per-metre side-emitting strip is what tests the ninety-LED path on the computer, which is the first evening's work |
+| **Linear resonant actuator** | To plug into the DRV2605L. Precision Microdrives are UK-based and catalogue several; their site would not return a price, so ring them |
+| **Bench basics** | Jumper leads, breadboard, and a 5 V supply good for a few amps |
+
+### Already held, from earlier orders
+
+Raspberry Pi 5 · Waveshare 5 in HDMI round touch display · `DM-TFTR50-413` bare panel and `DM-ADTTR-014` adapter · compute module and IO board.
+
+### Optional
+
+| Part | Why | Price |
+|---|---|---|
+| Makerfabs MaTouch SmartKnob, assembled | A hand-feel benchmark that arrives working, in stock | $69.00 |
+| ~~SeedLabs SmartKnob DevKit~~ | **Corrected: £329, not ~£100.** It is a different board from the original — 72 LEDs, ESP32-S3, added load cell and proximity sensor — its store publishes no shipping policy or delivery estimate, and **its licence is not Apache 2.0: commercial use requires a partnership agreement with royalties.** The Makerfabs unit does the same job for a tenth of the price | £329 |
+
+### The five bench tests, in order
+
+1. **Ninety LEDs off the computer, under load.** The SPI route first (no kernel module, no programmable-I/O block), the official programmable-I/O example second. Run a heavy interface scene at the same time and watch for flicker. **This is the one genuine unknown — nobody has published ninety LEDs on a Pi 5 under load.** If it fails, the halo returns to the microcontroller and the RP2350 argument in §6 comes back.
+2. **Computer as a USB keyboard, mains-powered, through the splitter.** Hand-written composite-device configuration; every published example targets a Pi Zero.
+3. **Motor spinning under SimpleFOC** with the driver breakout and the MT6701, then detents. **The day that matters — everything else is subordinate to whether the feel is right.**
+4. **The two-angle problem**, with the AS5600 on a friction-coupled second shaft. The genuinely novel work; no prior art helps.
+5. Servo pulse range and current from the computer's hardware PWM; vibration actuator from the microcontroller.
+
+### Send today, costs nothing
+
+**The code-ring enquiry** to MELTEC, PWB Encoders, Laser Lab and Optry Tech. It is the only item in the electronics with a multi-week clock and it has not started.
 
 ---
 
@@ -193,7 +239,7 @@ The Waveshare ESP32-P4 board · detent magnets and the sixty steel balls · the 
 
 Middle of the range with a Chinese knob: **roughly £500–580 per unit.** Not a quote.
 
-**Excluded:** board layout contract (£4,000–8,000 one-off), assembly labour, and compliance testing (£6,000–12,000 plus a retest — see `docs/SYSTEM-REVIEW.md` 4.2).
+**Excluded:** board layout contract (£4,000–8,000 one-off), assembly labour, and compliance testing (£6,000–12,000 plus a retest — see `docs/SYSTEM-REVIEW.md` 4.2). **The board layout figure is now the one to challenge** — with the halo, the servo and the USB device role moved off, the motion board shrinks to a microcontroller, a driver, two level shifters and connectors, which is a materially cheaper thing to have designed.
 
 ## Cannot be ordered until specified
 

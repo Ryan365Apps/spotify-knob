@@ -1,6 +1,8 @@
 /* albumart.c - see albumart.h. Wave 5 of BUILD.md section 8. */
 
 #include "albumart.h"
+#include "app_shell.h"   /* shell_wifi_rssi, for the Wave 10 measurement */
+#include "hid.h"         /* hid_connected, likewise */
 
 #include <string.h>
 
@@ -454,10 +456,22 @@ static void art_task(void *arg)
         snprintf(s_shown_url, sizeof(s_shown_url), "%s", url);
         xSemaphoreGive(s_mutex);
 
-        ESP_LOGI(TAG, "cover: %d bytes in %lld ms, decoded in %lld ms, tint %02X%02X%02X",
+        /* The BLE flag is Wave 10's measurement, taken for free.
+         *
+         * Wi-Fi and BLE share one radio on the S3 and coexist by time-slicing,
+         * so a connected keyboard should make this number worse - and BUILD.md
+         * wants that quantified before deciding whether BLE stays up
+         * permanently or only while the Wispr app is in front. Putting the
+         * state on the line that already carries the timing means the answer
+         * falls out of an ordinary evening's log rather than needing a test
+         * anybody has to remember to run. */
+        ESP_LOGI(TAG, "cover: %d bytes in %lld ms, decoded in %lld ms, "
+                      "tint %02X%02X%02X, ble %s, rssi %d",
                  len, (t_fetched - t0) / 1000,
                  (esp_timer_get_time() - t_fetched) / 1000,
-                 tint.red, tint.green, tint.blue);
+                 tint.red, tint.green, tint.blue,
+                 hid_connected() ? "CONNECTED" : "off",
+                 shell_wifi_rssi());
     }
 
     http_release();

@@ -62,3 +62,76 @@ CONFIG_ESP_TASK_WDT_PANIC=y
 CONFIG_ESP_TASK_WDT_TIMEOUT_S=10
 CONFIG_ESP_SYSTEM_PANIC_PRINT_REBOOT=y
 CONFIG_ESP_SYSTEM_PANIC_REBOOT_DELAY_SECONDS=1
+
+# Wave 10: BLE HID keyboard.
+#
+# NimBLE rather than Bluedroid - roughly half the footprint for a device that
+# needs one GATT service. Classic Bluetooth is not an option on this chip at
+# all: the S3 is BLE-only, and the BR/EDR radio on the board belongs to the
+# second MCU (BUILD.md section 3).
+#
+# **USB HID is never enabled.** The S3's USB HID and its USB-Serial-JTAG
+# flashing port are the same peripheral on the same pins, and this board has
+# no BOOT and no RESET button to recover with. Claiming USB may leave no way
+# back into download mode, which is a brick rather than an inconvenience.
+CONFIG_BT_ENABLED=y
+CONFIG_BT_NIMBLE_ENABLED=y
+CONFIG_BT_NIMBLE_ROLE_PERIPHERAL=y
+CONFIG_BT_NIMBLE_ROLE_BROADCASTER=y
+# No central or observer role: this device is a keyboard, it never scans.
+CONFIG_BT_NIMBLE_ROLE_CENTRAL=n
+CONFIG_BT_NIMBLE_ROLE_OBSERVER=n
+CONFIG_BT_NIMBLE_MAX_CONNECTIONS=1
+# Bonds persist to NVS, so the PC is remembered across a power cycle and a
+# reflash. Forgetting one is a deliberate act in Settings.
+CONFIG_BT_NIMBLE_NVS_PERSIST=y
+CONFIG_BT_NIMBLE_SM_LEGACY=y
+CONFIG_BT_NIMBLE_SM_SC=y
+CONFIG_BT_NIMBLE_HID_SERVICE=y
+CONFIG_BT_NIMBLE_BAS_SERVICE=y
+CONFIG_BT_NIMBLE_DIS_SERVICE=y
+CONFIG_BT_NIMBLE_GAP_SERVICE=y
+CONFIG_BT_NIMBLE_SVC_GAP_APPEARANCE=0x03C1
+CONFIG_BT_NIMBLE_SVC_GAP_DEVICE_NAME="Radial"
+
+# Internal RAM is the scarce thing on this board, and BLE is what proved it.
+#
+# Measured 2026-09-04: with the BLE controller started at boot, free internal
+# fell from ~43 KB to 2635 bytes with a 1536-byte largest block. The device
+# could not complete a TLS handshake, so Spotify never got past the splash and
+# esp_hidd_dev_init failed trying to allocate its own event-loop task.
+#
+# Two levers, both moving things that do not have to be internal:
+#
+# CONFIG_SPIRAM_TRY_ALLOCATE_WIFI_LWIP was tried on 2026-09-04 and REVERTED
+# the same day. It does not simply move existing buffers to PSRAM: enabling it
+# switches the Wi-Fi driver to a different buffer scheme entirely - static TX
+# buffers instead of dynamic, static RX 16 instead of 10, an RX block-ack
+# window of 16 instead of 6, and a 32-entry PSRAM cache TX pool - and free
+# PSRAM went from 7 366 564 to 700 744. mbedTLS could then not allocate an SSL
+# context at all (mbedtls_ssl_setup -0x7F00, which is ALLOC_FAILED), so the
+# device could not reach Spotify. One variable, one measurement, reverted.
+#
+# The NimBLE host's own allocations still go to PSRAM. That is safe because
+# nothing allocates until hid_start() runs, and the BLE *controller* stays
+# internal regardless - it feeds the radio and cannot move.
+CONFIG_BT_NIMBLE_MEM_ALLOC_MODE_EXTERNAL=y
+
+# Controller feature set: IDF defaults, deliberately.
+#
+# These were trimmed on 2026-09-04 - MAX_ACT to 1, then 3, and scan, the master
+# role, DTM and BLE test all off - and then advertising would not start:
+# hci_err 0x212, INV_HCI_CMD_PARMS, rc=530 from ble_gap_adv_start. Three
+# separate guesses at which trim caused it were all wrong.
+#
+# The mistake was upstream of any of them. Advertising had never once worked on
+# this board, because a separate bug in hid_ble.c meant the first BLE build
+# never reached an advertise call at all. So the trim was tuned against a
+# baseline that did not exist, and every "fix" was debugging two faults at
+# once. Defaults restored: get it advertising first, then take memory back one
+# option at a time with something working to compare against.
+#
+# The one kept is pure code placement and cannot change what the controller
+# accepts: it moves the controller out of IRAM, which is where nearly all of
+# BLE's internal RAM cost was.
+CONFIG_BT_CTRL_RUN_IN_FLASH_ONLY=y

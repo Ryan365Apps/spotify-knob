@@ -1997,6 +1997,17 @@ static void spotify_on_resume(void)
     }
 }
 
+/* The boot sequence asks this before it lifts. Valid state means a poll has
+ * landed - a track, or an honest 204 - so there is something on the screen
+ * behind it rather than the connecting field. */
+static bool spotify_is_ready(void)
+{
+    xSemaphoreTake(s_state_mutex, portMAX_DELAY);
+    const bool ready = s_state.valid;
+    xSemaphoreGive(s_state_mutex);
+    return ready;
+}
+
 const knob_app_t spotify_app = {
     .name = "Spotify",
     /* Was NULL, which the selector passed straight to lv_label_set_text and
@@ -2009,6 +2020,7 @@ const knob_app_t spotify_app = {
     .on_dial = spotify_on_dial,
     .on_pause = spotify_on_pause,
     .on_resume = spotify_on_resume,
+    .is_ready = spotify_is_ready,
     .on_tick = spotify_on_tick,
 };
 

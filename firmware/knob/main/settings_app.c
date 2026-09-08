@@ -18,6 +18,7 @@
 #include "esp_log.h"
 
 #include "app_shell.h"
+#include "hid.h"
 #include "settings_app.h"
 
 static const char *TAG = "settings";
@@ -73,6 +74,7 @@ static lv_timer_t *s_chase_timer = NULL;
 
 static int   s_sel = 0;
 static bool  s_in_detail = false;
+static bool  s_forget_armed = false;   /* Dictation: one detent arms, the next forgets */
 static float s_angle_now = 0.0f;
 static float s_angle_target = 0.0f;
 
@@ -103,7 +105,14 @@ static void value_text(int item, char *buf, size_t len)
             }
             break;
         }
-        case ITEM_DICTATION: snprintf(buf, len, "--"); break;   /* BLE is Wave 10 */
+        case ITEM_DICTATION:
+            switch (hid_state()) {
+                case HID_STATE_CONNECTED:   snprintf(buf, len, "READY"); break;
+                case HID_STATE_PAIRING:     snprintf(buf, len, "PAIRING"); break;
+                case HID_STATE_ADVERTISING: snprintf(buf, len, "WAITING"); break;
+                default:                    snprintf(buf, len, "OFF"); break;
+            }
+            break;
         default:             buf[0] = '\0'; break;
     }
 }
@@ -230,8 +239,35 @@ static void detail_refresh(void)
         }
         case ITEM_DICTATION:
             lv_obj_add_flag(s_detail_arc, LV_OBJ_FLAG_HIDDEN);
-            lv_label_set_text(s_detail_value, "not paired");
-            lv_label_set_text(s_detail_sub, "BLE keyboard arrives in Wave 10");
+            if (s_forget_armed) {
+                /* Forgetting the PC is the only destructive action in
+                 * Settings, so it is the only one that asks twice. No new
+                 * screen for it: one detent arms, the next one does it. */
+                lv_label_set_text(s_detail_value, "forget?");
+                lv_label_set_text(s_detail_sub, "turn again to forget this PC");
+            } else {
+                switch (hid_state()) {
+                    case HID_STATE_CONNECTED:
+                        lv_label_set_text(s_detail_value, "paired");
+                        lv_label_set_text(s_detail_sub, "turn to forget this PC");
+                        break;
+                    case HID_STATE_PAIRING:
+                        /* The passkey is generated per pairing and shown here.
+                         * Type it on the PC. */
+                        lv_label_set_text_fmt(s_detail_value, "%06lu",
+                                              (unsigned long) hid_passkey());
+                        lv_label_set_text(s_detail_sub, "type this on the PC");
+                        break;
+                    case HID_STATE_ADVERTISING:
+                        lv_label_set_text(s_detail_value, "Radial");
+                        lv_label_set_text(s_detail_sub, "add it as a Bluetooth keyboard");
+                        break;
+                    default:
+                        lv_label_set_text(s_detail_value, "off");
+                        lv_label_set_text(s_detail_sub, "BLE did not start");
+                        break;
+                }
+            }
             break;
         default:
             lv_obj_add_flag(s_detail_arc, LV_OBJ_FLAG_HIDDEN);
@@ -314,6 +350,26 @@ static void settings_on_dial(int delta)
             shell_dial_step_set(STEP_OPTS[i]);
             break;
         }
+        case ITEM_DICTATION:
+            /* The one destructive action in Settings, so the one that asks
+             * twice. A paired BLE HID keyboard can type anything into the PC
+             * it is bonded to; forgetting it by brushing the dial would be a
+             * poor trade for saving one detent. */
+            if (hid_state() == HID_STATE_OFF) {
+                shell_haptic_firm();
+                return;
+            }
+            if (!s_forget_armed) {
+                s_forget_armed = true;
+                shell_haptic_firm();
+            } else {
+                s_forget_armed = false;
+                hid_forget_host();
+                shell_haptic_firm();
+                ESP_LOGW(TAG, "host forgotten - the PC will have to pair again");
+            }
+            break;
+
         default:
             shell_haptic_firm();     /* status items have nothing to turn */
             return;
@@ -325,13 +381,20 @@ static void tap_cb(lv_event_t *e)
 {
     (void) e;
     if (s_in_detail) {
+        if (s_sel == ITEM_DICTATION) {
+            hid_stop();              /* it was only up to report on itself */
+        }
         s_in_detail = false;
+        s_forget_armed = false;      /* an arm never survives leaving the screen */
         shell_settings_save();       /* committed on leaving, not per detent */
         lv_obj_add_flag(s_detail, LV_OBJ_FLAG_HIDDEN);
         lv_obj_remove_flag(s_ring, LV_OBJ_FLAG_HIDDEN);
         hero_update();
     } else {
         s_in_detail = true;
+        if (s_sel == ITEM_DICTATION) {
+            hid_start();     /* the pairing screen needs a radio to report on */
+        }
         detail_refresh();
         lv_obj_add_flag(s_ring, LV_OBJ_FLAG_HIDDEN);
         lv_obj_remove_flag(s_detail, LV_OBJ_FLAG_HIDDEN);
@@ -437,6 +500,11 @@ static void settings_on_enter(lv_obj_t *parent)
      * long-press still reaches the screen because nothing here is clickable. */
     lv_obj_add_event_cb(parent, tap_cb, LV_EVENT_CLICKED, NULL);
 
+    /* Settings had no visible exit at all until 2026-09-05 - only the
+     * long-press. It goes on the ring group so the detail screen covers it,
+     * and a tap on the detail screen is what leaves that. */
+    shell_back_button(s_ring);
+
     hero_update();
     ring_layout();      /* not chase_cb: it returns early on a settled ring */
     s_chase_timer = lv_timer_create(chase_cb, CHASE_MS, NULL);
@@ -448,6 +516,7 @@ static void settings_on_exit(void)
     lv_timer_delete(s_chase_timer);
     s_chase_timer = NULL;
     shell_settings_save();
+    hid_stop();          /* nothing outside this app asked for the radio */
     s_ring = s_detail = s_hero_glyph = s_hero_name = s_hero_value = NULL;
     s_detail_title = s_detail_value = s_detail_sub = s_detail_arc = NULL;
     ESP_LOGI(TAG, "exited");
@@ -455,8 +524,11 @@ static void settings_on_exit(void)
 
 static void settings_on_tick(void)
 {
-    if (s_in_detail && s_sel == ITEM_ABOUT) {
-        detail_refresh();     /* uptime ticks while you look at it */
+    if (s_in_detail && (s_sel == ITEM_ABOUT || s_sel == ITEM_DICTATION)) {
+        /* About: uptime ticks while you look at it. Dictation: the passkey and
+         * the link state both arrive from the BLE host task, so this screen
+         * has to notice them rather than be told. */
+        detail_refresh();
     }
 }
 

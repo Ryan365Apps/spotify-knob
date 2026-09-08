@@ -1,0 +1,42 @@
+Encoding the teaser — always with ffmpeg, never through Blender's video sequencer
+(the sequencer applies AgX a second time on frames that already have it and crushes
+everything to near black).
+
+Run these from design/artwork/renders/frames_teaser_v10.
+
+1. Straight cut, no fades (360 frames, 15.00 s):
+
+ffmpeg -y -framerate 24 -start_number 1 -i frame_%04d.png \
+  -c:v libx264 -preset slow -crf 16 -pix_fmt yuv420p -movflags +faststart \
+  ../../examples/the60_v10_teaser_dark_vertical.mp4
+
+2. Graded cut with fades (408 frames, 17.00 s) — 1 s fade in at the top,
+   fade to black and back at each scene change with a 24-frame (1 s) black hold,
+   1 s fade out at the end.
+
+W=/tmp/fade; rm -rf $W; mkdir -p $W
+
+ffmpeg -y -framerate 24 -start_number 1 -i frame_%04d.png -frames:v 110 \
+  -vf "fade=t=in:st=0:d=1.0,fade=t=out:st=4.0:d=0.583,format=yuv420p" \
+  -c:v libx264 -crf 0 -preset ultrafast $W/s1.mp4
+
+ffmpeg -y -framerate 24 -start_number 111 -i frame_%04d.png -frames:v 125 \
+  -vf "fade=t=in:st=0:d=0.5,fade=t=out:st=4.625:d=0.583,format=yuv420p" \
+  -c:v libx264 -crf 0 -preset ultrafast $W/s2.mp4
+
+ffmpeg -y -framerate 24 -start_number 236 -i frame_%04d.png -frames:v 125 \
+  -vf "fade=t=in:st=0:d=0.5,fade=t=out:st=4.208:d=1.0,format=yuv420p" \
+  -c:v libx264 -crf 0 -preset ultrafast $W/s3.mp4
+
+ffmpeg -y -f lavfi -i color=c=black:s=1080x1920:r=24 -frames:v 24 \
+  -vf format=yuv420p -c:v libx264 -crf 0 -preset ultrafast $W/blk.mp4
+
+printf "file '%s'\n" $W/s1.mp4 $W/blk.mp4 $W/s2.mp4 $W/blk.mp4 $W/s3.mp4 > $W/list.txt
+
+ffmpeg -y -f concat -safe 0 -i $W/list.txt \
+  -c:v libx264 -preset slow -crf 16 -pix_fmt yuv420p -movflags +faststart \
+  ../../examples/the60_v10c_teaser_dark_vertical.mp4
+
+The shot boundaries are frames 1-110, 111-235 and 236-360. If the shot lengths
+change, the fade-out start times above are (segment length in frames - fade length
+in frames) / 24.

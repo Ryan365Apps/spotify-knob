@@ -60,6 +60,8 @@ Not requested; UI Automation gives them for free once the per-app module exists.
 
 ## The bezel as a scroll wheel — now the default mode (decided 2026-09-02)
 
+> **Superseded in part, 2026-09-07.** The interaction model below still stands, but what the bezel does and how it feels is now set **per application by a profile**, chosen automatically from the focused window. The profile sets the default feel; the feel hotspot described below is a momentary override that snaps back on release, never a second persistent source of the same state. See `docs/SOFTWARE-PROFILES.md`, which also carries the tab and application switcher gesture and the maintenance cost of profiles.
+
 The device enumerates a second HID interface as a mouse with a vertical wheel and a horizontal wheel (AC Pan), in the same composite device as the keyboard it already presents. Whatever has focus scrolls; Windows routes it, no companion required. Sixty magnetic detents at 120 wheel units each is one notch per click; the motor's fine steps emit sub-notch deltas for smooth scrolling, which Windows supports natively. Timeline scrubbing, brush size, spreadsheets, PDFs — all of it with zero vendor work, which is why Figma and Premiere stay off the vendor list.
 
 **This inverts R5** (the standard-build requirement that the dial is volume by default) **for the Halo product.** The reasoning: scrolling is continuous and frequent, volume is rare and urgent; a continuous action cannot afford a mode entry, a rare one can afford a single touch.

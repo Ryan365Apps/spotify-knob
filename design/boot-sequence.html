@@ -1,0 +1,690 @@
+<title>The 60 — Boot Sequence</title>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans+Condensed:wght@600;700&family=IBM+Plex+Sans:wght@400;500&family=Michroma&family=Montserrat:wght@400;500&display=swap">
+<style>
+  :root{
+    --ground:#EDEDE8;--plinth:#15181D;--rule:#CFCEC6;
+    --ink:#22252B;--ink-soft:#5D6270;--ink-faint:#8B8F9C;--brass:#8A6A1F;--brass-line:#B99436;
+    --sans:"IBM Plex Sans",system-ui,sans-serif;
+    --cond:"IBM Plex Sans Condensed","IBM Plex Sans",system-ui,sans-serif;
+    --mono:"IBM Plex Mono",ui-monospace,monospace;
+    --display:"Michroma",system-ui,sans-serif;--ui:"Montserrat",system-ui,sans-serif;
+  }
+  @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+    --ground:#0E1013;--plinth:#08090B;--rule:#2A2F37;
+    --ink:#DADDE4;--ink-soft:#99A1AF;--ink-faint:#6B7280;--brass:#D8B25A;--brass-line:#8A6E2C;}}
+  :root[data-theme="dark"]{
+    --ground:#0E1013;--plinth:#08090B;--rule:#2A2F37;
+    --ink:#DADDE4;--ink-soft:#99A1AF;--ink-faint:#6B7280;--brass:#D8B25A;--brass-line:#8A6E2C;}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--ground);color:var(--ink);font-family:var(--sans);
+    font-size:15px;line-height:1.55;-webkit-font-smoothing:antialiased}
+  .wrap{max-width:1180px;margin:0 auto;padding:56px 28px 96px}
+  header{border-bottom:1px solid var(--rule);padding-bottom:28px;margin-bottom:26px}
+  .eyebrow{font-family:var(--mono);font-size:11px;letter-spacing:.16em;text-transform:uppercase;
+    color:var(--brass);margin:0 0 14px}
+  h1{font-family:var(--cond);font-weight:700;font-size:clamp(32px,5vw,50px);line-height:1.04;
+    margin:0 0 16px;text-wrap:balance;letter-spacing:-.01em}
+  h2.sec{font-family:var(--cond);font-weight:700;font-size:26px;margin:0 0 8px;letter-spacing:-.01em}
+  .lede{max-width:64ch;color:var(--ink-soft);margin:0}
+  .scalenote{font-family:var(--mono);font-size:12px;color:var(--brass);
+    border-left:2px solid var(--brass-line);padding-left:14px;margin:26px 0 40px;max-width:74ch}
+  section{margin-top:72px}
+  .secintro{color:var(--ink-soft);max-width:66ch;margin:0 0 28px}
+
+  /* ---- the glass ---- */
+  .plinth{background:var(--plinth);border-radius:16px;padding:34px;display:flex;
+    align-items:center;justify-content:center;border:1px solid var(--rule);position:relative;
+    overflow:hidden}
+  .screen{border-radius:50%;position:relative;overflow:hidden;background:#000;flex:none;
+    box-shadow:0 0 0 6px #23262C,0 0 0 7px #34383F,0 18px 44px rgba(0,0,0,.6);z-index:1}
+  .screen canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
+  /* desk-level halo: the ring under the device, driven by the same envelope */
+  .halo{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);
+    border-radius:50%;pointer-events:none;opacity:0;z-index:0;
+    background:radial-gradient(circle,rgba(214,20,38,.85) 0%,rgba(150,8,20,.42) 42%,
+      rgba(90,4,12,.12) 68%,rgba(0,0,0,0) 78%)}
+
+  /* ---- hero ---- */
+  .hero{display:grid;grid-template-columns:minmax(0,1fr) 330px;gap:38px;align-items:start}
+  @media (max-width:920px){.hero{grid-template-columns:1fr}}
+  .heroglass .screen{width:460px;height:460px}
+  @media (max-width:560px){.heroglass .screen{width:300px;height:300px}
+    .heroglass .plinth{padding:20px}}
+
+  .transport{margin-top:18px;display:flex;flex-direction:column;gap:12px}
+  .row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+  .lbl{font-family:var(--mono);font-size:10.5px;letter-spacing:.13em;text-transform:uppercase;
+    color:var(--ink-faint);min-width:76px}
+  button{font-family:var(--mono);font-size:11px;letter-spacing:.10em;text-transform:uppercase;
+    background:transparent;color:var(--ink-soft);border:1px solid var(--rule);border-radius:4px;
+    padding:6px 11px;cursor:pointer;line-height:1}
+  button:hover{color:var(--ink);border-color:var(--ink-faint)}
+  button[aria-pressed="true"]{color:var(--brass);border-color:var(--brass-line)}
+  input[type=range]{flex:1;min-width:180px;accent-color:#C81428;height:18px}
+  .clock{font-family:var(--mono);font-size:12px;color:var(--brass);white-space:nowrap}
+  .clock b{color:var(--ink);font-weight:500}
+  .hint{font-size:12.5px;color:var(--ink-faint)}
+
+  /* phase table beside the hero */
+  .phases{margin:0;padding:0;border-top:1px solid var(--rule)}
+  .phases li{list-style:none;display:grid;grid-template-columns:96px 1fr;gap:14px;
+    padding:11px 0;border-bottom:1px solid var(--rule);cursor:pointer}
+  .phases li .t{font-family:var(--mono);font-size:11px;color:var(--ink-faint);padding-top:3px}
+  .phases li .n{font-family:var(--cond);font-weight:700;font-size:15px;margin:0}
+  .phases li .d{font-size:13px;color:var(--ink-soft);margin:2px 0 0}
+  .phases li[data-on="1"] .n,.phases li[data-on="1"] .t{color:var(--brass)}
+
+  .strip{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:22px 18px}
+  .strip .screen{width:100%;aspect-ratio:1}
+  .strip .plinth{padding:14px;border-radius:12px}
+  .strip .cap{margin-top:10px}
+  .strip .cap h3{font-family:var(--cond);font-size:14px;font-weight:700;margin:0}
+  .strip .cap p{font-family:var(--mono);font-size:10.5px;color:var(--ink-faint);margin:2px 0 0;
+    letter-spacing:.08em;line-height:1.5}
+
+  table.notes{border-collapse:collapse;width:100%;margin-top:8px;font-size:13.5px}
+  table.notes th,table.notes td{text-align:left;padding:9px 14px 9px 0;
+    border-bottom:1px solid var(--rule);vertical-align:top}
+  table.notes th{font-family:var(--mono);font-size:10.5px;letter-spacing:.13em;
+    text-transform:uppercase;color:var(--ink-faint);font-weight:400;white-space:nowrap;width:150px}
+  table.notes td em{font-style:normal;color:var(--ink-faint)}
+
+  footer{margin-top:80px;padding-top:26px;border-top:1px solid var(--rule);
+    color:var(--ink-faint);font-size:13px;max-width:78ch}
+  footer strong{color:var(--ink-soft);font-weight:500}
+  footer h3{font-family:var(--cond);font-size:16px;color:var(--ink);margin:22px 0 6px}
+  footer a{color:var(--brass)}
+  .kbd{font-family:var(--mono);font-size:11px;border:1px solid var(--rule);border-radius:3px;
+    padding:1px 5px;color:var(--ink-soft)}
+</style>
+
+<div class="wrap">
+<header>
+  <p class="eyebrow">The 60 · boot sequence · golden run · 1080 × 1080 round</p>
+  <h1>Three blinks,<br>a long wait,<br>then a pulse</h1>
+  <p class="lede">Three rapid red blinks, then two full seconds of black — long enough that you start to wonder. An ember appears at the centre and grows without stopping into a circular bloom that runs out to the rim, where the whole edge becomes one line. That line releases and collapses back to the middle, and from there it beats: two sounds close together, then a rest, then again, the way a heart does.</p>
+</header>
+
+<p class="scalenote">Rendered at the panel's native <strong>1080 × 1080</strong> and displayed smaller, so point density and gradient banding are honest. 2,600 points on a golden-angle packing, lit strictly outward. <strong>15.4 s end to end at 1×</strong> — the timing that used to be ¼× is now the design.</p>
+
+<!-- ============================ HERO ============================ -->
+<section id="hero" style="margin-top:8px">
+  <div class="hero">
+    <div class="heroglass">
+      <div class="plinth">
+        <div class="halo" id="halo"></div>
+        <div class="screen"><canvas id="heroCv" width="1080" height="1080"></canvas></div>
+      </div>
+
+      <div class="transport">
+        <div class="row">
+          <button id="bPlay" aria-pressed="true">Pause</button>
+          <button id="bReplay">Replay</button>
+          <input type="range" id="scrub" min="0" max="15400" value="0" step="10">
+          <span class="clock"><b id="tNow">0.00</b>s · <span id="pNow">Ember</span></span>
+        </div>
+        <div class="row">
+          <span class="lbl">Speed</span>
+          <button class="sbtn" data-s="1" aria-pressed="true">1×</button>
+          <button class="sbtn" data-s="2" aria-pressed="false">2×</button>
+          <button class="sbtn" data-s="0.5" aria-pressed="false">½×</button>
+          <button class="sbtn" data-s="0.25" aria-pressed="false">¼×</button>
+        </div>
+        <div class="row">
+          <span class="lbl">Wordmark</span>
+          <button class="wbtn" data-w="TORQUE OS" aria-pressed="true">Torque OS</button>
+          <button class="wbtn" data-w="THE 60" aria-pressed="false">The 60</button>
+          <button class="wbtn" data-w="RADIAL" aria-pressed="false">Radial</button>
+          <button class="wbtn" data-w="" aria-pressed="false">None</button>
+        </div>
+        <div class="row">
+          <span class="lbl">Desk halo</span>
+          <button id="bHalo" aria-pressed="true">Ring lit</button>
+          <span class="hint">The halo repeats the screen at desk level — same colour, same moment, no extra information.</span>
+        </div>
+      </div>
+    </div>
+
+    <div>
+      <h2 class="sec">Four phases</h2>
+      <p class="secintro" style="margin-bottom:14px;font-size:14px">Click a phase to jump the scrubber there.</p>
+      <ul class="phases" id="phaseList"></ul>
+    </div>
+  </div>
+</section>
+
+<!-- ============================ FREEZE FRAMES ============================ -->
+<section id="frames">
+  <h2 class="sec">The sequence as stills</h2>
+  <p class="secintro">Six moments, held. The two-second black between the last blink and the ember has no still worth showing, which is the whole point of it.</p>
+  <div class="strip" id="strip"></div>
+</section>
+
+<footer>
+  <h3>One event, three times</h3>
+  <p>The run, the collapse and every heartbeat are the same thing: a <strong>front</strong> — a radius, a softness and an amplitude — sweeping through the phyllotaxis field while points flare as it passes. Several are alive at once and each point sums them. That is why the beats look like the spiral run: they <em>are</em> the spiral run, fired again on a cardiac rhythm.</p>
+  <table class="notes">
+    <tr><th>The run</th><td>One front, out from the ember over 4.0 s, accelerating as <em>rim · p^1.42</em>. It does not stop at the rim, it keeps travelling and slides off the edge, so nothing switches from "running" to "lit".</td></tr>
+    <tr><th>The collapse</th><td>The same front travelling the other way, rim to centre over 1.15 s, accelerating as it converges the way a converging wave does. It arrives at the centre exactly as the first heartbeat leaves it.</td></tr>
+    <tr><th>Each beat</th><td>Two fronts. A strong one, then a weaker one at 52% amplitude 0.23 s behind it — lub-dub — then rest until the next cycle. Period 1.30 s, about 46 beats a minute. Each front crosses in 1.15 s and fades as it goes, so it is faint by the time it nears the rim and gone before it gets there.</td></tr>
+    <tr><th>Overlap</th><td>Three cycles are kept alive, so a beat launches while the previous one is still travelling. Up to six fronts can be summing at once.</td></tr>
+    <tr><th>Decay</th><td>Beat amplitude falls to about 62% over the first four beats, so it calms down without ever stopping.</td></tr>
+    <tr><th>The rim</th><td>Answers the beat with a 0.55 s delay — it brightens when a wave gets near it, not when the wave leaves the centre.</td></tr>
+    <tr><th>What is left of the bloom</th><td>A small core glow at the middle, the source the fronts leave from. Everything else on screen after the rim strike is the point field.</td></tr>
+  </table>
+
+  <h3>How the field is made organic</h3>
+  <table class="notes">
+    <tr><th>Front softness</th><td>Tight at the centre (16 px) and widening toward the rim (78 px). That is what makes the ember grow continuously into the field instead of a scatter popping into existence around it, and it applies to every front, not just the run.</td></tr>
+    <tr><th>Granular ignition</th><td>Each point's effective radius is offset by a hash of its index, up to ±10 px, so points catch slightly early or late. Fronts stay circular; only their edges are grainy.</td></tr>
+    <tr><th>Uneven flare</th><td>Summed flare is scaled by a per-point hash, so some points catch hard and some barely — the same points every time, which gives the field a fixed texture.</td></tr>
+    <tr><th>Wander</th><td>Every point drifts a couple of pixels on its own slow phase, which is what stops 2,600 points reading as a texture map.</td></tr>
+    <tr><th>Nothing is stroked</th><td>The rim hairline is the only circle drawn as a circle. Every wave is points lighting up.</td></tr>
+  </table>
+
+  <h3>What this costs on the panel</h3>
+  <table class="notes">
+    <tr><th>Fill rate</th><td>1080 × 1080 is 1.17 megapixels. Blitting a full frame at 60 fps is 70 Mpx/s before a single point is computed. A 2,600-point additive field is well past a software renderer on an ESP32-P4.</td></tr>
+    <tr><th>Framebuffer</th><td>RGB565 at 1080 × 1080 is 2.33 MB a buffer, so double-buffered is about 4.7 MB of PSRAM before any asset.</td></tr>
+    <tr><th>Now it is all one field</th><td>Making the beats look like the run means the heartbeat is a particle field too, so it cannot be a swept radial profile any more. It also has to run indefinitely while the device is still working, which rules out baked frames. The whole thing has to be computed.</td></tr>
+    <tr><th>What that needs</th><td>Per frame: 2,600 points, each summing up to six Gaussians, then one blit. Roughly 16,000 exponentials and 2,600 alpha-blended sprite draws. That is a GPU job or a much smaller point count — the honest options are dropping to about 700 points, rendering at 540 × 540 and upscaling, or both. Worth testing on the real board before the design is locked.</td></tr>
+    <tr><th>Cheap wins</th><td>The Gaussian is a lookup table. The six-front sum is already reject-tested on a radius window, so most points touch one or two fronts. Point radii and the golden-angle positions are constant and can live in flash rather than being recomputed.</td></tr>
+    <tr><th>Sprites</th><td>The same trick this page uses. The colour ramp is pre-baked into 14 gradient discs and every point is one blit. That is the shape the firmware wants too.</td></tr>
+  </table>
+
+  <h3>Keys</h3>
+  <p><span class="kbd">space</span> play / pause · <span class="kbd">R</span> replay · <span class="kbd">←</span> <span class="kbd">→</span> step 50 ms</p>
+
+  <p style="margin-top:22px">Reference: <a href="https://bookofshapes.com/patterns/phyllotaxis-bloom">phyllotaxis bloom</a> at Book of Shapes. The panel under consideration is the <a href="https://tailorpixels.com/product/5-inch-ips-tft-round-display-1080-1080/">Tailor Pixels 5-inch IPS TFT round display, 1080 × 1080</a>. The blink is <a href="https://en.wikipedia.org/wiki/HAL_9000">HAL 9000</a>, deliberately.</p>
+</footer>
+</div>
+
+<script>
+(function(){
+"use strict";
+
+var TAU  = Math.PI*2;
+var GOLD = Math.PI*(3-Math.sqrt(5));          // golden angle, 137.507°
+
+/* ========================= timeline =========================
+   Times in seconds, absolute. Nothing below branches on a phase boundary —
+   the phase list is a reading aid, the render is one continuous function. */
+var T = {
+  blink:  [[0.00,0.11],[0.22,0.33],[0.44,0.55]],   // rapid, then the long dark
+  swell0: 2.55, swell1: 4.10,                      // ember grows, overruns the run start
+  run0:   3.20, run1:  7.20,                       // the field opens out to the rim
+  strike: 7.20,                                    // rim flash, on its own decay clock
+  col0:   7.75, colD:  1.15,                       // the annulus collapsing inward
+  beats0: 8.90, beatP: 1.30,                       // ~46 bpm
+  word0:  9.20, word1: 10.40,
+  end:   14.60
+};
+var TOTAL = 15.40;                                 // includes a held tail before the loop
+
+var PH = [
+  {t0:0.00, t1:3.20, n:"Ember",
+   d:"Three rapid blinks, then two seconds of black, then an ember at the centre that grows without stopping."},
+  {t0:3.20, t1:7.20, n:"Spiral run",
+   d:"A circular front expands out of the ember. Grainy at its edge, but round."},
+  {t0:7.20, t1:7.75, n:"Rim strike",
+   d:"The front slides off the edge and the whole rim becomes one line."},
+  {t0:7.75, t1:14.60, n:"Heartbeat",
+   d:"The rim releases and collapses to the middle, then fires the run again on a cardiac rhythm — two fronts, then a rest."}
+];
+function phaseAt(t){ for(var i=PH.length-1;i>=0;i--) if(t>=PH[i].t0) return PH[i]; return PH[0]; }
+
+/* ========================= maths helpers ========================= */
+function clamp01(x){ return x<0?0:x>1?1:x; }
+function seg(t,a,b){ return clamp01((t-a)/(b-a)); }
+function easeOut(p){ return 1-Math.pow(1-p,3); }
+function hash(i){ var x=Math.sin(i*127.1+311.7)*43758.5453; return x-Math.floor(x); }
+function gauss(x,w){ var q=x/w; return Math.exp(-q*q); }
+
+/* Deep-red emission ramp. v = 0 is oxblood at the edge of visibility,
+   v = 1 is the hot core only the blinks and the rim strike ever reach. */
+var STOPS = [[0,[24,1,4]],[0.28,[88,4,12]],[0.55,[168,11,25]],[0.80,[232,36,38]],[1,[255,158,126]]];
+function ramp(v){
+  v = clamp01(v);
+  for(var i=1;i<STOPS.length;i++){
+    if(v<=STOPS[i][0]){
+      var a=STOPS[i-1], b=STOPS[i], f=(v-a[0])/(b[0]-a[0]);
+      return [Math.round(a[1][0]+(b[1][0]-a[1][0])*f),
+              Math.round(a[1][1]+(b[1][1]-a[1][1])*f),
+              Math.round(a[1][2]+(b[1][2]-a[1][2])*f)];
+    }
+  }
+  return STOPS[STOPS.length-1][1];
+}
+function rgba(c,a){ return "rgba("+c[0]+","+c[1]+","+c[2]+","+clamp01(a).toFixed(3)+")"; }
+
+/* ========================= point sprites =========================
+   2,600 radial gradients a frame is not affordable, so the ramp is
+   pre-baked into 14 sprite discs and blitted. One drawImage per point. */
+var SPR_PX = 56, SPR_N = 14, SPRITES = null;
+function sprites(){
+  if(SPRITES) return SPRITES;
+  SPRITES = [];
+  for(var k=0;k<SPR_N;k++){
+    var c = ramp(k/(SPR_N-1));
+    var cv = document.createElement("canvas"); cv.width=cv.height=SPR_PX;
+    var g = cv.getContext("2d"), h=SPR_PX/2;
+    var rg = g.createRadialGradient(h,h,0,h,h,h);
+    rg.addColorStop(0,    rgba(c,1));
+    rg.addColorStop(0.16, rgba(c,0.78));
+    rg.addColorStop(0.40, rgba([Math.round(c[0]*0.72),Math.round(c[1]*0.34),Math.round(c[2]*0.36)],0.24));
+    rg.addColorStop(0.72, rgba([Math.round(c[0]*0.42),0,0],0.06));
+    rg.addColorStop(1,    "rgba(0,0,0,0)");
+    g.fillStyle=rg; g.fillRect(0,0,SPR_PX,SPR_PX);
+    SPRITES.push(cv);
+  }
+  return SPRITES;
+}
+function blob(ctx,x,y,rad,v,a){
+  if(a<=0.004 || rad<=0) return;
+  var sp = sprites();
+  ctx.globalAlpha = clamp01(a);
+  ctx.drawImage(sp[Math.round(clamp01(v)*(SPR_N-1))], x-rad, y-rad, rad*2, rad*2);
+}
+
+/* ========================= renderer state ========================= */
+/* S is the internal pixel size; u scales everything authored in 1080-space. */
+function makeD(canvas, word){
+  var S = canvas.width;
+  return {
+    ctx: canvas.getContext("2d"),
+    S: S, u: S/1080, c: S/2,
+    rim: S/2*0.955,                            // the lit rim sits just inside the glass
+    N: Math.max(360, Math.round(2600*(S*S)/(1080*1080))),
+    word: word===undefined ? "TORQUE OS" : word
+  };
+}
+
+/* ========================= the envelopes =========================
+   One master level drives the bloom, the point-field lift, the rim and the
+   desk halo from the rim strike onward. It is continuous by construction:
+   the collapse rises 0 → 1 and the first heartbeat starts at exactly 1. */
+
+function cardiac(x){                               // x = position in one cycle, 0..1
+  return Math.min(1, gauss(x-0.09, 0.062) + 0.58*gauss(x-0.27, 0.075));
+}
+function collapseP(t){ return seg(t, T.col0, T.col0+T.colD); }
+function collapseIn(p){ return Math.pow(p, 1.9); }   // accelerates as it converges
+function collapseCore(t){ return collapseIn(collapseP(t)); }
+
+function pulse(t){
+  if(t < T.beats0) return collapseCore(t);         // reaches 1 exactly at beats0
+  var q = (t - T.beats0)/T.beatP + 0.09;           // first systole lands on arrival
+  var n = Math.floor(q);
+  return cardiac(q - n) * (1 - 0.40*clamp01(n/4));
+}
+
+/* ---- the blinks and the ember ----
+   The ember swell overruns the run start and fades out under the field, so
+   there is no moment where one stops and the other begins. */
+function drawEmber(D,t){
+  var ctx=D.ctx, b, p, k, r;
+  for(b=0;b<T.blink.length;b++){
+    if(t < T.blink[b][0] || t > T.blink[b][1]) continue;
+    p = (t-T.blink[b][0])/(T.blink[b][1]-T.blink[b][0]);
+    k = Math.min(1, Math.min(p, 1-p)/0.20);        // snaps on, snaps off
+    r = 21*D.u;
+    blob(ctx, D.c, D.c, r*4.6, 0.46, 0.26*k);
+    blob(ctx, D.c, D.c, r*1.7, 0.84, 0.70*k);
+    blob(ctx, D.c, D.c, r*0.62,1.00, 0.96*k);
+  }
+  var s = seg(t, T.swell0, T.swell1);
+  if(s<=0) return;
+  var fade = 1 - seg(t, T.run0+0.20, T.run0+1.60); // handed over to the field
+  if(fade<=0) return;
+  var e = easeOut(s), rr = (9 + 54*e)*D.u;
+  blob(ctx, D.c, D.c, rr*3.1, 0.56+0.28*e, (0.20+0.42*e)*fade);
+  blob(ctx, D.c, D.c, rr*1.1, 0.90,        (0.56+0.34*e)*fade);
+  blob(ctx, D.c, D.c, rr*0.36,1.00,        0.94*fade);
+}
+
+/* ---- fronts ----
+   A front is a radius, a softness and an amplitude. Points flare as one
+   sweeps past them. The spiral run is a front; the collapse is the same
+   thing travelling the other way; every heartbeat launches two more. One
+   piece of code draws all of them, which is why the beats look like the run.
+   Held in a flat array, three slots per front, rebuilt each frame. */
+var FR = [], BEAT_LIFE = 1.15, SECOND_GAP = 0.23;
+
+function frontBase(D,t){
+  if(t <= T.run1) return D.rim*Math.pow(seg(t, T.run0, T.run1), 1.42);
+  // velocity-matched at the rim (1.42/4.0 s of run), then accelerating away,
+  // so the head leaves the edge without a kink in its speed
+  var x = t - T.run1;
+  return D.rim*(1 + 0.355*x + 0.45*x*x);
+}
+
+function buildFronts(D,t){
+  FR.length = 0;
+
+  // the spiral run, growing out of the ember and sliding off the edge
+  if(t >= T.run0){
+    var b = frontBase(D,t);
+    if(b < D.rim*1.45) FR.push(b, (16 + 62*clamp01(b/D.rim))*D.u, 1);
+  }
+
+  // the collapse: the run in reverse, accelerating as it converges
+  var cp = collapseP(t);
+  if(cp > 0 && cp < 1){
+    var h = D.rim*(1 - collapseIn(cp));
+    FR.push(h, (26 + 52*(h/D.rim))*D.u,
+            0.95*Math.min(1, cp/0.10)*(1 - 0.22*cp));
+  }
+
+  // the heartbeats: a strong front, a weaker second sound 0.23 s behind,
+  // then rest. Three cycles are kept alive, so waves overlap.
+  if(t >= T.beats0){
+    var tt = t - T.beats0, n = Math.floor(tt/T.beatP);
+    for(var k=0;k<=2;k++){
+      var bi = n-k; if(bi<0) continue;
+      var decay = 1 - 0.38*clamp01(bi/4);
+      for(var v=0;v<2;v++){
+        var age = tt - bi*T.beatP - (v ? SECOND_GAP : 0);
+        if(age < 0 || age > BEAT_LIFE) continue;
+        var q = age/BEAT_LIFE, pos = Math.pow(q, 0.80);
+        var amp = (v ? 0.52 : 1.0)*decay*Math.pow(1-q, 1.15);
+        if(amp < 0.02) continue;
+        FR.push(D.rim*pos*0.98, (24 + 54*pos)*D.u, amp);
+      }
+    }
+  }
+}
+
+/* ---- the field ----
+   Every point sums the flare of every live front, so the run, the collapse
+   and the beats are all the same visual event at different times. */
+function drawField(D, t, lift){
+  var ctx = D.ctx, C = D.rim/Math.sqrt(D.N), nf = FR.length;
+  var spin = 0.46*easeOut(seg(t, T.run0, T.strike+0.60));
+  var runR = frontBase(D,t);
+  var lit  = t >= T.strike;                       // the run has passed everything
+
+  var maxr = 0;
+  for(var f=0; f<nf; f+=3) if(FR[f] + FR[f+1]*2.4 > maxr) maxr = FR[f] + FR[f+1]*2.4;
+  maxr = lit ? D.rim*1.6 : maxr + 12*D.u;
+
+  for(var i=1;i<=D.N;i++){
+    var r = C*Math.sqrt(i);
+    if(r > maxr) break;                           // r rises with i, nothing beyond is lit
+    var reff = r + (hash(i)-0.5)*20*D.u;          // granular ignition, ±10 px
+
+    var flare = 0;
+    for(f=0; f<nf; f+=3){
+      var dd = reff - FR[f], sf = FR[f+1];
+      if(dd < -2.6*sf || dd > 2.6*sf) continue;   // cheap reject before the exp
+      flare += FR[f+2]*gauss(dd, sf);
+    }
+    flare *= (0.72 + 0.56*hash(i*3+7));
+
+    var on  = lit || reff < runR;
+    var bed = on ? (0.13 + 0.27*(r/D.rim)) * (0.80 + 0.40*hash(i*5+3)) : 0;
+    var v = clamp01(bed + flare*0.92 + (on ? lift : 0));
+    if(v <= 0.015) continue;
+
+    var a  = i*GOLD + spin*(1 + (r/D.rim)*0.55);
+    var rw = r + 2.6*D.u*Math.sin(i*0.41 + t*0.90);
+    var aw = a + (2.2*D.u/Math.max(r, 9*D.u))*Math.sin(i*0.29 - t*0.75);
+    var rad = (2.5 + 5.8*(r/D.rim))*D.u*(1 + flare*1.8);
+    blob(ctx, D.c + Math.cos(aw)*rw, D.c + Math.sin(aw)*rw, rad, v, clamp01(v*1.20));
+  }
+}
+
+/* ---- the rim ----
+   Flash decays on absolute time, so the edge fades rather than switching. */
+function rimFlash(t){ return t < T.strike ? 0 : gauss(t-T.strike, 0.22); }
+function drawRim(D,t,pulseLvl){
+  var ctx=D.ctx, f = rimFlash(t);
+  var release = collapseIn(collapseP(t));                   // dims as the light leaves
+  var hold = (1-release)*0.55 + release*(0.18 + 0.26*pulseLvl);
+
+  ctx.globalAlpha = 1;
+  ctx.lineWidth = (2.0 + 13*f + 2.0*(1-release))*D.u;
+  ctx.strokeStyle = rgba(ramp(0.66 + 0.34*f), hold + 0.45*f);
+  ctx.beginPath(); ctx.arc(D.c, D.c, D.rim, 0, TAU); ctx.stroke();
+
+  if(f > 0.004){
+    var g = ctx.createRadialGradient(D.c,D.c,D.rim*0.55, D.c,D.c,D.rim*1.06);
+    g.addColorStop(0,    "rgba(0,0,0,0)");
+    g.addColorStop(0.72, rgba(ramp(0.42), 0.20*f));
+    g.addColorStop(1,    rgba(ramp(0.80), 0.55*f));
+    ctx.fillStyle=g; ctx.fillRect(0,0,D.S,D.S);
+
+    var sw = D.rim + D.S*0.075*(1-f);
+    ctx.lineWidth = 3.2*D.u;
+    ctx.strokeStyle = rgba(ramp(0.86), 0.42*f);
+    ctx.beginPath(); ctx.arc(D.c, D.c, sw, 0, TAU); ctx.stroke();
+  }
+}
+
+/* ---- the core ----
+   All that is left of the soft bloom: the source the fronts leave from. It
+   swells as the collapse arrives and beats with the pulse. Everything else
+   on screen after the strike is the point field. */
+function drawCore(D,t,lvl){
+  var settled = seg(t, T.col0, T.col0 + T.colD);
+  var a = 0.07*settled + 0.30*lvl;
+  if(a <= 0.006) return;
+  blob(D.ctx, D.c, D.c, (44 + 150*lvl)*D.u, 0.60 + 0.30*lvl, a);
+  blob(D.ctx, D.c, D.c, (13 +  46*lvl)*D.u, 0.92,            a*0.85);
+}
+
+/* Wordmark, deep red, pulsing on the beat. Tracking is done by hand rather
+   than ctx.letterSpacing, which is not universal — and hand-tracking lets it
+   contract as it resolves. */
+function drawWord(D,t,lvl){
+  if(!D.word) return;
+  var ctx=D.ctx;
+  var a = seg(t, T.word0, T.word1);
+  if(a<=0) return;
+
+  var trackF = 0.44 - 0.22*easeOut(a);
+  var size = 78*D.u, track = trackF*size, w = 0, i;
+  ctx.textBaseline = "middle"; ctx.textAlign = "left";
+  ctx.font = size+"px Michroma, system-ui, sans-serif";
+  for(i=0;i<D.word.length;i++) w += ctx.measureText(D.word[i]).width + track;
+  w -= track;
+
+  // glyph widths and tracking both scale linearly with size, so one pass fits
+  // any wordmark inside 74% of the diameter — TORQUE OS needs it, THE 60 does not
+  var maxW = D.rim*2*0.74;
+  if(w > maxW){
+    size *= maxW/w; track = trackF*size; w = 0;
+    ctx.font = size+"px Michroma, system-ui, sans-serif";
+    for(i=0;i<D.word.length;i++) w += ctx.measureText(D.word[i]).width + track;
+    w -= track;
+  }
+
+  ctx.globalAlpha = 1;
+  ctx.shadowColor = "rgba(206,16,32,0.85)";
+  ctx.shadowBlur  = (14 + 26*lvl)*D.u;
+  ctx.fillStyle   = rgba([214,20,36], 0.95*a*(0.74 + 0.26*lvl));
+  var x = D.c - w/2;
+  for(i=0;i<D.word.length;i++){
+    ctx.fillText(D.word[i], x, D.c);
+    x += ctx.measureText(D.word[i]).width + track;
+  }
+  ctx.shadowBlur = 0; ctx.shadowColor = "transparent";
+}
+
+/* ---- the whole frame ---- */
+function frame(D, t){
+  var ctx = D.ctx;
+  ctx.setTransform(1,0,0,1,0,0);
+  ctx.globalCompositeOperation = "source-over";
+  ctx.globalAlpha = 1;
+  ctx.fillStyle = "#000"; ctx.fillRect(0,0,D.S,D.S);
+
+  ctx.save();
+  ctx.beginPath(); ctx.arc(D.c,D.c,D.S/2,0,TAU); ctx.clip();
+  ctx.globalCompositeOperation = "lighter";     // everything after this is emitted light
+
+  var lvl  = t >= T.col0 ? pulse(t) : 0;
+  // the rim answers when a wave gets near it, not when it leaves the centre
+  var rimLvl = t >= T.col0 + 0.55 ? pulse(t - 0.55) : 0;
+  var lift = 0.05*seg(t, T.strike, T.strike+0.50) + 0.05*lvl;
+
+  buildFronts(D, t);
+  drawEmber(D,t);
+  if(t >= T.run0)   drawField(D, t, lift);
+  if(t >= T.strike) drawRim(D, t, rimLvl);
+  if(t >= T.col0)   drawCore(D, t, lvl);
+  if(t >= T.word0)  drawWord(D, t, lvl);
+
+  // tail fade, so the loop back to black is watchable rather than a cut
+  var out = seg(t, T.end, TOTAL-0.10);
+  if(out > 0){
+    ctx.globalCompositeOperation = "destination-out";
+    ctx.globalAlpha = out;
+    ctx.fillStyle = "#000"; ctx.fillRect(0,0,D.S,D.S);
+  }
+
+  ctx.restore();
+  ctx.globalAlpha = 1;
+  ctx.globalCompositeOperation = "source-over";
+}
+
+/* Envelope the desk halo follows — the same light, one surface down. */
+function haloLevel(t){
+  var lv = 0, b, p;
+  for(b=0;b<T.blink.length;b++){
+    if(t < T.blink[b][0] || t > T.blink[b][1]) continue;
+    p = (t-T.blink[b][0])/(T.blink[b][1]-T.blink[b][0]);
+    lv = 0.32*Math.min(1, Math.min(p,1-p)/0.20);
+  }
+  lv = Math.max(lv, 0.22*seg(t, T.swell0, T.swell1));
+  lv = Math.max(lv, 0.08 + 0.20*seg(t, T.run0, T.strike));
+  lv = Math.max(lv, 0.75*rimFlash(t));
+  if(t >= T.col0) lv = Math.max(lv, 0.14 + 0.50*pulse(t));
+  return clamp01(lv) * (1 - seg(t, T.end, TOTAL-0.10));
+}
+
+/* ========================= page wiring ========================= */
+var reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+var plist = document.getElementById("phaseList");
+PH.forEach(function(p){
+  var li = document.createElement("li");
+  li.innerHTML = '<span class="t">'+p.t0.toFixed(2)+'–'+p.t1.toFixed(2)+'s</span>'+
+                 '<span><p class="n">'+p.n+'</p><p class="d">'+p.d+'</p></span>';
+  li.addEventListener("click", function(){ pause(); setT(p.t0+0.02); });
+  plist.appendChild(li);
+});
+var pLis = plist.querySelectorAll("li");
+
+var heroCv = document.getElementById("heroCv");
+var hero = makeD(heroCv, "TORQUE OS");
+var halo = document.getElementById("halo");
+var haloOn = true;
+
+var scrub = document.getElementById("scrub"),
+    tNow  = document.getElementById("tNow"),
+    pNow  = document.getElementById("pNow"),
+    bPlay = document.getElementById("bPlay");
+var playing = !reduce, speed = 1, clock = 0;
+
+function sizeHalo(){
+  var s = heroCv.getBoundingClientRect().width || 460;
+  halo.style.width = halo.style.height = (s*2.15)+"px";
+}
+window.addEventListener("resize", sizeHalo); sizeHalo();
+
+function setT(t){ clock = Math.max(0, Math.min(TOTAL, t)); scrub.value = Math.round(clock*1000); paint(); }
+function pause(){ playing=false; bPlay.textContent="Play"; bPlay.setAttribute("aria-pressed","false"); }
+function play(){  playing=true;  bPlay.textContent="Pause"; bPlay.setAttribute("aria-pressed","true"); }
+
+function paint(){
+  frame(hero, clock);
+  tNow.textContent = clock.toFixed(2);
+  var ph = phaseAt(clock);
+  pNow.textContent = ph.n;
+  for(var i=0;i<pLis.length;i++) pLis[i].setAttribute("data-on", PH[i]===ph ? "1" : "0");
+  halo.style.opacity = haloOn ? haloLevel(clock).toFixed(3) : 0;
+}
+
+bPlay.addEventListener("click", function(){ playing ? pause() : play(); });
+document.getElementById("bReplay").addEventListener("click", function(){ setT(0); play(); });
+scrub.addEventListener("input", function(){ pause(); clock = (+scrub.value)/1000; paint(); });
+document.getElementById("bHalo").addEventListener("click", function(){
+  haloOn = !haloOn; this.setAttribute("aria-pressed", haloOn?"true":"false");
+  this.textContent = haloOn ? "Ring lit" : "Ring off"; paint();
+});
+function group(sel, fn){
+  var b = document.querySelectorAll(sel);
+  b.forEach(function(x){ x.addEventListener("click", function(){
+    b.forEach(function(y){ y.setAttribute("aria-pressed","false"); });
+    x.setAttribute("aria-pressed","true"); fn(x); paint();
+  }); });
+}
+group(".sbtn", function(x){ speed = parseFloat(x.dataset.s); });
+group(".wbtn", function(x){ hero.word = x.dataset.w; repaintStills(); });
+
+document.addEventListener("keydown", function(e){
+  if(e.target.tagName==="INPUT") return;
+  if(e.code==="Space"){ e.preventDefault(); playing?pause():play(); }
+  else if(e.key==="r"||e.key==="R"){ setT(0); play(); }
+  else if(e.key==="ArrowLeft"){ pause(); setT(clock-0.05); }
+  else if(e.key==="ArrowRight"){ pause(); setT(clock+0.05); }
+});
+
+/* --- freeze frames --- */
+var STILLS = [
+  {t:0.27,  n:"Blink two",     s:"110 ms on, 110 ms off"},
+  {t:3.30,  n:"Ember growing", s:"the field taking over"},
+  {t:5.20,  n:"Circular front",s:"mid-run, grainy edge"},
+  {t:7.32,  n:"Rim strike",    s:"the line closes"},
+  {t:8.40,  n:"Collapse",      s:"the run, in reverse"},
+  {t:10.60, n:"Lub-dub",       s:"two fronts, 0.23 s apart"}
+];
+var stripHost = document.getElementById("strip"), stills = [];
+STILLS.forEach(function(S){
+  var d = document.createElement("div");
+  d.innerHTML = '<div class="plinth"><div class="screen">'+
+    '<canvas width="1080" height="1080"></canvas></div></div>'+
+    '<div class="cap"><h3>'+S.n+'</h3><p>'+S.t.toFixed(2)+' s<br>'+S.s+'</p></div>';
+  stripHost.appendChild(d);
+  stills.push({D: makeD(d.querySelector("canvas"), "TORQUE OS"), t: S.t});
+});
+function repaintStills(){
+  stills.forEach(function(s){ s.D.word = hero.word; frame(s.D, s.t); });
+}
+
+/* --- only animate what is on screen --- */
+var live;
+if("IntersectionObserver" in window){
+  var vis = new Set();
+  new IntersectionObserver(function(es){
+    es.forEach(function(e){ e.isIntersecting ? vis.add(e.target) : vis.delete(e.target); });
+  }, {rootMargin:"120px"}).observe(heroCv);
+  live = function(){ return vis.has(heroCv); };
+} else {
+  live = function(){ return true; };
+}
+
+/* --- the clock --- */
+repaintStills();
+if(reduce){
+  clock = 8.40; paint(); pause();
+} else {
+  var last = performance.now();
+  requestAnimationFrame(function loop(now){
+    requestAnimationFrame(loop);
+    var dt = Math.min(0.1, (now-last)/1000); last = now;
+    if(playing){
+      clock += dt*speed;
+      if(clock > TOTAL) clock -= TOTAL;
+      scrub.value = Math.round(clock*1000);
+    }
+    if(live()) paint();
+  });
+}
+
+// Michroma arrives after first paint; redraw the wordmark still once it lands.
+if(document.fonts && document.fonts.ready) document.fonts.ready.then(repaintStills);
+
+})();
+</script>

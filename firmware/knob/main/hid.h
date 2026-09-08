@@ -19,6 +19,7 @@
 #pragma once
 
 #include <stdbool.h>
+#include <stdint.h>
 
 #include "esp_err.h"
 
@@ -63,25 +64,77 @@ static inline hid_action_t hid_pin(int n)
  * HID_NONE - the range check is the whole point, so do not relax it. */
 hid_action_t hid_ctrl_alt(char letter);
 
+/* What the link is doing, for the one screen that reports it. */
+typedef enum {
+    HID_STATE_OFF = 0,       /* the stack is not running                   */
+    HID_STATE_ADVERTISING,   /* waiting for a host to connect              */
+    HID_STATE_PAIRING,       /* a passkey is on the screen, type it on the PC */
+    HID_STATE_CONNECTED,     /* bonded, encrypted, ready to send           */
+} hid_state_t;
+
 /* Send one action as a single atomic key report: press, then release. Never
  * holds a modifier down, because a held modifier makes every mouse click on
  * the PC a ctrl-click for as long as it lasts.
  *
- * Returns ESP_ERR_INVALID_ARG for an action outside the enum's ranges, and
- * ESP_ERR_INVALID_STATE when no host is connected. */
+ * Chords are serialised with at least 600 ms between them (BUILD.md section
+ * 5): one movement can never double-send, and a suppressed send never flips a
+ * believed state, because this returns an error rather than pretending.
+ *
+ * Returns ESP_ERR_INVALID_ARG for an action outside the enum's ranges,
+ * ESP_ERR_INVALID_STATE when no host is connected, and ESP_ERR_NOT_FINISHED
+ * when it arrived inside another chord's 600 ms. */
 esp_err_t hid_send(hid_action_t action);
 
 /* True when a host is bonded and connected. The UI uses this to say what it
  * knows rather than what it hopes. */
 bool hid_connected(void);
 
-/* True while the transport is the Wave 10 stub rather than a real BLE
- * keyboard. Screens use it to label themselves honestly instead of claiming a
- * pairing that does not exist. */
+hid_state_t hid_state(void);
+
+/* The six digits to type on the PC. Meaningful only in HID_STATE_PAIRING. */
+uint32_t hid_passkey(void);
+
+/* Start advertising, for when there is no bond to fall back on. */
+esp_err_t hid_advertise(void);
+
+/* Drop every bond. A paired BLE keyboard can type anything into the PC it is
+ * paired with, so this is the one action in Settings that confirms first. */
+void hid_forget_host(void);
+
+/* True while the transport is a stub rather than a real BLE keyboard. Kept so
+ * a screen can label itself honestly; false since Wave 10. */
 bool hid_is_stub(void);
 
 /* A human-readable name for a log line or a screen. This is the one direction
  * that is safe: an action becomes text. Text never becomes an action. */
 const char *hid_action_name(hid_action_t action);
 
+/* Note the seam here: init is free, start is not.
+ *
+ * hid_init() only makes the module safe to call. hid_start() brings the BLE
+ * controller and the NimBLE host up, and on this board that costs about 40 KB
+ * of internal RAM - which is roughly all the internal RAM there is once Wi-Fi,
+ * LVGL and a TLS session have taken theirs. Measured on hardware 2026-09-04:
+ * starting it at boot left 2635 bytes free and the device could not complete a
+ * TLS handshake at all.
+ *
+ * So the stack starts on demand, when a screen that needs it is opened, and
+ * the device boots exactly as it did before BLE existed. This is the option
+ * BUILD.md always held open - scope BLE to the app that uses it, and decide
+ * with numbers rather than in advance. */
 void hid_init(void);
+esp_err_t hid_start(void);
+
+/* Give the radio back.
+ *
+ * Not optional housekeeping. With the link up, free internal RAM sits near
+ * 26 KB and Spotify's TLS connect times out - measured on hardware
+ * 2026-09-06, presenting as `Failed to open new connection in specified
+ * timeout` rather than as anything mentioning Bluetooth. Whether the binding
+ * constraint is the memory or the two radios time-slicing, the answer is the
+ * same: a screen that needed the keyboard gives it back when you leave.
+ *
+ * The bond lives in NVS, so coming back reconnects rather than re-pairs. */
+void hid_stop(void);
+
+bool hid_is_started(void);

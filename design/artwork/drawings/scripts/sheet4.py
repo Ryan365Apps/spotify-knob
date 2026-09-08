@@ -1,4 +1,4 @@
-"""D04 — the steel plate and the floor: cut-outs, fixings, ports, back panel."""
+"""D04 - the aluminium core, the stainless rim ring and the port face (v15)."""
 import sys, math, os
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import engine
@@ -6,127 +6,118 @@ from engine import P
 from sheet import Sheet, Port, box_centre, add_balloon, note_list
 from meta import META, n, save
 
-PORTS_CUT = sum(1 for i in range(P.PORT_N)
-                if abs(((7.5 + 15.0 * i - P.MOTOR_AZ + 180) % 360) - 180) <= 30)
-PORTS_DRILLED = P.PORT_N - PORTS_CUT
-# model.carriage_hole() is built from MOTOR_R and CLUTCH_LIFT, not from
-# params.CARRIAGE_HOLE_R0/R1 (which nothing in model.py reads), so the numbers
-# on the sheet are taken from the shape that is actually cut.
-HOLE_D = P.MOTOR_OD + 2 * 1.0 + 1.5
-HOLE_R1 = P.MOTOR_R + HOLE_D / 2
-HOLE_R0 = P.MOTOR_R - P.CLUTCH_LIFT - HOLE_D / 2
-TAB_R0 = P.MOTOR_R - P.MOTOR_OD / 2 - 3.5 - 5.0
-
-
-s = Sheet("BASE PLATE AND FLOOR — CUT-OUTS, FIXINGS, PORTS", "60-09-D04", "AS SHOWN")
+s = Sheet("BASE - ALUMINIUM CORE, STAINLESS RIM RING, PORT FACE", "60-15-D04", "AS SHOWN")
 s.frame(META)
 
-# ---------------------------------------------------------------- THE PLATE, 1:1
-vP, hP = engine.plan_section(["base_plate"], P.PLATE_T / 2)
-pP = Port(s, 87, 100, 1.0)
-clP = pP.clip("clipP", 17, 30, 140, 140)
-pP.draw(vP, clip=clP, hidden=False, wv=0.3, hatch_paths=hP)
-s.rect(17, 30, 140, 140, 0.3)
-s.text(17, 27, "THE PLATE — HORIZONTAL SECTION AT z %s     scale 1 : 1" % n(P.PLATE_T / 2, 1), 3.4, weight="bold")
-s.line(pP.px(-P.PLATE_R - 4), pP.py(0), pP.px(P.PLATE_R + 4), pP.py(0), 0.12, dash="6 2 1 2")
-s.line(pP.px(0), pP.py(-P.PLATE_R - 4), pP.px(0), pP.py(P.PLATE_R + 4), 0.12, dash="6 2 1 2")
-for az, lab in ((0, "0° port slot"), (P.MOTOR_AZ, "%g° carriage" % P.MOTOR_AZ), (270, "270°"), (180, "180°")):
-    a = math.radians(az)
-    # the 0 and 180 labels go inside the rim: at r 65 they would run out of the frame
-    r = 65.0 if abs(math.sin(a)) > 0.5 else 44.0
-    dy = 2.5 if math.sin(a) < -0.5 else (1.0 if abs(math.sin(a)) > 0.5 else -1.8)
-    s.text(pP.px(r * math.cos(a)), pP.py(r * math.sin(a)) + dy, lab, 2.3, anchor="middle")
-for az in P.PLATE_SCREW_AZ:
-    a = math.radians(az)
-    pP.leader(P.PLATE_SCREW_R * math.cos(a), P.PLATE_SCREW_R * math.sin(a),
-              pP.px(72 * math.cos(a)), pP.py(72 * math.sin(a)), "M3 %g°" % az,
-              anchor="end" if math.cos(a) < 0 else "start", size=2.2)
-s.text(17, 175, "Ø%s × %s laser-cut steel, about %s g. Countersinks are on the underside — this view is from above."
-       % (n(2 * P.PLATE_R, 0), n(P.PLATE_T, 0), "385"), 2.2)
-s.text(17, 178.5, "The plate is the mass, the ground plane and the halo's bottom edge. v8's Ø123 × 3 printed plate is gone.", 2.2)
+BASE = ["base_plate", "rim_ring_STEEL", "closing_plate_AL", "closing_gasket_ASSUMED", "pad",
+        "port_face", "usbc_board", "jack_board", "barrel_board", "light_board", "veml7700",
+        "usbc_receptacle", "jack_3p5", "halo_diffuser", "led_strip_ENVELOPE"]
+vD, hD = engine.radial_section(BASE, 0.0, hidden=False, missing_ok=True)
 
-# ---------------------------------------------------------------- THE FLOOR, 1:1
-FZ = 8.0
-FLOOR = ["base_plate", "internal_structure", "carriage", "servo_mount", "speaker_cradle", "speaker",
-         "driver_board", "port_face", "usbc_board", "jack_board", "light_board", "commutation_board", "led_flex"]
-FLOOR += [k for k in engine.parts() if k.startswith(("servo_", "motor_", "supercap", "standoff_",
-                                                     "tmc6300_", "drv2605l_", "es9219q_", "jack_", "usbc_",
-                                                     "veml7700_", "lra_", "plug_"))]
-vF, hF = engine.plan_section(FLOOR, FZ)
-pF = Port(s, 233, 100, 1.0)
-clF = pF.clip("clipF", 163, 30, 140, 140)
-pF.draw(vF, clip=clF, hidden=False, wv=0.25, hatch_paths=hF)
-s.rect(163, 30, 140, 140, 0.3)
-s.text(163, 27, "THE FLOOR — HORIZONTAL SECTION AT z %s     scale 1 : 1" % n(FZ, 1), 3.4, weight="bold")
-s.line(pF.px(-P.PLATE_R - 4), pF.py(0), pF.px(P.PLATE_R + 4), pF.py(0), 0.12, dash="6 2 1 2")
-s.line(pF.px(0), pF.py(-P.PLATE_R - 4), pF.px(0), pF.py(P.PLATE_R + 4), 0.12, dash="6 2 1 2")
-pF.leader(0, P.MOTOR_R, 250, 40, "motor on its carriage, %g°" % P.MOTOR_AZ, size=2.2)
-pF.leader(P.SPEAKER_CENTRE[0], P.SPEAKER_CENTRE[1], 250, 158, "speaker, cone up, on (%g, %g)" % P.SPEAKER_CENTRE, size=2.2)
-_a = math.radians(engine.model.DRIVER_AZ)
-pF.leader(engine.model.DRIVER_R * math.cos(_a), engine.model.DRIVER_R * math.sin(_a),
-          182, 46, "driver board, %g°" % engine.model.DRIVER_AZ, anchor="start", size=2.2)
-_a = math.radians(P.LRA_AZ)
-pF.leader((P.R_WALL_IN - 1.2) * math.cos(_a), (P.R_WALL_IN - 1.2) * math.sin(_a),
-          172, 62, "LRA, %g°" % P.LRA_AZ, anchor="start", size=2.2)
-s.text(163, 175, "Perimeter ports Ø%s at z %s on a %g° grid: %d of the %d positions are drilled, %d fall in the "
-       "motor cut-out." % (n(P.PORT_D, 1), n(P.PORT_Z, 1), 360.0 / P.PORT_N, PORTS_DRILLED,
-                           P.PORT_N, PORTS_CUT), 2.2)
-s.text(163, 178.5, "The speaker breathes into the cavity and out through them. Nothing fires down into the plate.", 2.2)
+# ---------------------------------------------------------------- SECTION D-D
+pD = Port(s, 24, 96, 1.75, ox=0.0, oy=6.0)
+clD = pD.clip("clipD", 17, 30, 179, 106)
+pD.draw(vD, clip=clD, hidden=False, hatch_paths=hD, wv=0.32)
+s.rect(17, 30, 179, 106, 0.3)
+s.text(17, 27, "SECTION  D-D     scale 1.75 : 1", 3.4, weight="bold")
+s.text(17, 141, "Right half, on the 0 deg - 180 deg axis, through the port face. The base is three parts: the machined "
+       "core, the ring round it and the closing plate under it.", 2.2, col="#333")
+s.line(pD.px(0), 32, pD.px(0), 134, 0.15, dash="6 2 1 2")
+s.text(pD.px(0) + 1.5, 38.5, "CL", 2.2, col="#444")
+
+pD.dim_h(0, P.R_CORE_DUCT, -5.0, "r %s ducted core" % n(P.R_CORE_DUCT), off=5)
+pD.dim_h(0, P.RIM_IN, -5.0, "r %s ring bore" % n(P.RIM_IN), off=11)
+pD.dim_h(0, P.PLATE_R, -5.0, "r %s edge" % n(P.PLATE_R), off=17)
+pD.dim_v(0.0, P.CLOSING_T, P.PLATE_R, n(P.CLOSING_T), off=3)
+pD.dim_v(0.0, P.PLATE_T, P.PLATE_R, n(P.PLATE_T), off=9)
+pD.dim_v(P.VENT_Z0, P.VENT_Z0 + P.VENT_H, P.PLATE_R, n(P.VENT_H), off=15)
+
+for i, (mx, my, by) in enumerate([
+        ((P.RING_WALL_R0 + P.PLATE_R) / 2, P.VENT_Z0 + P.VENT_H / 2, 38),
+        ((P.RIM_IN + P.R_CORE_DUCT) / 2, P.PLATE_T - 2.0, 55),
+        (40.0, P.CLOSING_T / 2, 72),
+        (P.PORT_FACE_R0, 4.0, 89),
+        (P.R_CORE_DUCT - 6.0, 2.5, 106)], 1):
+    add_balloon(pD, mx, my, 190, by, i)
 
 # ---------------------------------------------------------------- NOTES
-s.text(313, 27, "NOTES", 3.4, weight="bold")
-note_list(s, 309, 36, [
- (1, "Plate: Ø%s × %s steel, the heaviest part of the device and its ground plane. Its rim at r %s is the bottom "
-     "edge of the halo." % (n(2 * P.PLATE_R, 0), n(P.PLATE_T, 0), n(P.PLATE_R, 1))),
- (2, "Two big cut-outs: the carriage stadium at %g° (Ø%s over r %s–%s, plus a tab slot inboard) and the port "
-     "slot at 0° (%s wide, r %s to the rim)."
-     % (P.MOTOR_AZ, n(HOLE_D, 1), n(HOLE_R0, 1), n(HOLE_R1, 1),
-        n(P.PORT_W, 0), n(P.PORT_NOTCH_R0, 0))),
- (3, "Fixings, all countersunk or tapped from below: 3 × M3 at %s on r %s into inserts in the structure; 2 × M3 "
-     "speaker cradle; 2 × M3 servo tray; 4 × M2 driver board; 2 × M2 port-face ears; 2 × M2 jack board; and one "
-     "M3 ground bond beside the slot."
-     % (" / ".join("%g°" % a for a in P.PLATE_SCREW_AZ), n(P.PLATE_SCREW_R, 0))),
- (4, "The port slot carries three things on two small boards: USB-C on a horizontal board at z %s; the 3.5 mm jack "
-     "hanging UNDER a board at z %s, so its body sits at z −1 to 5, below the halo; and the light sensor on a "
-     "small vertical board looking rearward through a Ø%s hole in the face. One board could not put both axes at "
-     "z 2." % (n(engine.model.USBC_BOARD_Z0, 1), n(engine.model.JACK_BOARD_Z0, 1), n(P.SENSOR_HOLE_D))),
- (5, "The speaker stands cone-UP on its rear boss at (%g, %g), breathing into the cavity and out through the "
-     "perimeter ports. v8's down-firing speaker had nowhere to fire once the plate went solid."
-     % P.SPEAKER_CENTRE),
- (6, "Pad: Ø%s at the top tapering to Ø%s, %s thick, notched at the port slot. The carriage stands on the pad "
-     "through the plate, so pad thickness is part of the drive geometry, not just a foot."
-     % (n(2 * P.PAD_R, 0), n(2 * (P.PAD_R - 0.3), 1), n(P.PAD_T, 1))),
-], w=88)
+s.text(210, 27, "NOTES", 3.4, weight="bold")
+note_list(s, 206, 36, [
+ (1, "Rim ring, r %s - %s x %s deep, machined stainless. %s. The outer wall r %s - %s carries the vent openings, "
+     "%s x %s obround on a %d-position ring, each with a %s x 45 deg polished chamfer at the mouth; the parts list "
+     "records 108 open once the ring screws and the port slot have taken their share."
+     % (n(P.RIM_IN, 1), n(P.PLATE_R, 1), n(P.PLATE_T, 1), "stainless 304 or 316, bare",
+        n(P.RING_WALL_R0, 1), n(P.PLATE_R, 1), n(P.VENT_W, 1), n(P.VENT_H, 1), P.VENT_N, n(P.VENT_CHAMFER, 1))),
+ (2, "Core, r under %s, CNC 6082 aluminium: %s web, %s duct, ribs %s tall on the top face."
+     % (n(P.RIM_IN, 1), n(P.WEB_T, 1), n(P.PLATE_T - P.CLOSING_T - P.WEB_T, 1), n(6.0, 1))),
+ (3, "Closing plate: %s mm laser-cut aluminium, r under %s, %d x M2.5 countersunk from below, flush in the core's "
+     "recess on a %s gasket. Unscrew it to clean the duct - it is the only way in."
+     % (n(P.CLOSING_T, 0), n(P.R_CORE_DUCT, 1), len(P.CLOSING_SCREW_XY), n(P.GASKET_T, 1))),
+ (4, "Port face at r %s, %s thick, carrying USB-C, a 3.5 mm jack, the barrel jack and the ambient-light sensor "
+     "looking rearward through a dia %s hole. The port slot through the core is %s wide, from r %s out to the rim."
+     % (n(P.PORT_FACE_R0, 1), n(P.PORT_FACE_T, 1), n(P.SENSOR_HOLE_D, 1), n(P.PORT_W, 1), n(P.PORT_NOTCH_R0, 1))),
+ (5, "The edge the user sees is the ring, not the core: the ring's outer face is brushed axially and left bare, "
+     "and every external face of the core is black hard anodised. No masked pads anywhere - internal faces are "
+     "chromate or bare, so the finish line is a whole face, not a patch."),
+ (6, "The ring is the mass at the largest radius and the structure the vents pass through, so its section is set "
+     "by the openings, not by stiffness. Plate screws from below at %s, into pillars on the wall."
+     % " / ".join("%g deg" % a for a in P.PLATE_SCREW_AZ)),
+], w=84)
 
-# ---------------------------------------------------------------- SECTION D-D, THE BACK
-BACK = ["base_plate", "pad", "port_face", "usbc_board", "jack_board", "light_board", "internal_structure",
-        "knob_body", "halo_diffuser", "led_flex"]
-BACK += [k for k in engine.parts() if k.startswith(("jack_", "usbc_", "veml7700_", "es9219q_", "plug_"))]
-vD, hD = engine.radial_section(BACK, 0.0, hidden=False)
-pD = Port(s, 22, 247, 1.5, ox=0.0, oy=0.0)
-clD = pD.clip("clipD", 17, 186, 175, 66)
-pD.draw(vD, clip=clD, hidden=False, hatch_paths=hD, wv=0.28)
-s.rect(17, 186, 175, 66, 0.3)
-s.text(17, 183, "SECTION  D–D — THE BACK     1.5 : 1", 3.0, weight="bold")
-s.line(pD.px(0), 186, pD.px(0), 252, 0.15, dash="6 2 1 2")
-pD.dim_h(P.PORT_NOTCH_R0, P.PLATE_R, -1.5, "port slot, r %s to the rim" % n(P.PORT_NOTCH_R0, 0), off=-7)
-pD.leader(P.PORT_FACE_R0, engine.model.USBC_BOARD_Z0 + 1.0, 140, 196, "USB-C, z %s" % n(engine.model.USBC_BOARD_Z0, 1), size=2.2)
-pD.leader(P.PORT_FACE_R0, engine.model.JACK_Z, 140, 203, "3.5 mm jack, axis z %s" % n(engine.model.JACK_Z, 1), size=2.2)
-pD.leader(P.PORT_FACE_R0, 2.5, 140, 210, "light sensor, Ø%s aperture" % n(P.SENSOR_HOLE_D), size=2.2)
-pD.leader(P.R_DIFF_IN + 1.0, (P.HALO_Z0 + P.HALO_Z1) / 2, 140, 217, "halo passes outside the slot", size=2.2)
-s.text(17, 256, "Section on the 0°–180° axis, right half. Nothing in the port slot reaches past r 51, and the halo "
-       "sits at r %s–%s, so the light band runs over the back unbroken." % (n(P.R_DIFF_IN, 1), n(P.R_DIFF_OUT_TOP, 1)), 2.2)
-s.text(17, 259.5, "The plug envelopes are ASSUMED: 12 × 6.5 × 12 for the right-angle cable outside, "
-       "10 × 6.5 × 19 for the internal straight plug.", 2.2)
+# ---------------------------------------------------------------- DETAIL S - a vent opening
+vV, hV = engine.radial_section(["rim_ring_STEEL", "base_plate", "pad"], 200.0, hidden=False, missing_ok=True)
+dS = Port(s, 350, 70, 9.0, ox=P.PLATE_R - 3.0, oy=P.VENT_Z0 + P.VENT_H / 2)
+clS = dS.clip("clipS", 300, 30, 100, 80)
+dS.draw(vV, clip=clS, hidden=False, hatch_paths=hV, wv=0.28)
+s.rect(300, 30, 100, 80, 0.3)
+s.text(300, 27, "DETAIL S - RIM RING WALL     9 : 1", 3.0, weight="bold")
+dS.dim_v(P.VENT_Z0, P.VENT_Z0 + P.VENT_H, P.PLATE_R + 0.6, n(P.VENT_H), off=4)
+dS.dim_h(P.RING_WALL_R0, P.PLATE_R, P.VENT_Z0 - 1.2, n(P.PLATE_R - P.RING_WALL_R0), off=6, above=False)
+s.text(300, 116, "The openings pass through the %s outer wall on 3 deg, into an underside" % n(P.PLATE_R - P.RING_WALL_R0, 1), 2.2)
+s.text(300, 120, "groove that the pad closes. The %s undercut under the wall is what lets" % n(0.8, 1), 2.2)
+s.text(300, 124, "the groove be machined without breaking through the visible face.", 2.2)
 
-# ---------------------------------------------------------------- DETAIL S — the port face
-dS = Port(s, 248, 222, 4.0, ox=49.5, oy=2.0)
-clS = dS.clip("clipS", 198, 186, 100, 66)
-dS.draw(vD, clip=clS, hidden=False, hatch_paths=hD, wv=0.26)
-s.rect(198, 186, 100, 66, 0.3)
-s.text(198, 183, "DETAIL S — THE PORT FACE     4 : 1", 3.0, weight="bold")
-dS.dim_h(P.PORT_FACE_R0, P.PORT_FACE_R0 + P.PORT_FACE_T, -0.5, n(P.PORT_FACE_T), off=8, above=False)
-s.text(198, 256, "Printed face %s thick at r %s, on two M2 ears." % (n(P.PORT_FACE_T), n(P.PORT_FACE_R0, 1)), 2.2)
-s.text(198, 259.5, "Face positions: USB-C %g, sensor %g, jack %+g." % (P.PORT_USBC_T, P.PORT_LIGHT_T, P.PORT_JACK_T), 2.2)
+# ---------------------------------------------------------------- PLAN - THE CORE'S TOP FACE
+Z1 = P.PLATE_T - 0.5
+PL1 = ["base_plate", "rim_ring_STEEL", "port_face"]
+v1, h1 = engine.plan_section(PL1, Z1, missing_ok=True)
+p1 = Port(s, 77, 206, 0.55)
+cl1 = p1.clip("clip1", 17, 150, 120, 112)
+p1.draw(v1, clip=cl1, hidden=False, wv=0.25, hatch_paths=h1)
+s.rect(17, 150, 120, 112, 0.3)
+s.text(17, 147, "PLAN AT z %s - THE CORE'S TOP FACE     scale %.2f : 1" % (n(Z1, 1), p1.k), 3.0, weight="bold")
+s.line(p1.px(-P.PLATE_R), p1.py(0), p1.px(P.PLATE_R), p1.py(0), 0.12, dash="6 2 1 2")
+s.line(p1.px(0), p1.py(-P.PLATE_R), p1.px(0), p1.py(P.PLATE_R), 0.12, dash="6 2 1 2")
+s.text(p1.px(P.PLATE_R) + 1.0, p1.py(0) + 0.8, "0 deg", 2.3)
+s.text(17, 266, "Three through-cuts: the Pi window, the carriage hole at %g deg, the port slot at 0 deg." % P.MOTOR_AZ, 2.2)
+s.text(17, 269.5, "Each keeps %s of solid wall so the duct cannot leak into it. Ring bore r %s, duct ends r %s."
+       % (n(P.DUCT_MARGIN, 1), n(P.RIM_IN, 1), n(P.R_CORE_DUCT, 1)), 2.2)
+s.text(17, 273, "Ribs on this face stand %s tall and carry the boards." % n(6.0, 1), 2.2, col="#555")
 
-save(s, "the60_v9_D04_plate_floor_ports")
+# ---------------------------------------------------------------- PLAN - THROUGH THE VENTS
+Z2 = P.VENT_Z0 + P.VENT_H / 2
+v2, h2 = engine.plan_section(["rim_ring_STEEL", "base_plate", "closing_plate_AL", "port_face"], Z2, missing_ok=True)
+p2 = Port(s, 199, 206, 0.55)
+cl2 = p2.clip("clip2", 141, 150, 116, 112)
+p2.draw(v2, clip=cl2, hidden=False, wv=0.25, hatch_paths=h2)
+s.rect(141, 150, 116, 112, 0.3)
+s.text(141, 147, "PLAN AT z %s - THROUGH THE VENTS     scale %.2f : 1" % (n(Z2, 1), p2.k), 3.0, weight="bold")
+s.line(p2.px(-P.PLATE_R), p2.py(0), p2.px(P.PLATE_R), p2.py(0), 0.12, dash="6 2 1 2")
+s.line(p2.px(0), p2.py(-P.PLATE_R), p2.px(0), p2.py(P.PLATE_R), 0.12, dash="6 2 1 2")
+s.text(141, 266, "The openings run all the way round except where the port slot and the ring's own", 2.2)
+s.text(141, 269.5, "screw bosses interrupt them. Air crosses the inner land through %d intake and" % P.INTAKE_N, 2.2)
+s.text(141, 273, "3 exhaust passages - that circuit is D05.", 2.2)
+
+# ---------------------------------------------------------------- ISOMETRIC - THE RING
+vI = engine.iso(["rim_ring_STEEL"], direction=(0.9, -1.0, 0.55), hidden=False)
+cx, cy = box_centre(vI)
+pI = Port(s, 330, 196, 0.50, ox=cx, oy=cy)
+clI = pI.clip("clipI", 263, 150, 132, 92)
+pI.draw(vI, clip=clI, hidden=False, wv=0.22)
+s.rect(263, 150, 132, 92, 0.3)
+s.text(263, 147, "RIM RING - ISOMETRIC     0.50 : 1", 3.0, weight="bold")
+s.text(263, 246, "The ring on its own, as machined. Every opening in the outer wall is on 3 deg to the radius, so the "
+       "eye sees a fine louvre rather than a row of holes.", 2.2)
+s.text(263, 249.5, "Finish: bare stainless - edge brushed axially, every opening mouth and both edges polished.", 2.2)
+
+save(s, "the60_v15_D04_core_rim_ports")

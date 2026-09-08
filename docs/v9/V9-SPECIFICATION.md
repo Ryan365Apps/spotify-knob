@@ -90,7 +90,7 @@ File: `vendor/Waveshare_ESP32-P4-WIFI6-Touch-LCD-3.4C/ESP32-P4-WIFI6-TOUCH-LCD-3
 
 | # | Provision | Why | Grade | Verdict |
 |---|---|---|---|---|
-| 1 | **Four fixing points on Ø106.07** that bear on the disc's back face and take an M4 screw each | The disc has exactly four M4 holes and no other fixing. The screws are the only way to hold a 115 mm glass disc without clamping its edge (the knob must not touch it) | MUST | Real. But "bosses on the shell" was v8's shape, not a requirement — and it cannot work anyway: two of the four holes are 0.5 mm from the board's edge, so no post can stand under them. v9: four 4 × 6 columns at 42/138/222/318° (three degrees off the holes) carrying 1.2 mm seat tabs that reach the holes inside the 1.5 mm gap above the board |
+| 1 | **Four fixing points on Ø106.07** that bear on the disc's back face and take an M4 screw each | The disc has exactly four M4 holes and no other fixing. The screws are the only way to hold a 115 mm glass disc without clamping its edge (the knob must not touch it) | MUST | Real. But "bosses on the shell" was v8's shape, not a requirement — and it cannot work anyway: two of the four holes are 0.5 mm from the board's edge, so no post can stand under them. v9: four 4 × 6 stadium-section pillars at 52/142/218/308° (seven degrees off the holes, so the Ø7 screw head is clear) carrying 1.2 mm seat tabs that reach the holes inside the 1.5 mm gap above the board; a Ø7.6 pass-through hole in the ledge under each lets the head come up from the plate side |
 | 2 | **M4 thread engagement ≤ 3.5 mm** (and ≥ 2.5 mm) | The tapped hole is 3.5 deep; a longer screw bottoms and splits the housing. So the screw length is the seat thickness + 3.0 ± 0.5 | MUST | Real, measured. v8's "M4 × 5 deep" and "M4 × 6" were wrong |
 | 3 | Screw heads face the plate side and are driven **before the plate goes on** | Follows from the assembly order (knob → display → structure → plate). No long driver, no through-holes in a wall | MUST | Real, and now trivially met by the order. v8's 25 mm through-hole idea is deleted |
 | 4 | Clearance for the disc's own rear features: four Ø4.5 stud bosses (1.5 proud) and the bracket 3.6 proud at r 33.5–39.7 on the header side | They are moulded into the case; anything touching them loads the disc off its four seats | MUST | Real, measured. v8 did not model them |
@@ -158,7 +158,7 @@ File `Vishay_VEML7700-TR_ambient_light_sensor.step`. **MEASURED** 6.8 × 2.35 ×
 
 File `Vybronics_VLV101040A_LRA.step`. **MEASURED** can 10 × 10 × 4.05, installed stack **4.37** with tape and cushion, 13.9 long with the flex tail. **PUBLISHED** in full.
 
-**Placement (Ryan, question 18):** bonded by its tape to the **internal structure's wall next to a wheel post**, so the pulse reaches the knob through that bearing. Unproven — decision-list question C. **Provide:** a flat 10.2 × 10.2 bonding face with 4.4 mm of height, tail channel to the driver board. SHOULD (the product works without it; the detent is the motor's job).
+**Placement (Ryan, question 18):** bonded by its tape to the **internal structure's wall next to a wheel post** (v9: at 258°, beside the post at 273°, on the open side of the base), so the pulse reaches the knob through that bearing. Unproven — decision-list question C. **Provide:** a flat 10.2 × 10.2 bonding face with 4.4 mm of height, tail channel to the driver board. SHOULD (the product works without it; the detent is the motor's job).
 
 ### 4.10 TI DRV2605L haptic driver
 
@@ -168,7 +168,7 @@ Files `TI_DRV2605L_VSSOP10_DGS.step` (3 × 3, 1.10 tall, hand-solderable) and `T
 
 Files `Soberton_SP-4005-1_speaker_D40.step` and the vendor mesh. **Height is 9.05** (the vendor mesh measures z −1.50 to +7.55 over Ø40.00); the datasheet's 8.5 is not the overall height. Flange Ø40, front ring Ø38 / Ø35.5 opening, rear boss Ø16.2, lead exit `_ASSUMED`.
 
-**How it is used (v9 build):** stands cone-up on its rear boss at (0, −30), breathing into the cavity, which vents through the **perimeter ports** (section 6.9). No plate aperture. **Provide:** a cradle ring under the Ø40 flange (flange 4.45–5.95 above the rear face) with three snap fingers over it, two M3 into the plate, lead path to the vendor board's JST. MUST.
+**How it is used (v9 build):** stands cone-up on its rear boss at 180° (centre (−31.5, 0)), breathing into the cavity, which vents through the **perimeter ports** (section 6.9). No plate aperture. **Provide:** a cradle ring under the Ø40 flange (flange 4.45–5.95 above the rear face) with three snap fingers over it, two M3 into the plate, lead path to the vendor board's JST. MUST.
 
 ### 4.12 ESS ES9219Q DAC with headphone amplifier
 
@@ -238,11 +238,11 @@ What it must do, in order of importance: (1) hold the display by its four M4 sea
 
 ### 5.3 Halo diffuser (opal PMMA production; natural PETG prototype)
 
-A ring, v9 build: r 60.0 inside, r 62.0 outside at the bottom leaning out to 62.5 at the top, z 5.0–7.6 (2.6 tall). Its bottom edge sits on the plate top at the rim; **retained by being trapped between the plate and a 0.8 mm lip on the structure at z 7.6–8.4** (Ryan, question 28). No openings for the sockets, which are below it.
+A ring, v9 build: r 60.0 inside, r 62.0 outside at the bottom leaning out to 62.5 at the top, z 5.0–7.6 (2.6 tall), 0.5 chamfer on the outside top edge. Its bottom edge sits on the plate top at the rim; **retained by being trapped between the plate and a 0.8 mm lip on the structure at z 7.6–8.4** (Ryan, question 28). No openings for the sockets, which are below it.
 
 ### 5.4 Knob (PETG prototype; CNC 6082 production)
 
-As v8 in principle, solid: Ø125; 3 mm lip to Ø89; chamfers 2.5 / 1.0 / 1.2; diamond knurl 56 starts, 1.0 deep, 30° helix; straight bore Ø116; on the bore from the bottom: smooth **drive band**, **code band** recessed 0.15 for the strip, **90° V-groove** 1.3 deep with a 0.6 flat root. Nothing else. The band heights follow the motor stack (section 8).
+As v8 in principle, solid: Ø125; 3 mm lip to Ø89; chamfers 2.5 / 1.0 / 1.2; diamond knurl 56 starts, 1.0 deep, in **four whole rows** between the lands (helix angle derived, 30.5°, so the rows fit the 23.8 mm band exactly and the top and bottom rows are complete diamonds); straight bore Ø116; on the bore from the bottom: smooth **drive band**, **code band** recessed 0.15 for the strip, **90° V-groove** 1.3 deep with a 0.6 flat root. Nothing else. The band heights follow the motor stack (section 8).
 
 ### 5.5 Wheel V-collar ×3 and eccentric bush ×3
 
@@ -270,7 +270,7 @@ Not a separate part: a pattern of small holes (e.g. Ø2–2.5, 12–24 of them) 
 
 Three 623ZZ in convex-V collars on eccentric bushes in posts on the structure, running in the bore's concave V-groove level with the display board. Wheel axis r 52.63, retracted 0.57 inside the bore for the drop-on, half a turn seats them.
 
-**Wheel azimuths are restricted by the board's edge** (the collars sweep r 46–59 at the board's height). In the device frame with the board's USB-C edge at the back (0°), the clear arcs are **270–291°, 308–52°, 69–111°, 144–216°**. **Settled (Ryan, 4 September): wheels at 30°, 150°, 270°** (board edge at r 32.3, 42.7, 42.8 on those rays — the best-margin set, leaving the back open from 270° to 30° for the ports and the internal USB-C plug). The motor sector must not coincide with a post.
+**Wheel azimuths are restricted by the board's edge** (the collars sweep r 46–59 at the board's height). In the device frame with the board's USB-C edge at the back (0°), the clear arcs are **270–291°, 308–52°, 69–111°, 144–216°**. **Settled (Ryan, 4 September): wheels at 33°, 153°, 273°** — the 30/150/270 set rotated 3° after the Fusion review so that no post sits over the speaker at 180° and every post is at least 9.5° from a display pillar (board edge at r 36–43 on those rays; the back stays open from 273° to 33° for the ports and the internal USB-C plug). The motor sector must not coincide with a post.
 
 **Assumed:** 0.9 eccentric throw covers print tolerance; three wheels suffice. **Gaps:** production bush lock; groove-to-bore concentricity 0.05 on a print.
 

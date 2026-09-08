@@ -1,4 +1,4 @@
-"""Hidden-line view generation for the 60 v9, from the real build123d model.
+"""Hidden-line view generation for the 60 v15, from the exported assembly.
 
 Nothing here is drawn by hand: every line on a sheet is projected from
 docs/v9/the60_v9/src/model.py.  The only hand work is where a view sits on the
@@ -11,41 +11,54 @@ above src, in bought/bought-parts.
 import os, sys, tempfile, math
 import xml.etree.ElementTree as ET
 
-SRC = os.environ.get("THE60_SRC", "/root/work/v9/src")
+_REPO = os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", "..", ".."))
+SRC = os.environ.get("THE60_SRC", os.path.join(_REPO, "docs", "v15", "the60_v15", "src"))
 sys.path.insert(0, SRC)
 from build123d import *                      # noqa
-from build123d import export_brep, import_brep
+from build123d import export_brep, import_brep, import_step
 from build123d.exporters import Drawing, ExportSVG, LineType
-import model, params as P                    # noqa
+import params as P                           # noqa
 
 SVGNS = "{http://www.w3.org/2000/svg}"
 
 # ---------------------------------------------------------------- the model, built once
-# Building the assembly takes about two minutes, so each body is written to a
-# BREP file the first time and re-read (under a second) on every later run.
-# Delete the cache folder after any change to model.py or params.py.
-CACHE = os.environ.get("THE60_CACHE", "/root/work/cache")
+# v15: bodies come from the exported assembly STEP rather than from a rebuild of
+# model.py, because the vendor STEP files model.py needs are not all in the repo.
+# Names are the assembly's own labels, flattened, so they match the Fusion tree.
+# The two clutch states are two exported files.
+ASM = {True:  os.environ.get("THE60_ASM",  os.path.join(_REPO, "docs", "v15", "the60_v15_assembly.step")),
+       False: os.environ.get("THE60_ASMF", os.path.join(_REPO, "docs", "v15", "the60_v15_assembly_free_spin.step"))}
+CACHE = os.environ.get("THE60_CACHE", os.path.join(os.path.dirname(os.path.abspath(__file__)), ".cache"))
 
 _parts = {}
-def _build(engaged):
-    m = model.made_parts(knurl=False, engaged=engaged)
-    b = model.bought_parts(engaged)
-    return {**m, **b}
+def _flatten(c):
+    out = {}
+    def walk(n):
+        kids = list(getattr(n, "children", []) or [])
+        if kids:
+            for k in kids: walk(k)
+            return
+        lab = n.label or "body"
+        for i, s in enumerate(n.solids()):
+            k = lab if i == 0 else "%s_%d" % (lab, i)
+            while k in out: k += "_x"
+            out[k] = s
+    for k in (getattr(c, "children", []) or []): walk(k)
+    return out
 
 def parts(engaged=True):
-    """{name: solid} for every made and bought body, cached per clutch state."""
+    """{name: solid} for every body in the assembly, cached per clutch state."""
     if engaged in _parts:
         return _parts[engaged]
+    src = ASM[engaged]
     d = os.path.join(CACHE, "engaged" if engaged else "released")
     stamp = os.path.join(d, "_ok")
-    fresh = os.path.isfile(stamp) and all(
-        os.path.getmtime(stamp) > os.path.getmtime(os.path.join(SRC, f))
-        for f in ("model.py", "params.py", "knurl.py"))
+    fresh = os.path.isfile(stamp) and os.path.getmtime(stamp) > os.path.getmtime(src)
     if fresh:
         _parts[engaged] = {f[:-5]: import_brep(os.path.join(d, f))
                            for f in os.listdir(d) if f.endswith(".brep")}
     else:
-        p = _build(engaged)
+        p = _flatten(import_step(src))
         os.makedirs(d, exist_ok=True)
         for f in os.listdir(d):
             os.unlink(os.path.join(d, f))
@@ -53,7 +66,36 @@ def parts(engaged=True):
             export_brep(v, os.path.join(d, k + ".brep"))
         open(stamp, "w").write("ok")
         _parts[engaged] = p
-    return _parts[engaged]
+    d2 = _parts[engaged]
+    if "knob_body" in d2 and len(d2["knob_body"].faces()) > 100:
+        d2["knob_body_knurled"] = d2["knob_body"]
+        d2["knob_body"] = _smooth_knob()
+    return d2
+
+
+def _smooth_knob():
+    """The knob without its knurl, rebuilt from params.
+
+    The exported assembly carries the knurled body (2286 faces); in section and
+    in hidden-line projection every diamond would be drawn. Drawings use the
+    turned profile, as the v9 sheets did (model.knob_body(knurl=False)).
+    """
+    rb, rk, ri, rg = P.R_BORE, P.R_KNOB, P.R_CROWN_IN, P.R_GROOVE_ROOT
+    zs, zt, zcb = P.Z_SKIRT_BOT, P.Z_KNOB_TOP, P.Z_CROWN_BOT
+    f = P.WHEEL_V_FLAT / 2
+    zr = zcb + P.STRIP_T
+    pts = [(rb, zs), (rk - P.CH_BOT, zs), (rk, zs + P.CH_BOT),
+           (rk, zt - P.CH_TOP), (rk - P.CH_TOP, zt),
+           (ri + P.CH_IN, zt), (ri, zt - P.CH_IN),
+           (ri, zcb), (P.CODE_R0, zcb), (P.CODE_R0, zr), (P.CODE_R1, zr), (P.CODE_R1, zcb), (rb, zcb),
+           (rb, P.Z_GROOVE1), (rg, P.Z_RIDGE_MID + f), (rg, P.Z_RIDGE_MID - f), (rb, P.Z_GROOVE0)]
+    with BuildPart() as bp:
+        with BuildSketch(Plane.XZ) as sk:
+            with BuildLine():
+                Polyline([(x, z) for x, z in pts], close=True)
+            make_face()
+        revolve(axis=Axis.Z)
+    return bp.part.solids()[0]
 
 def scene(names=(), engaged=True, missing_ok=False):
     """Bodies by name, in order, with repeats dropped (a name may match twice

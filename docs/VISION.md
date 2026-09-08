@@ -1,131 +1,148 @@
-# Vision & roadmap — the desk dial
+# Vision — the 60
 
-**Date:** 2026-09-01
-**Companion docs:** `PREMIUM-BOM.md` (prototype hardware and the dial mechanism), `CAD-BRIEF.md` (what the model must change), `COMMERCIAL-FEASIBILITY.md` (gates, pricing, drop model), `design/screens.html` (screen design language).
+**Date:** 2026-09-04. **Status:** current requirements. This document is rewritten in place, never appended to; the previous version is in git.
+
+**Companion documents:** `DECISIONS.md` (the numbered decision index), `SOURCING-BOM.md` (every bought part), `v9/V9-SPECIFICATION.md` (the mechanical specification), `SOFTWARE-CONTEXTS.md` (what the software does), `COMMERCIAL-FEASIBILITY.md` (gates, pricing, the run), and the two architecture documents written into the Claude project on 4 September 2026: the processor and display options paper, and the electronics build path.
+
+---
 
 ## One line
 
-A CNC-knurled 110mm dial around a 105mm round display — one wonderfully tactile knob, a screen that shows exactly one thing well, and a companion app on the PC that gives it a context for whatever you're doing. Jabra Speak2 55 footprint. Not a Stream Deck competitor: *the one perfect dial* that sits beside anything.
+A machined knurled ring around a five-inch round screen, on a heavy steel base, that plugs into a computer and becomes the one control worth reaching for. Sixty detents, rendered by a motor, so the feel of the click is software. Its own digital-to-analogue converter, so the computer's audio passes through it and the knob is the volume control in the hardware itself.
+
+The category line is **"Cadrane 60 — a haptic desk dial"**. It is not a Stream Deck competitor. It is the one perfect dial that sits beside anything.
 
 ## The object
 
-**A heavy, expensive watch sitting on your desk that invites you to move it.** The dial must reward idle handling, not only deliberate use — picked up, spun, fidgeted with. That is the emotional target, and the mechanism section of `PREMIUM-BOM.md` is where it is either delivered or lost.
+**A heavy, expensive watch sitting on your desk that invites you to move it.** The dial must reward idle handling, not only deliberate use — picked up, spun, fidgeted with. That is the emotional target. Every other decision serves it: if something improves the feel of the ring it wins, and if it competes for budget with the feel of the ring it loses.
 
-Everything else on this page is in service of that. If a decision improves the feel of the ring, it wins; if it competes for budget with the feel of the ring, it loses.
+The second requirement, added 4 September and now equal in weight: **the screen must feel fast and be beautiful.** Not "acceptable for embedded hardware" — genuinely fluid, sixty frames a second, with depth and light that stand up to being looked at ten thousand times. This is what moved the product off a microcontroller and onto a computer with a real graphics processor.
 
 ## Form
 
-- **135 mm outside diameter, 40 mm tall.** The ergonomic model is a mouse, not a thermostat: heel of the hand on the desk, two or three fingers reaching the touchscreen, open palm across the bezel to spin it. At 60 mm the wrist lifts off the desk and every interaction becomes a reach; at 40 mm the hand stays planted. The current model is ~60 mm — see `CAD-BRIEF.md` §1 for where the 20 mm comes from. Treat 45 mm as the failure threshold.
-- Knurled aluminium outer knob, free-rotating. **Detent mechanism is an open decision** — see `PREMIUM-BOM.md`; the current vibration-only plan has an untested assumption (the vibration source sits on the opposite side of the bearing from your fingers) and a contradiction (a geared position sensor, when gearing was rejected elsewhere for adding slop)
-- ~105mm round display (800×800), fixed, optically bonded glass
-- Chunky weighted base (~250g+), captive braided USB-C
-- **Halo ring**: SK6812 RGBW ring at the base's lower edge, under a printed opal diffuser, firing down/outward onto the desk (Jabra-style corona). On the static base, never the rotating knob.
-- Down-firing 8Ω 2W speaker into the under-base gap; board's dual mics + echo cancellation retained
-- **Ambient light sensor** (VEML7700/BH1750 class, ~£1–2) behind a small window or light pipe on the base — adaptive brightness for screen *and* halo, so evenings never need a manual override. Halo must dim on the same curve as the screen or it dominates a dark room.
-- **Audio front-end (run 2 flagship): quality DAC + headphone/line out, ~£10–15 BOM** (ESS Sabre-class chip + clean amp stage + power filtering). The device enumerates as a USB audio interface: PC audio flows through the dial out to your KEF desk speakers or Bose/quality headphones — the knob controls volume *in the DAC itself*, true zero-lag hardware volume. **Positioning: it never competes with the user's expensive audio gear — it becomes its front-end.** The pitch upgrades from "a nice knob" to "your DAC is the knob"; desk nerds are audio nerds. Caveat: this crowd measures — clean 5V-to-analog power design is the bounded-but-real engineering task; done well it's the review headline. Spike early with a DAC breakout; ships on the run-2 custom PCB.
-- Run 2 glass: 2.5D polished edge, oleophobic + AR (see BOM doc)
+- **Roughly Ø150 mm.** The earlier Ø135 limit is withdrawn. The diameter now follows the panel: a Ø127 picture in a 136.5 mm module, plus the knob wall. The proportion that matters is the picture as a share of the face, and it improves — about 85 %, against 70 % on the Ø125 build.
+- **Height is derived from the parts, not imposed.** The old 40 mm ceiling was set by a development board we no longer use. A flatter object is accepted.
+- **Mass is wanted.** The steel base plate grows with the diameter; more heft reads as quality and helps the flywheel.
+- **The knob is one piece** — lip, skirt, diamond knurl and chamfers, no seam, no visible screw. It is the majority of the visible side. It turns on three small wheels running in a groove cut into its own bore, and it touches nothing else. It never touches the display.
+- **The metal ring on the top face is about 11 mm wide** at this diameter. That is a deliberate change of character from the earlier design and must be looked at on a print before it is accepted.
+- **Sixty detents per turn**, rendered by a gimbal motor pressing on the knob's bore through a silicone band, with the pattern and the weight set in software. The passive magnet detent is deleted. A servo sets the motor's preload, so free spin is real — the motor lifts physically clear.
+- **The knob turns itself**, slowly. Not for speed — for a call ringing, for confirming an action, for a splash flourish.
+- **Halo ring** of addressable light at the base's lower edge, under an opal diffuser, firing down and outward onto the desk. Full 360°. On the static base, never on the rotating knob.
+- **A dedicated mains power supply.** The device is no longer limited to what one computer's cable can deliver. The old firmware cap of roughly 20 % on halo brightness is withdrawn — the halo will be driven properly bright.
+- **Sockets at the back:** the mains inlet, a cable to the computer, and a 3.5 mm line output. No permanent cable.
+- **Perimeter ports** in the base wall under the knob's skirt for the speaker, the microphones and heat.
+- Down-firing notification speaker; the board's microphones retained and made to work, because dictation is a first-tier context.
+- **Ambient light sensor** at the back, so screen and halo dim together and evenings never need a manual override.
 
-## Design law (from the screen mockups — the halo and sounds inherit it)
+## What is inside, and why
 
-- **Colour is ownership:** green = volume, amber = seek, white = the device itself. Red reserved for mute/recording.
-- **Value is an arc from the dot at twelve.** The screen draws it as the phyllotaxis bloom; the halo draws the *same arc, same colour, same clock position* at desk level — the bloom overflowing the glass onto the desk. The halo never shows information the screen doesn't; up close it's reinforcement in peripheral vision, across the room it collapses to status (steady red = muted, breathing green = in a call, off = idle).
-- **Sound is subordinate to light.** Notification-grade only (chimes, alerts, detent-confirms) — never music, never uninvited. Every sound has a halo equivalent and an off switch.
-- **Sound as haptic texture:** the speaker layers a subtle mechanical "kerchunk" under haptic events — end-stops, mode changes, a heavy detent landing — the way a camera shutter sound completes the gesture. Software-driven, so it's tuned per event and per context, and it makes the LRA feel stronger than it is. Quiet enough that it reads as the mechanism, not a speaker.
-- Firmware brightness cap ~20% on the halo (full-white RGBW ring exceeds USB power budget; ambient should be dim anyway).
+Settled 4 September 2026 after a full survey of what is buyable.
 
-## Aesthetic direction (moodboard: KEF LS50, watch bezels/knurled hardware, Totem Alfa machined knob, restomod Saab 900)
+**A computer, not a microcontroller.** Production is a Raspberry Pi Compute Module 5; development is a Raspberry Pi 5, which is the same processor and the same software. The ESP32-P4 is out. It has no graphics processor at all, its pixel accelerator can only rotate in ninety-degree steps — useless for a menu that tracks the knob between detents — and its memory bandwidth measures about 85 megabytes a second against the 140 the new panel needs simply to be scanned out. No microcontroller sold today does runtime blur, glow and shaded three-dimensional line art at this resolution, at any price.
 
-**Law: the metal is monochrome; colour only ever comes from light** (screen bloom + halo — the colour-ownership rules above). No printed or painted accents anywhere on the object.
+Rockchip parts are faster on paper. Raspberry Pi was chosen anyway, for one reason that matters more than raw numbers: this is built by one person with an assistant and the internet, and Raspberry Pi is where the answers are written down. Open upstream graphics drivers, a curated list of display panels that work with a single line of configuration, and a supported way for the device to present itself to a computer as a keyboard and mouse.
 
-- **Knob:** diamond knurl, watch-bezel coarseness — deep enough to catch a fingertip, not aggressive. The *only* heavily textured surface (knurl OR fluting, never both; fluting also needs 4th-axis machining — dearer).
-- **Bevel:** wide 45° chamfer between knurl and glass, **diamond-cut after anodising** — one crisp ring of bright raw aluminium against matt black (diamond-cut alloy wheel / restomod trick). This single machined line is all the jewellery.
-- **Base:** matt black mass, Saab-restomod attitude; the halo is the full-width rear light bar wrapped into a ring, just off the desk.
-- **Underside / speaker aperture:** KEF-style machined concentric ribs radiating around the down-firing speaker — the "engineering you find when you pick it up" moment. Totem-style castellated radial cuts as an option for the top trim ring.
-- **Finish SKUs:** matt black anodise + diamond-cut edge ("turbo"), and silver bead-blast. Same machining program, different anodise bath — cheap variant split for the drop (e.g. 40 black / 10 silver).
+**The real-time work leaves the computer.** The motor control loop, the encoder, the vibration actuator, the clutch servo and the LED ring go on their own small microcontroller, which also presents the scroll wheel to the computer directly. A heavy animation frame can then never disturb a click, and the scroll is one hop from the encoder to the cable. This separation is a requirement, not an optimisation.
+
+**Audio leaves the computer too.** Its own board: an XMOS controller presenting a proper asynchronous sound card to the computer, feeding an ESS converter. The two microphones are captured by the same chip, so the computer sees one sound card with a speaker and a microphone. The equaliser and the spectrum analysis run there, where the samples already are, and send only their results to the screen.
+
+**No headphone drive.** The 3.5 mm socket is a line output to powered speakers. The device is a front end for the audio equipment the owner already has, not a replacement for it.
+
+**Three boards and a small hub**, therefore, sharing one cable to the computer. That is a compound device in the USB specification's own words — the standard arrangement, not a workaround.
+
+## Design law
+
+- **Colour is ownership.** Green means volume, amber means seek, white means the device itself, red is reserved for mute and recording.
+- **The metal is monochrome; colour only ever comes from light** — the screen and the halo. No printed or painted accent anywhere on the object.
+- **Value is an arc from the dot at twelve.** The screen draws it; the halo draws the same arc, the same colour, the same clock position at desk level — the bloom overflowing the glass onto the desk. The halo never shows information the screen does not.
+- **Sound is subordinate to light.** Notification-grade only. Every sound has a halo equivalent and an off switch.
+- **Sound as haptic texture.** The speaker layers a subtle mechanical noise under haptic events, the way a shutter sound completes a photograph. Quiet enough to read as the mechanism, not as a speaker.
+- **One bright line.** A wide 45° chamfer between the knurl and the glass, diamond-cut after anodising: one crisp ring of bright raw aluminium against matt black. That single machined line is all the jewellery.
+
+## Aesthetic direction
+
+Moodboard: KEF LS50, watch bezels and knurled hardware, the Totem Alfa machined knob, restomod Saab 900.
+
+- **Knob:** diamond knurl at watch-bezel coarseness — deep enough to catch a fingertip, not aggressive. The only heavily textured surface.
+- **Base:** matt black mass, with the halo as a full-width rear light bar wrapped into a ring, just off the desk.
+- **Underside:** machined concentric ribs around the speaker — the engineering you find when you pick it up.
+- **Finishes:** matt black anodise with the diamond-cut edge, and a silver bead-blast variant. Same machining programme, different bath.
+
+## The screen
+
+The display decision was settled on evidence rather than preference, and two findings are worth carrying forward because they will come up again.
+
+**There is nothing sharper to buy.** Between three and five inches, across every panel maker and module house checked, the round display catalogue is three panels: 3.4 inch at 800×800, 4 inch at 720×720, and 5 inch at 1080×1080. Round panels are cut from rectangular mother glass and inherit whatever resolution the volume application — motorcycle and car instrument clusters — needed. All three are already past what the eye resolves at desk distance, so resolution is not the lever. Picture size, border width, brightness, black level and optical bonding are.
+
+**Round organic-LED panels stop at 1.75 inches.** There is no catalogue part at three inches or above; the round screen in the new MINI was a custom programme between a supplier and BMW. That matters because our design law wants a black object whose screen disappears into it, and a liquid-crystal panel never fully extinguishes. The recovery is optical bonding, which we must not lose, plus a brighter panel run dim, plus never rendering pure black as the dominant field.
 
 ## Built to outlast us
 
-Four decisions already point this way and were made for other reasons: no battery removes the commonest cause of premature death in electronics; no cloud means nothing dies when a server is switched off; Gate 7 forbids a brick date; and integrating at the operating-system layer means no vendor's product decision can end it.
+No battery, so the commonest cause of premature death is removed. No cloud, so nothing dies when a server is switched off. Integration at the layer the operating system owns, so no vendor's product decision can end it.
 
-What is missing is a parts and service strategy, which is what this actually runs on. Meze publishes a catalogue where every pad, cable and driver module is a purchasable spare. Chris Reeve refurbishes free, forever. Vitsœ has kept shelving parts compatible since 1960. The question to answer is: **which part can an owner replace in year seven?**
+**The display is still the time bomb, and the survey made the case stronger.** A bonded round panel is one factory's part number, and the whole catalogue is three panels wide. In ten years this one will not exist. The answer is the one the Danish tap maker VOLA has used since 1968: the visible body never changes while the working part inside it is updated across decades, so a fifty-year-old tap is still serviceable with current parts. **Design the display as a module on a defined mechanical and electrical interface** — fixed outside diameter, fixed mounting pattern, documented connector — so a different panel can be fitted in 2036. Nearly free now, impossible to retrofit later.
 
-**The display is the time bomb.** A bonded round panel is a product from one factory with one part number, and in ten years it will not exist — not hard to find, gone. The fix is not stockpiling. It is the approach the Danish tap maker VOLA has used since 1968: the visible body of their Arne Jacobsen mixer tap has never changed, while the valve cartridge inside it has been updated across the decades — so a fifty-year-old tap can still be serviced with current parts, and the same body is still sold today. **A shell that never changes, around a working part that can be replaced with whatever exists later.** **Design the display as a module on a defined mechanical and electrical interface** — fixed outside diameter, fixed mounting pattern, documented connector — so a different panel can be fitted in 2036. Nearly free now, impossible to retrofit later.
+The same argument now applies to the computer. A compute module on a documented connector can be replaced with whatever exists later; a processor soldered to the main board cannot. Raspberry Pi commits to producing this one until at least January 2036.
 
-**Split the inventory problem by cost and behaviour:**
+**Split the inventory problem by cost and behaviour.** Stock what is cheap and wears — wheels, cable, silicone band, servo — all storable in a drawer for twenty years. Design interfaces for what is expensive and will be discontinued — the display and the computer — and do not stock those.
 
-- **Stock what is cheap and wears** — bearing, cable, magnets, the detent carrier actuator. All under £20, all storable in a drawer for twenty years.
-- **Design interfaces for what is expensive and will be discontinued** — the display and the main board. Do not stock them; make them swappable for whatever exists later.
+**A trade to state rather than discover.** Optical bonding is right, but it makes glass and panel one part, so a crack means a new display module rather than new glass. Keep the bonding and publish the consequence with a price: cracked glass means a replacement display module, fitted by us, at cost. Repairability only reads as a luxury feature when the cost of each repair is published.
 
-That is the difference between a promise that can be kept and one that gets quietly broken in year eight.
+**Free lifetime service, extending to second owners.** At sixty units this costs a few hours a year and every owner will be known personally. It returns field-wear data nobody else in this category has, and sixty numbered units will have a watched resale market, which is the most credible quality proof available.
 
-**A trade to state rather than discover: bonded glass versus repairability.** Optical bonding is right — no air gap, deeper blacks, better touch — but it makes glass and panel one part, so a crack means a new display module rather than new glass. Keep the bonding, and publish the consequence with a price: *cracked glass means a replacement display module, fitted by us, at cost.* Repairability only reads as a luxury feature if the cost of each repair is published.
+**The exit guarantee.** A published commitment that if the project ends, the firmware source and the configuration page are released publicly. It costs nothing until it is needed, and it is the one thing a technically literate buyer of a connected object actually worries about.
 
-**Free lifetime service, and it extends to second owners.** At 60 units this costs a few hours a year and you will personally know every owner. Bearing re-lubricated, detent re-tensioned, re-anodised if it needs it. It also returns real field-wear data that nobody else in this category has. Serving second owners is unusual and deliberate: sixty numbered units will have a watched resale market, and resale value is the most credible quality proof available.
+## What the software is
 
-**The exit guarantee.** Gate 7 covers what happens if a service dies. This covers what happens if *we* stop: a published commitment that if the project ends, the firmware source and the configuration page are released publicly. It costs nothing until it is needed, and it is the one thing a technically literate buyer of a connected object actually worries about.
+The firmware and its companion application are **TorqueOS**. The device is a display and a controller; the integrations run in a companion application on the computer, Windows first and macOS to follow.
 
-## Context roadmap (each = screen layout + dial mapping + data source in the companion app)
+**Scroll is home.** The bezel is a scroll wheel by default, which works in every application ever written with no vendor code, and the screen is a deck of touch modifier hotspots around a Now Playing widget. A finger resting on a hotspot varies the detent from full clicks to a free flywheel. Touching the left zone opens media, where the bezel is volume.
 
-**Tier 1 — the five that must be flawless (drop ships these):**
-1. **Calls / mute** — the commercial wedge. Rotate = call volume, press = mute, halo = unmissable status. Teams/Zoom APIs.
-2. **Media + album art** — the founding use case. SMTC on Windows: art from whatever is playing; volume, seek, transport. (Spotify becomes one source among many.)
-3. **System volume** — always-works fallback, HID.
-4. **Dictation / Wisprflow** — push-to-talk on the dial, recording state on halo (red), HID hotkeys.
-5. **App launcher / selector** — the Galaxy-Watch-bezel radial from screen 05; five slots at 72°, one green dot.
+**Contexts surface themselves.** A call starts and the call context takes the screen; music plays and Now Playing takes it back; a coding agent asks permission and the halo glows amber until the knob is pressed; a timer runs and the screen fills. The ring menu is the manual override and holds at most six owner-chosen entries.
 
-**Tier 2 — cheap once the context engine exists:** clock/timer/pomodoro, weather, calendar/next-meeting (Granola), stocks ticker, brightness and settings radials (screens 06–08).
+**The timer is the signature screen.** Sixty detents, sixty minutes: turn the knob like a dive bezel to twenty-five, a bloom fills to twenty-five, the halo shows the same arc on the desk, and when it lands the speaker gives a kerchunk. That is the screen a watch collector is shown.
 
-**Tier 3 — novel, differentiating:** **Claude Code status** (waiting/working glance state, press to approve a permission prompt, chime on completion), OBS/streaming, MX-Creative-Console-style per-app creative maps (brush size, timeline scrub), MIDI/HID device mode so pro apps map it natively with zero plugin work.
+Priorities, in order: calls and mute, media and album art, system volume, dictation, the launcher, notifications, and the coding agent's status. Below that: timer, clock, calendar, spectrum display. Parked: market data, where the buyer brings their own licence.
 
-## What Radial will never do
+## What the 60 will never do
 
-These are **decisions, not deferrals.** Each one removes capability the product could have had, each one costs something real, and the cost is named so nobody re-opens the argument cheaply. Anything that belongs on this list and isn't yet is a gap; anything here that acquires an exception stops being a principle.
+Decisions, not deferrals. Each removes capability, and each cost is named so nobody reopens the argument cheaply.
 
-**No cloud. Ever.** The device never talks to a server we own. Verifiable by anyone with a packet capture, which is the point — for a connected object this is the most checkable claim available, and almost nobody in the premium hardware world can make it.
-*Costs:* no remote analytics, no silent fixes, no A/B testing. Firmware updates are user-initiated over the local page. When an upstream API changes, the user has to act.
+**No cloud, ever.** The device never talks to a server we own — verifiable with a packet capture, which is the point. *Costs:* no remote analytics, no silent fixes. Updates are user-initiated over the local page.
 
-**No battery.** This is a desk object with a captive cable and a 250 g base, sited eighteen inches from a PC. A battery would buy nothing and cost a charge state to manage, thermal limits, UN38.3 testing and air-freight restrictions, a worse power budget on a halo already capped at 20% — and, decisively, **an expiry date.** Every other decision here argues for permanence; a swollen cell in year five contradicts all of them.
-*Costs:* it never leaves the desk. **Consequence to resolve:** a captive cable that cannot be replaced is the one detail that would undercut this claim — either make it field-replaceable behind a service screw, or replace it free for life and say so.
+**No battery.** A desk object with a cable and a heavy base, eighteen inches from a computer. A battery buys nothing and costs a charge state, thermal limits, transport testing, and decisively an expiry date. *Consequence resolved:* the cable is not captive and is replaceable.
 
-**No vendor alignment. Integrate at the layer the OS owns, never the layer a vendor owns.** SMTC, not the Spotify API. HID, not a vendor plugin. Note what this already cost: the founding use case *was* Spotify, and moving to SMTC deliberately swapped a richer integration for a poorer, more universal one.
-*Costs:* no playlists, no library browsing, no device transfer, no per-service features. Expect to be asked for a Spotify-only feature within a week of shipping; this line is the answer.
+**No vendor alignment.** Integrate at the layer the operating system owns, never the layer a vendor owns. *Costs:* no per-service features. The exception is narrow and named: accepting, declining and ending a call needs per-application work for Teams, Zoom and Meet, because no operating system exposes it — but the promise that the device reacts to every call on the machine is kept at the system layer.
 
-**No phone app. The phone is a browser and nothing more.** Setup uses a phone — QR, captive portal, config page — but that is a web page served by the device, not an application.
-*Costs:* no push notifications, no remote control from a phone, no companion app features. In exchange: no app store, no two mobile platforms, and no annual OS churn that can brick the product.
+**No phone application.** Setup uses a phone as a browser and nothing more.
 
-**No macros, no scripting, no user-defined actions.** You configure *which* apps appear and in what order; you never define *what the dial does*. Stream Deck's proposition is infinite configurability, which is why it needs an afternoon of setup and why no two are alike. Radial's inverse proposition is that it arrives already knowing what to do.
-*Costs:* power users will ask, and the answer is no. Crossing this line means competing with Stream Deck on Stream Deck's terms, against a plugin marketplace we do not have.
+**No macros, no scripting, no user-defined actions.** You configure which contexts appear and in what order; you never define what the dial does. Stream Deck's proposition is infinite configurability, which is why it needs an afternoon of setup. Ours is the inverse: it arrives already knowing what to do.
 
-**No speakerphone, and no music from the onboard speaker.** Jabra owns acoustic quality in this footprint and a mediocre one would define the reviews.
-*Note the same logic applied consistently:* it bears on the run-2 DAC too. Audio measurement is a culture — this crowd runs sweeps and posts them. Either the DAC clears that scrutiny or it is the speakerphone mistake in a different component.
+**No speakerphone, and no music from the onboard speaker.** Jabra owns acoustic quality in this footprint and a mediocre one would define the reviews. The same logic governs the converter: this audience runs measurement sweeps and publishes them. Either the audio clears that scrutiny or it is the speakerphone mistake in a different component.
 
-**Deferred, not refused:** an open plugin store. Stated honestly as a deferral because it may one day be right; it is not a principle.
+**Deferred, not refused:** an open plugin store.
 
 ### Tested and kept
 
-Three additions were argued for removal and survived. Recorded so they are not re-litigated:
+- **Touch** — first tier, and the path to trackpad-class input. A question raised on 4 September and still open: whether the screen should also present itself to the computer as a precision touchpad. It is technically clean, and it argues for ten-point touch on the production panel rather than five.
+- **Microphones** — dictation is a first-tier context, not an accident of a development board. Kept, and therefore used.
+- **Speaker** — kept as a notification instrument, never a music source.
 
-- **Touch** — complements the bevel gesture set, and is the path to trackpad-class input later. Kept.
-- **Microphones** — dictation is a first-tier context, not an accident of the dev board. Kept, and therefore *used*, not merely present.
-- **Speaker** — ringer and notification UX tied to on-screen animation, customisable alert sounds. Kept as a notification instrument, still never a music source.
+## Where the project is
 
+| Stage | State |
+|---|---|
+| Mechanical, v9 | Built around the old 3.4 inch panel and the ESP32-P4 board. Superseded by the architecture change; v10 is briefed |
+| Mechanical, v10 | To be specified: the five-inch panel, a computer with its cooling, and a mains inlet as well as the data socket |
+| Electronics | Architecture settled. No board designed yet. The carrier board will be laid out by a contractor and assembled by a factory — no hand soldering |
+| Software | Not started on the new platform. Godot to prototype, Qt Quick for the product |
+| Hardware in hand | Raspberry Pi 5 and the five-inch round HDMI display on order |
 
+## The open questions that matter
 
-## Hardware evolution
-
-| Stage | What | Key deltas |
-|---|---|---|
-| v0 prototype (~£120) | Waveshare 3.4C, 3D printed, passive bearing + LRA ticks | Prove art pipeline (port 5 first), feel, contexts |
-| Bench spike (~£25) | **Magnetic detent rig first** — magnets on a printed rotor against steel pole pieces, no electronics. Then a vibration-coupling test across the bearing | Answers whether a 110mm ring needs real mechanical force or tolerates faked clicks. Cheapest, most informative, and blocks the CNC drawings until answered |
-| Bench spike 2 | Switchable detent: pole-piece ring moved 1–2mm by one small actuator | Two mechanical characters in one object — crisp clicks for menus, free inertial spin for volume, with an audible change-over. Most of what force feedback promised, without a custom motor |
-| The drop (50 × £450) | CNC knurled knob, halo ring, speaker, captive cable, white-glove onboarding | Landed ~£130–165 + ring/speaker ~£8 |
-| Run 2 | Custom PCB (P4 module, proper USB-C device port, drop unused dev-board parts), raw panel + custom 2.5D glass, **DAC + headphone/line out (+£10–15)**, ambient light sensor | Claws back £25–35/unit; NANO board is the reference layout; DAC power design is the one real engineering task |
-
-## Open spikes, in order
-
-1. Port-5 test: art + HID over the board's full-speed USB-C alone (see BOM doc — likely kills the adapter).
-2. Windows SMTC → art on the round screen (Gate 3, now on the real panel).
-3. BLDC bench feel test.
-4. Halo prototype: one SK6812 ring + diffuser print, wired to the 40-pin header — same week as first case print.
-5. DAC breakout (e.g. PCM5102/ES9023 board, ~£8) on the P4's I2S → line out to desk speakers; dial writes DAC volume directly. Proves the "your DAC is the knob" feel long before the custom PCB.
-6. Kerchunk tuning: layer speaker transients under LRA events; A/B with haptics-only — cheap, pure software.
+1. Does the bare five-inch panel need a start-up command sequence, and will the supplier provide it? It decides whether the production display is a week of work or a specialist job.
+2. Touch on the production panel — a bonded sensor on a round cover lens must be specified. Five points or ten, and the trackpad question decides it.
+3. Prove on the bench that the compute module runs from its own power supply while appearing to the computer as a keyboard. Everything else depends on it.
+4. The metal ring on the top face narrows to about 11 mm. Look at it before accepting it.
+5. Grounding the rotating knob so a resting finger survives the ring turning. The proposal is a spring-loaded contact running in the same groove as the wheels.
+6. The halo diffuser gap, which sets the final diameter and is still a guess.

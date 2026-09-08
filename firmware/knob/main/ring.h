@@ -50,6 +50,11 @@ typedef struct {
     const char *(*glyph_at)(int i);
     const char *(*name_at)(int i);
 
+    /* Optional. Draw item i's glyph into `into`, a square container of `px`,
+     * in `colour`. Return true if you drew it and the font symbol should not
+     * be used. For shapes the symbol font cannot spell - see knob_app_t. */
+    bool (*draw_glyph)(int i, lv_obj_t *into, int px, lv_color_t colour);
+
     /* A tap on the selected item, on its rim glyph, or on the centre. Called
      * through lv_async_call, so it is safe to destroy the ring inside it. */
     void (*on_pick)(int i);

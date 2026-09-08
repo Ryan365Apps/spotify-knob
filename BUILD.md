@@ -188,13 +188,23 @@ CONFIG_ESP_TASK_WDT_PANIC=y              # a wedge reboots instead of printing f
 CONFIG_ESP_TASK_WDT_TIMEOUT_S=10
 CONFIG_ESP_SYSTEM_PANIC_PRINT_REBOOT=y
 CONFIG_ESP_SYSTEM_PANIC_REBOOT_DELAY_SECONDS=1 # so the backtrace reaches the monitor
-CONFIG_BT_ENABLED=y                      # Wave 10 only
+CONFIG_BT_ENABLED=y                      # Wave 10
 CONFIG_BT_NIMBLE_ENABLED=y               # NimBLE, not Bluedroid — roughly half the footprint
+CONFIG_BT_NIMBLE_HID_SERVICE=y           # NOT BT_NIMBLE_SVC_HID_ENABLED, which does not exist
+CONFIG_BT_NIMBLE_MAX_CONNECTIONS=1
+CONFIG_BT_NIMBLE_NVS_PERSIST=y           # the bond survives a power cycle and a reflash
+CONFIG_BT_NIMBLE_SVC_GAP_APPEARANCE=0x03C1   # keyboard; this field is hex, not decimal
 ```
+
+**BLE cost, measured 2026-09-04:** `knob.bin` went from 0x19e140 to 0x1d86b0, **+233 KB of flash**, against 54% of a 4 MB app partition still free. Flash was never the constraint. RAM is the open question and it is what Wave 10 exists to measure — the 30-second heap telemetry reports it, and the album-art log line now carries the BLE link state and the RSSI alongside the fetch time so the throughput comparison falls out of an ordinary evening's log.
+
+Two symbol names cost a build cycle each: the HID service is `BT_NIMBLE_HID_SERVICE` (the `BT_NIMBLE_SVC_HID_*` symbols are its sub-options, not its switch), and `BT_NIMBLE_SVC_GAP_APPEARANCE` is declared `hex`, so the keyboard value is `0x03C1` and not `961`.
 
 **`CONFIG_MBEDTLS_DYNAMIC_BUFFER` is off on purpose and the comment above used to say the opposite.** It exists to save RAM by allocating TLS buffers only while they are in use, and against this workload — one long-lived connection, a request every few seconds — the buffers were not coming back. Fixed buffers cost more at rest and cost the *same* at rest forever, which is the trade a device holding one connection for days should take. The reasoning is written into `sdkconfig.defaults` as well. Do not re-enable it to save memory without measuring free heap over ten minutes.
 
-**`sdkconfig` is gitignored and is not regenerated from `sdkconfig.defaults` once it exists.** A setting added only to the defaults file will not reach a build on a machine that already has an `sdkconfig`. Change both.
+**`sdkconfig` is gitignored and is not regenerated from `sdkconfig.defaults` once it exists.** A setting added only to the defaults file will not reach a build on a machine that already has an `sdkconfig`. Change both — **and change it in place.**
+
+Appending to `sdkconfig` does not work, which cost a build cycle on 2026-09-04. `confgen` parses the file and writes it back out in Kconfig order, and lines added after its trailing `# End of deprecated options` marker are discarded. Worse, the discard is silent: symbols that happen to default to `y` still look as though they took. **Either edit the existing line in place, or delete `sdkconfig` entirely and let it regenerate from `sdkconfig.defaults`** — the second is the reliable one, and it is safe as long as the defaults file is the real record, which it is.
 
 ### Working with the board
 
@@ -616,6 +626,20 @@ The rules that came out of that:
 
 **The same asymmetry bit a second time, hiding underneath the first (found 2026-09-04).** `px_blend` blends toward a *channel* value — 0–31 for red and blue, 0–63 for green — and three call sites were passing `255, 255, 255` because that is what white looks like. Every channel saturates, but not at the same rate: at alpha 25, red and blue reach 24 of their 31 levels while green reaches 24 of 63. So "white" came out strongly magenta. It was visible as a purple loading spinner and as a magenta cast through the unlit field of the dial screens, and it survived the Bayer fix because the two faults are independent. **A colour crossing into a blend is only white if it is white in the space the blend works in** — `WHITE_R5/G6/B5` now exist so nobody has to remember which space that is.
 
+**A full-circle `lv_arc` poisons every redraw on its screen, not just its own.** LVGL draws one through `draw_border_complex` → `lv_draw_sw_mask_radius_init`, and that builds an anti-aliased mask for the whole radius **however small the invalidated area is**. A 344 px arc's bounding box is the entire screen, so *anything* that changes anywhere on that screen lands inside it and pays a full 172 px mask build.
+
+This rebooted the device twice on 2026-09-04, watchdog on `taskLVGL` with `IDLE0` starved, backtrace `circ_calc_aa4` → `lv_draw_sw_mask_radius_init` → `draw_border_complex` → `lv_draw_sw_arc` both times. **The first fix moved the animation off the arc and onto a 60 px mic and changed nothing**, because the mic sits inside the arc's box — which is the part worth remembering. Shrinking what you animate does not help; the arc has to not be there. The Dictation screen carries its state on the mic and the word instead.
+
+**A ring that has to animate belongs in a canvas, drawn by hand like `bloom.c` does the Spotify progress rim.** Anything on a canvas is an image blit, and invalidating a small object over it costs a `memcpy` of that region rather than a mask rebuild.
+
+**Set a style only when its value actually changes — and check the path where nothing is happening.** The same breathe callback wrote the arc's opacity every 100 ms *while dictation was off*, so the screen paid that full-circle redraw ten times a second the entire time it was open, doing nothing. The guard that skips a no-op write is worth more than the frame-rate choice above it.
+
+**Scaling a point field: keep the ratio of dot size to spacing, not the point count.** The boot sequence is authored at 1080 px with 2 600 points — mean spacing about 17.7 px against dots of 2.5–8.3 px, a ratio of roughly a third, and that ratio is what makes it read as a field of fine points. Translating it to 360 px by keeping the count proportional to *area* (300) and then enlarging every dot to cover the gaps produced 300 fat blobs overlapping into a smear. **More points at their honest size costs the same pixels and looks like the drawing.** 800 fine dots and 300 fat ones are within a few hundred writes of each other.
+
+**A small dot must be placed to sub-pixel accuracy, or it snaps.** Rounding a dot's centre to the nearest pixel is invisible on a 20 px shape and is the entire difference on a 2 px one — it jumps a whole column at a time as it moves. Measure the falloff from the true fractional centre. This is the same fault, and the same fix, as the bloom's rasteriser above.
+
+**A soft falloff is fog.** `(1 − d²/r²)²` puts most of a dot's light in its outer half. A Gaussian on true distance, cut at the radius where it has fallen to about 7%, gives a defined core and a short edge instead.
+
 **Values carried from the simulator to the panel have to be looked at on glass.** Opacity, stroke width and type size were all set against a monitor showing the panel at roughly twice life size, and all three were wrong on hardware: bloom alphas roughly doubled, spindles from 0.8–1.3 px to 1.6–3.4, and the whole type ramp up a size or two. A display-calibration difference, not a change of intent.
 
 ### Two seams that exist as code, not as intentions
@@ -892,7 +916,42 @@ This screen is the recovery documentation. It should never be seen, and it must 
 - **Measure Wi-Fi throughput with BLE connected and with it disconnected**, and decide from that whether BLE stays up permanently.
 - **Done when:** spinning right starts dictation and spinning right again does not stop it; spinning left stops it; two spins the same way inside 2 s resync a deliberately desynced device; and the album art fetch time with BLE connected is recorded in this document.
 
-**The UI half landed 2026-09-04, ahead of the transport.** `main/wispr_app.c` implements screens 13 A and 13 B of `design/screens.html` rev W: the belief, the three-detent threshold, the idempotent direction mapping and the 2 s resync are all built and can be judged on glass. What is missing is only the transport - `main/hid.c` is a stub that logs the report it would have sent and reports itself connected, so the screens are exercisable without a BLE stack existing. Wave 10 deletes `HID_TRANSPORT_STUB`, fills in `send_report`, and does the throughput measurement; nothing above `hid.h` should need a line changed.
+**The UI landed 2026-09-04 and the transport landed the same day, behind it.** `main/wispr_app.c` implements screens 13 A and 13 B of `design/screens.html` rev W: the belief, the three-detent threshold, the idempotent direction mapping and the 2 s resync. `main/hid_ble.c` is NimBLE with `esp_hid`'s BLE device backend — a boot-protocol keyboard report map, bonds persisted to NVS, and pairing with MITM protection using a six-digit passkey shown on the panel rather than the fixed `123456` the IDF example ships. The stub it replaced went out through the same `hid.h` and nothing above that header changed by a line, which was the point of putting the seam in first.
+
+Three things are built into it and are not negotiable. **Keyboard only** — no consumer-control page, no mouse, because a bonded HID keyboard can already type anything into the PC and the descriptor should be the smallest surface that does the job. **Never USB** — nothing in the firmware enables TinyUSB or USB HID, for the brick reason in section 3. And **every chord is press-then-release**, serialised at a minimum of 600 ms, with the refusal returned as an error rather than swallowed, because the Wispr app only flips its believed state when a chord actually went out.
+
+**The measurement this wave existed to take, and it is not the one anyone expected.** BUILD.md asked whether BLE could stay up permanently, expecting the answer to come from Wi-Fi throughput. It came from internal RAM instead, on the first flash:
+
+| | Free internal | Largest block | Free DMA |
+|---|---|---|---|
+| Before BLE, Spotify running | ~43 600 | 31 744 | ~35 800 |
+| BLE started at boot | **2 635** | **1 536** | **995** |
+
+The BLE controller takes roughly 40 KB of internal RAM, and roughly 43 KB is all there was. The device could not complete a TLS handshake, so Spotify never got past the splash, and `esp_hidd_dev_init` failed too — trying to allocate its own 4 KB event-loop task with nothing left to allocate from. Both symptoms, one cause.
+
+**So BLE does not start at boot.** `hid_init()` costs nothing; `hid_start()` brings the radio up and is called when the Dictation app, the Launcher, or the Settings Dictation item is opened. The device boots exactly as it did before BLE existed, and by the time one of those screens is entered Spotify's `on_exit` has already released its TLS session. This is the option this document always held open — *"BLE can be scoped to the Wispr app if the numbers are bad"* — and the numbers are bad.
+
+**A second attempt at making room went wrong, and it is worth recording because the option looks obviously correct.** `CONFIG_SPIRAM_TRY_ALLOCATE_WIFI_LWIP` reads as "move the Wi-Fi buffers to PSRAM", which is exactly what was wanted. It does more than that: enabling it switches the Wi-Fi driver to a different buffer scheme entirely — static TX buffers instead of dynamic, static RX 16 instead of 10, a receive block-ack window of 16 instead of 6, and a 32-entry PSRAM cache TX pool. **Free PSRAM went from 7 366 564 to 700 744**, and mbedTLS could no longer allocate an SSL context at all — `mbedtls_ssl_setup returned -0x7F00`, which is `ALLOC_FAILED` — so the device could not reach Spotify even with the radio switched off. Reverted the same day, and the Wi-Fi buffer configuration is now byte-identical to the pre-BLE one.
+
+Only the NimBLE host's own allocations go to PSRAM, which is safe because nothing allocates until `hid_start()` runs. The BLE *controller* cannot move at all; it feeds the radio and has to be internal.
+
+**Shrinking the controller is what made it start reliably.** The stock controller is sized for a general-purpose stack, and starting it late failed with `esp_bt_controller_init -4` from the Launcher while succeeding from Dictation a minute later, at the same ~53 KB free. That is fragmentation, not exhaustion: the largest free block sits at 31 744, which is the clean 32 KiB DRAM region at `0x3FCF0000` — the big 155 KiB region is chopped up by the time an app asks. So the answer was to need less rather than to find more. `BT_CTRL_BLE_MAX_ACT` 6 → 1, scan and the master role and DTM and BLE test all off, and `BT_CTRL_RUN_IN_FLASH_ONLY=y` to get the controller's code out of IRAM. **After that, BLE costs almost nothing in total bytes** — 38 755 free internal with Spotify against 39 347 with the radio up — though the largest free block still halves, from 26 624 to 14 336.
+
+**Two traps, both found by reading a log line rather than the code.**
+
+`ble_gap_adv_params.channel_map` **must be set explicitly.** Zeroing the struct leaves it 0, NimBLE passes that straight through, and the spec requires at least one advertising channel bit. The IDF example does not set it either. `0x07` for all three channels.
+
+**Leave the BLE controller's feature set at the IDF defaults.** Trimming it — `BT_CTRL_BLE_MAX_ACT` down from 6, and scan, the master role, DTM and BLE test all off — made the controller reject LE Set Advertising Parameters with `hci_err 0x212` (`INV_HCI_CMD_PARMS`), surfacing as `rc=530` from `ble_gap_adv_start`. The whole trim was worth about 4 KB. Restoring the defaults fixed it immediately.
+
+**`BT_CTRL_RUN_IN_FLASH_ONLY=y` is the one worth keeping**, and it is the one that mattered: it moves the controller's code out of IRAM and takes BLE's internal-RAM cost from roughly 43 KB to almost nothing. It changes code placement and nothing about what the controller accepts.
+
+**How this was found is the part worth keeping.** Three separate guesses at which option broke advertising were all wrong, because the premise was wrong: advertising had never worked *once* on this board. A separate bug meant the first BLE build never reached an advertise call at all, so the trim was tuned against a baseline that did not exist and every attempted fix was debugging two faults simultaneously. **Do not tune a thing you have never seen work.** Get a known-good baseline, then take savings back one option at a time against something you can compare with.
+
+And **`ble_hs_cfg.sync_cb` fires from the host task, which starts inside `nimble_port_freertos_init`** — so any flag the sync callback depends on has to be set *before* that call, not after. Setting it after meant the advertise attempt inside `on_sync` refused on a not-yet-started check, with the same visible symptom.
+
+**The coexistence problem this leaves, and it is the real one.** With the radio up the largest free internal block is 14 336, and mbedTLS needs a contiguous 16 KB input buffer for a handshake. So **returning to Spotify after visiting Dictation fails** — `mbedtls_ssl_setup returned -0x7F00`, `ALLOC_FAILED` — and only a reboot recovers it. This is the same 16 KB threshold Wave 5 hit from the other direction with the album-art connection. The fix is to give the radio back on leaving the BLE apps, which is the option this document always named: *BLE only while the app that needs it is in the foreground, trading a reconnect delay on entry for everything else the rest of the time.*
+
+**Still to do:** pair with the PC, prove a chord arrives, add the deinit path, then prove reconnect after a PC sleep and record the throughput numbers — the album-art log line carries the BLE state and the RSSI, so those come out of an ordinary evening's log.
 
 ### Wave 11 — Launcher
 
@@ -924,7 +983,8 @@ This screen is the recovery documentation. It should never be seen, and it must 
 | A config-page endpoint that forwards text to the HID layer | Remote code execution on the PC from anywhere on the LAN | Architectural rule in section 6: the HID layer accepts a fixed action enum, never a string. Check for this in review, not at runtime |
 | Encoder emits phantom counts on fast reversal (**confirmed, Wave 2 D4, 2026-09-02**: drift +2,+1,0,−2,0,+1,+1,+2,+3,+4 over ten fast waggles, clockwise bias, worst +4) | Fast direction changes miscount; slow single detents count exactly, so ordinary corrections are barely exposed | **The waggle gesture was retired over this** (section 5, 2026-09-02). Residual exposure is volume accuracy during violent corrections; one driver-tuning experiment (poll/debounce in `bidi_knob.c`) still worth trying |
 | BLE HID reconnect after PC sleep | Dictation trigger dead until replug | Windows is unreliable here. If it proves bad, Classic BT HID on the second MCU (UART, GPIO48/38) is the fallback — more work, better reconnect |
-| BLE and Wi-Fi contending for one radio | Album art visibly slower | Measured in Wave 10; BLE can be scoped to the Wispr app if the numbers are bad |
+| BLE and Wi-Fi contending for one radio | Album art visibly slower | Still open, and still to be measured — the album-art log line now carries the BLE state and the RSSI so it comes free |
+| BLE and everything else contending for **internal RAM** (**confirmed 2026-09-04**: the controller took free internal from ~43 600 to 2 635, largest block 31 744 to 1 536, and the device could not complete a TLS handshake) | Everything stops at once, and it presents as Spotify never leaving the splash rather than as anything to do with Bluetooth | BLE is started on demand rather than at boot, so the device boots as it did before it existed. Wi-Fi, lwIP and the NimBLE host moved to PSRAM. **The radio was the risk everyone watched; memory was the one that landed** |
 | Radial's believed dictation state drifts from reality | Spinning right does nothing | Two spins the same way inside 2 s force the toggle; the Flow Bar is the visible truth |
 | Wispr ignores its hands-free chord while certain apps have focus (**observed with VS Code, 2026-08-31**) | Belief flips, reality does not — the trigger looks dead | Wispr-side quirk, not the transport: it reproduces from a physical keyboard. Resync spin recovers; if it proves frequent, revisit whether hotkey-driven hands-free is reliable enough at all |
 | Phone abandons the SoftAP mid-setup | Setup appears to hang; both iOS and Android drop a Wi-Fi network with no internet | Captive-portal responses on the well-known probe URLs (`/generate_204`, `/hotspot-detect.html`) keep the phone attached; Wave 9 |

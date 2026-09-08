@@ -1,0 +1,569 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+  html{color-scheme:light dark}
+  body{margin:0;font:14px system-ui,-apple-system,"Segoe UI",sans-serif}
+  img{max-width:100%}
+  [hidden]{display:none!important}
+</style>
+<title>The 60 Halo Section</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&display=swap">
+<style>
+  :root{
+    --ground:#EDEFF1; --surface:#FFFFFF; --sunk:#E3E7EA;
+    --ink:#14181C; --ink2:#4B555E; --ink3:#78838C;
+    --rule:#D2D8DC; --rule2:#BFC7CD;
+    --accent:#D93C17; --accent-soft:#F6C9BB;
+    --steel:#A6AFB6; --steel-line:#7C868D;
+    --plastic:#8C979F; --plastic-2:#A7B0B7;
+    --opal:#F4EEE4; --opal-line:#B9AE9C;
+    --white-face:#FCFAF6; --white-line:#9AA3AA;
+    --knob:#2A3036; --knob-line:#151A1E;
+    --void:#EDEFF1;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --ground:#0E1114; --surface:#161A1E; --sunk:#0A0C0F;
+      --ink:#E7EBEE; --ink2:#A3AEB6; --ink3:#6E7982;
+      --rule:#272E34; --rule2:#39424A;
+      --accent:#FF5E33; --accent-soft:#5A2415;
+      --steel:#6E777E; --steel-line:#98A2A9;
+      --plastic:#4E585F; --plastic-2:#3C454B;
+      --opal:#D9D2C5; --opal-line:#8B8375;
+      --white-face:#EEEAE2; --white-line:#8B949B;
+      --knob:#1B2025; --knob-line:#454F57;
+      --void:#0E1114;
+    }
+  }
+  :root[data-theme="dark"]{
+    --ground:#0E1114; --surface:#161A1E; --sunk:#0A0C0F;
+    --ink:#E7EBEE; --ink2:#A3AEB6; --ink3:#6E7982;
+    --rule:#272E34; --rule2:#39424A;
+    --accent:#FF5E33; --accent-soft:#5A2415;
+    --steel:#6E777E; --steel-line:#98A2A9;
+    --plastic:#4E585F; --plastic-2:#3C454B;
+    --opal:#D9D2C5; --opal-line:#8B8375;
+    --white-face:#EEEAE2; --white-line:#8B949B;
+    --knob:#1B2025; --knob-line:#454F57;
+    --void:#0E1114;
+  }
+
+  *{box-sizing:border-box}
+  body{
+    background:var(--ground); color:var(--ink);
+    font-family:"Source Serif 4",Georgia,"Times New Roman",serif;
+    font-size:17px; line-height:1.62; -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:1200px; margin:0 auto; padding:48px 28px 96px; display:flex; flex-direction:column; gap:52px}
+  .col{max-width:68ch}
+  .full{max-width:none}
+
+  h1,h2,h3,th,.eyebrow{font-family:Archivo,"Helvetica Neue",Arial,sans-serif}
+  .mono,td.n,th.n,.figno{font-family:"IBM Plex Mono",ui-monospace,Menlo,monospace}
+
+  .eyebrow{font-size:11.5px; font-weight:600; letter-spacing:.13em; text-transform:uppercase; color:var(--accent); font-family:"IBM Plex Mono",monospace}
+  h1{font-size:clamp(34px,5vw,52px); font-weight:700; line-height:1.02; letter-spacing:-.022em; margin:.28em 0 0; text-wrap:balance}
+  .standfirst{font-size:20px; color:var(--ink2); margin:.7em 0 0; text-wrap:pretty}
+  h2{font-size:24px; font-weight:600; letter-spacing:-.012em; margin:0 0 .5em; text-wrap:balance}
+  h3{font-size:15px; font-weight:600; letter-spacing:.02em; margin:0 0 .35em}
+  p{margin:0 0 1em} p:last-child{margin-bottom:0}
+  strong{font-weight:600}
+
+  header{border-bottom:1px solid var(--rule); padding-bottom:34px}
+
+  .verdict{display:flex; flex-wrap:wrap; margin-top:30px; border:1px solid var(--rule); background:var(--surface); border-radius:2px}
+  .verdict div{padding:16px 22px; flex:1 1 160px; border-right:1px solid var(--rule)}
+  .verdict div:last-child{border-right:0}
+  .verdict .k{font-family:"IBM Plex Mono",monospace; font-size:10.5px; letter-spacing:.11em; text-transform:uppercase; color:var(--ink3)}
+  .verdict .v{font-family:"IBM Plex Mono",monospace; font-size:25px; font-weight:500; letter-spacing:-.02em; margin-top:5px; font-variant-numeric:tabular-nums}
+  .verdict .v.hot{color:var(--accent)}
+  .verdict .n{font-size:13.5px; color:var(--ink2); margin-top:3px; line-height:1.35}
+
+  .figs{display:grid; grid-template-columns:repeat(auto-fit,minmax(340px,1fr)); gap:30px}
+  figure{margin:0; background:var(--surface); border:1px solid var(--rule); border-radius:2px; padding:20px 20px 16px; display:flex; flex-direction:column; gap:14px}
+  figure.wide{grid-column:1/-1}
+  .figtop{display:flex; align-items:baseline; gap:10px; border-bottom:1px solid var(--rule); padding-bottom:11px; flex-wrap:wrap}
+  .figno{font-size:11px; font-weight:500; color:var(--accent); letter-spacing:.08em}
+  .figtitle{font-family:Archivo,sans-serif; font-weight:600; font-size:15px; letter-spacing:-.005em}
+  .figscroll{overflow-x:auto}
+  svg{display:block; max-width:100%; height:auto; margin:0 auto}
+  figcaption{font-size:14.5px; color:var(--ink2); line-height:1.5; text-wrap:pretty}
+  figcaption b{color:var(--ink); font-weight:600}
+
+  table{border-collapse:collapse; width:100%; font-size:14.5px}
+  caption{text-align:left; font-family:Archivo,sans-serif; font-size:15px; font-weight:600; padding-bottom:10px; color:var(--ink)}
+  th,td{padding:8px 12px 8px 0; text-align:left; border-bottom:1px solid var(--rule); vertical-align:baseline}
+  th{font-size:11px; font-weight:600; letter-spacing:.09em; text-transform:uppercase; color:var(--ink3); border-bottom-color:var(--rule2)}
+  td.n,th.n{font-variant-numeric:tabular-nums; text-align:right; padding-right:16px}
+  tr.pick td{background:var(--accent-soft)}
+  tr.pick td:first-child{font-weight:600}
+  tr.now td{color:var(--ink3)}
+  .tablewrap{overflow-x:auto; background:var(--surface); border:1px solid var(--rule); border-radius:2px; padding:20px 22px}
+
+  ul{margin:0 0 1em; padding-left:1.15em}
+  li{margin-bottom:.42em}
+  li::marker{color:var(--ink3)}
+
+  .split{display:grid; grid-template-columns:repeat(auto-fit,minmax(300px,1fr)); gap:26px}
+  .note{border-left:2px solid var(--accent); padding-left:18px}
+  .note h3{color:var(--accent)}
+  footer{border-top:1px solid var(--rule); padding-top:22px; font-size:13.5px; color:var(--ink3)}
+</style>
+</head>
+<body>
+
+
+<div class="wrap">
+
+<header class="col">
+  <div class="eyebrow">the 60 · v15 · halo</div>
+  <h1>The Halo Section</h1>
+  <p class="standfirst">The band is a display, not a mood light. Two changes make it read as one seamless line: point the LEDs somewhere other than at the diffuser, and give the diffuser enough thickness to survive being a part.</p>
+
+  <div class="verdict">
+    <div><div class="k">As built</div><div class="v hot">0.2 mm</div><div class="n">LED fires straight at the diffuser</div></div>
+    <div><div class="k">Channel</div><div class="v">4.0 mm</div><div class="n">LEDs fire down at a white floor</div></div>
+    <div><div class="k">Ring section</div><div class="v">4.0 mm</div><div class="n">vertical face, was 0.9 at the foot</div></div>
+    <div><div class="k">Object</div><div class="v">Ø179.4</div><div class="n">band stands 2 mm proud of the knob</div></div>
+  </div>
+</header>
+
+<section class="col">
+  <h2>Three answers</h2>
+  <p><strong>Down beats up, and for the reason you gave.</strong> Firing up still leaves a direct sight line from each LED to the bottom of the diffuser's inner face, so the band would be brightest and dottiest along its lower edge — a gradient with the scallops strongest exactly where the eye lands. Fire down at a white floor and <em>nothing</em> the viewer sees is direct light. The floor becomes the source, and a lit patch on the floor is roughly twice as wide as the throw — an LED 4 mm up makes an 8 mm pool. That pool, not the 2 mm LED, is what the diffuser sees.</p>
+  <p><strong>That is the prize, and it changes the count.</strong> The pitch-to-distance rule applies to a source you can see. Replace a 2 mm LED with an 8 mm bounced pool and the rule relaxes hard — <strong>60 LEDs may well be enough</strong>, which is much closer to your instinct than the 120 I gave you. It has to be measured rather than asserted, but 60 is now the number to test first, not the fallback.</p>
+  <p><strong>The cost of firing down is the thermal path.</strong> The strip goes back onto printed plastic — a ledge inside the channel — instead of onto the stainless ring, which was one of the better arguments for the move. Two ways out: a thin aluminium ledge instead of a printed one, or fire up with a low white baffle shielding the diffuser, which keeps the strip on steel and still makes the light indirect. Fig 3 draws all three.</p>
+</section>
+
+<section class="figs">
+
+<!-- ============ FIG 1 : AS BUILT ============ -->
+<figure>
+  <div class="figtop"><span class="figno">FIG 1</span><span class="figtitle">Radial section — as built (v15)</span></div>
+  <div class="figscroll">
+  <svg viewBox="0 0 620 800" role="img" aria-label="Radial cross-section of the v15 halo: an LED strip stands vertically on a band on the printed structure wall and fires outward across a 0.2 millimetre gap into a leaning opal diffuser only 0.9 millimetres thick at its foot.">
+    <defs>
+      <pattern id="st1" width="9" height="9" patternTransform="rotate(45)" patternUnits="userSpaceOnUse">
+        <rect width="9" height="9" fill="var(--steel)"/><line x1="0" y1="0" x2="0" y2="9" stroke="var(--steel-line)" stroke-width="1.1"/>
+      </pattern>
+      <pattern id="kn1" width="7" height="7" patternTransform="rotate(-45)" patternUnits="userSpaceOnUse">
+        <rect width="7" height="7" fill="var(--knob)"/><line x1="0" y1="0" x2="0" y2="7" stroke="var(--knob-line)" stroke-width="1"/>
+      </pattern>
+      <marker id="a1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse"><path d="M0,1 L9,5 L0,9 z" fill="var(--accent)"/></marker>
+      <marker id="d1" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,2 L9,5 L0,8 z" fill="var(--ink3)"/></marker>
+    </defs>
+
+    <g font-family="IBM Plex Mono, monospace" font-size="10.5" fill="var(--ink3)">
+      <line x1="104" y1="30" x2="104" y2="784" stroke="var(--rule2)"/>
+      <g stroke="var(--rule2)"><line x1="98" y1="702" x2="104" y2="702"/><line x1="98" y1="430" x2="104" y2="430"/><line x1="98" y1="243" x2="104" y2="243"/><line x1="98" y1="195" x2="104" y2="195"/></g>
+      <text x="92" y="705" text-anchor="end">z 0</text><text x="92" y="433" text-anchor="end">z 8.0</text>
+      <text x="92" y="246" text-anchor="end">z 13.5</text><text x="92" y="198" text-anchor="end">z 14.9</text>
+    </g>
+
+    <line x1="112" y1="753" x2="560" y2="753" stroke="var(--rule2)" stroke-width="1.5"/>
+    <text x="556" y="770" text-anchor="end" font-family="IBM Plex Mono, monospace" font-size="10.5" fill="var(--ink3)">desk</text>
+    <rect x="112" y="702" width="196" height="51" fill="var(--plastic-2)" stroke="var(--ink3)"/>
+    <text x="150" y="732" font-family="IBM Plex Mono, monospace" font-size="10.5" fill="var(--ink)">pad</text>
+
+    <rect x="112" y="430" width="287" height="272" fill="url(#st1)" stroke="var(--steel-line)" stroke-width="1.4"/>
+    <rect x="130" y="479" width="143" height="223" fill="var(--void)" stroke="var(--steel-line)" stroke-width="1.2"/>
+    <rect x="273" y="496" width="126" height="153" fill="var(--void)" stroke="var(--steel-line)" stroke-width="1.2"/>
+    <rect x="273" y="675" width="126" height="27" fill="var(--void)" stroke="var(--steel-line)" stroke-width="1.2"/>
+    <g font-family="IBM Plex Mono, monospace" font-size="10.5" fill="var(--ink)">
+      <text x="152" y="516">intake groove</text><text x="281" y="580">vent</text><text x="118" y="452">stainless rim ring · 8</text>
+    </g>
+
+    <rect x="178" y="30" width="54" height="400" fill="var(--plastic)" stroke="var(--ink3)"/>
+    <text x="186" y="330" font-family="IBM Plex Mono, monospace" font-size="10.5" fill="var(--ink)" transform="rotate(-90 186 330)">printed wall</text>
+    <rect x="232" y="243" width="34" height="187" fill="var(--plastic-2)" stroke="var(--ink3)"/>
+    <rect x="266" y="252" width="46" height="169" fill="var(--knob)" stroke="var(--knob-line)"/>
+    <rect x="312" y="305" width="14" height="52" fill="var(--accent)"/>
+
+    <g stroke="var(--accent)" stroke-width="1.6">
+      <line x1="326" y1="320" x2="334" y2="320" marker-end="url(#a1)"/>
+      <line x1="326" y1="331" x2="334" y2="331" marker-end="url(#a1)"/>
+      <line x1="326" y1="342" x2="334" y2="342" marker-end="url(#a1)"/>
+    </g>
+
+    <path d="M334,430 L365,430 L399,243 L334,243 Z" fill="var(--opal)" stroke="var(--opal-line)" stroke-width="1.4"/>
+    <rect x="232" y="216" width="133" height="27" fill="var(--plastic)" stroke="var(--ink3)"/>
+    <text x="240" y="235" font-family="IBM Plex Mono, monospace" font-size="10.5" fill="var(--ink)">lip</text>
+    <path d="M246,195 L399,195 L399,30 L246,30 Z" fill="url(#kn1)" stroke="var(--knob-line)" stroke-width="1.4"/>
+    <text x="268" y="120" font-family="IBM Plex Mono, monospace" font-size="10.5" fill="var(--ink)">knob skirt</text>
+
+    <g font-family="IBM Plex Mono, monospace" font-size="11">
+      <line x1="326" y1="331" x2="326" y2="392" stroke="var(--accent)"/>
+      <line x1="334" y1="360" x2="334" y2="392" stroke="var(--accent)"/>
+      <line x1="316" y1="388" x2="344" y2="388" stroke="var(--accent)" stroke-width="1.4" marker-start="url(#a1)" marker-end="url(#a1)"/>
+      <text x="352" y="392" fill="var(--accent)" font-weight="500">0.2 gap</text>
+
+      <line x1="334" y1="424" x2="334" y2="466" stroke="var(--rule2)"/>
+      <line x1="365" y1="434" x2="365" y2="466" stroke="var(--rule2)"/>
+      <line x1="334" y1="462" x2="365" y2="462" stroke="var(--accent)" stroke-width="1.4" marker-start="url(#a1)" marker-end="url(#a1)"/>
+      <text x="374" y="466" fill="var(--accent)" font-weight="500">0.9 foot</text>
+
+      <line x1="411" y1="243" x2="470" y2="243" stroke="var(--rule2)"/>
+      <line x1="411" y1="430" x2="470" y2="430" stroke="var(--rule2)"/>
+      <line x1="464" y1="243" x2="464" y2="430" stroke="var(--ink3)" stroke-width="1.2" marker-start="url(#d1)" marker-end="url(#d1)"/>
+      <text x="474" y="340" fill="var(--ink2)">5.5</text>
+      <text x="410" y="278" fill="var(--ink)">opal, leaning</text>
+      <text x="410" y="294" fill="var(--ink3)">0.9 → 1.9 thick</text>
+    </g>
+    <text x="112" y="796" font-family="IBM Plex Mono, monospace" font-size="10.5" fill="var(--ink3)">r 79.5 →  outward  →  r 90</text>
+  </svg>
+  </div>
+  <figcaption>The strip stands upright and fires <b>straight at the diffuser from 0.2 mm</b>. The opal is <b>0.9 mm thick where it meets the steel</b> and leans outward from there, so a cantilevered cone stands on a knife edge. Both the optics and the fragility come from this one arrangement.</figcaption>
+</figure>
+
+<!-- ============ FIG 2 : PROPOSED ============ -->
+<figure>
+  <div class="figtop"><span class="figno">FIG 2</span><span class="figtitle">Radial section — proposed</span></div>
+  <div class="figscroll">
+  <svg viewBox="0 0 620 800" role="img" aria-label="Proposed radial cross-section: a four millimetre thick opal ring with a vertical outer face standing two millimetres proud, seated on a shelf on the stainless rim ring, lit indirectly by a strip firing downward onto a white floor inside a four millimetre channel.">
+    <defs>
+      <pattern id="st2" width="9" height="9" patternTransform="rotate(45)" patternUnits="userSpaceOnUse">
+        <rect width="9" height="9" fill="var(--steel)"/><line x1="0" y1="0" x2="0" y2="9" stroke="var(--steel-line)" stroke-width="1.1"/>
+      </pattern>
+      <pattern id="kn2" width="7" height="7" patternTransform="rotate(-45)" patternUnits="userSpaceOnUse">
+        <rect width="7" height="7" fill="var(--knob)"/><line x1="0" y1="0" x2="0" y2="7" stroke="var(--knob-line)" stroke-width="1"/>
+      </pattern>
+      <marker id="a2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse"><path d="M0,1 L9,5 L0,9 z" fill="var(--accent)"/></marker>
+      <marker id="d2" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,2 L9,5 L0,8 z" fill="var(--ink3)"/></marker>
+    </defs>
+
+    <g font-family="IBM Plex Mono, monospace" font-size="10.5" fill="var(--ink3)">
+      <line x1="104" y1="30" x2="104" y2="784" stroke="var(--rule2)"/>
+      <g stroke="var(--rule2)"><line x1="98" y1="702" x2="104" y2="702"/><line x1="98" y1="430" x2="104" y2="430"/><line x1="98" y1="294" x2="104" y2="294"/><line x1="98" y1="243" x2="104" y2="243"/></g>
+      <text x="92" y="705" text-anchor="end">z 0</text><text x="92" y="433" text-anchor="end">z 8.0</text>
+      <text x="92" y="297" text-anchor="end">z 12.0</text><text x="92" y="246" text-anchor="end">z 13.5</text>
+    </g>
+
+    <line x1="112" y1="753" x2="560" y2="753" stroke="var(--rule2)" stroke-width="1.5"/>
+    <text x="556" y="770" text-anchor="end" font-family="IBM Plex Mono, monospace" font-size="10.5" fill="var(--ink3)">desk</text>
+    <rect x="112" y="702" width="196" height="51" fill="var(--plastic-2)" stroke="var(--ink3)"/>
+    <text x="150" y="732" font-family="IBM Plex Mono, monospace" font-size="10.5" fill="var(--ink)">pad</text>
+
+    <!-- rim ring with a 1 mm shelf out to r 89.7 at its top -->
+    <path d="M112,430 L433,430 L433,396 L399,396 L399,702 L112,702 Z" fill="url(#st2)" stroke="var(--steel-line)" stroke-width="1.4"/>
+    <rect x="130" y="479" width="143" height="223" fill="var(--void)" stroke="var(--steel-line)" stroke-width="1.2"/>
+    <rect x="273" y="496" width="126" height="153" fill="var(--void)" stroke="var(--steel-line)" stroke-width="1.2"/>
+    <rect x="273" y="675" width="126" height="27" fill="var(--void)" stroke="var(--steel-line)" stroke-width="1.2"/>
+    <g font-family="IBM Plex Mono, monospace" font-size="10.5" fill="var(--ink)">
+      <text x="152" y="516">intake groove</text><text x="281" y="580">vent</text><text x="118" y="452">stainless rim ring · 8</text>
+    </g>
+    <text x="440" y="414" font-family="IBM Plex Mono, monospace" font-size="10" fill="var(--ink2)">1 mm shelf carries the overhang</text>
+
+    <!-- printed wall, moved in 1.0 -->
+    <rect x="144" y="30" width="54" height="400" fill="var(--plastic)" stroke="var(--ink3)"/>
+    <text x="152" y="336" font-family="IBM Plex Mono, monospace" font-size="10.5" fill="var(--ink)" transform="rotate(-90 152 336)">printed wall −1.0</text>
+
+    <!-- white channel floor on the steel -->
+    <rect x="198" y="423" width="136" height="7" fill="var(--white-face)" stroke="var(--white-line)" stroke-width="0.8"/>
+    <text x="204" y="418" font-family="IBM Plex Mono, monospace" font-size="10" fill="var(--ink)">white floor</text>
+
+    <!-- ledge + down-firing strip -->
+    <rect x="198" y="260" width="120" height="17" fill="var(--plastic)" stroke="var(--ink3)"/>
+    <rect x="198" y="277" width="120" height="17" fill="var(--knob)" stroke="var(--knob-line)"/>
+    <rect x="242" y="294" width="26" height="9" fill="var(--accent)"/>
+    <text x="204" y="273" font-family="IBM Plex Mono, monospace" font-size="10" fill="var(--ink)">ledge + strip, facing down</text>
+
+    <!-- indirect light: down to floor, bounce out to diffuser -->
+    <g stroke="var(--accent)" stroke-width="1.5" fill="none">
+      <path d="M255,305 L216,418" marker-end="url(#a2)"/>
+      <path d="M255,305 L255,418" marker-end="url(#a2)"/>
+      <path d="M255,305 L296,418" marker-end="url(#a2)"/>
+    </g>
+    <g stroke="var(--accent)" stroke-width="1.4" fill="none" opacity="0.75">
+      <path d="M222,420 L330,330" marker-end="url(#a2)"/>
+      <path d="M258,420 L330,372" marker-end="url(#a2)"/>
+      <path d="M294,420 L330,406" marker-end="url(#a2)"/>
+    </g>
+
+    <!-- thick vertical diffuser, 4.0, protruding 2.0 -->
+    <path d="M334,430 L399,430 L433,396 L433,260 L399,243 L334,243 Z" fill="var(--opal)" stroke="var(--opal-line)" stroke-width="1.5"/>
+
+    <!-- lip roofs the channel -->
+    <rect x="198" y="216" width="167" height="27" fill="var(--plastic)" stroke="var(--ink3)"/>
+    <rect x="198" y="236" width="167" height="7" fill="var(--white-face)" stroke="var(--white-line)" stroke-width="0.8"/>
+    <text x="206" y="232" font-family="IBM Plex Mono, monospace" font-size="10.5" fill="var(--ink)">lip · white underside</text>
+
+    <path d="M246,195 L399,195 L399,30 L246,30 Z" fill="url(#kn2)" stroke="var(--knob-line)" stroke-width="1.4"/>
+    <text x="268" y="120" font-family="IBM Plex Mono, monospace" font-size="10.5" fill="var(--ink)">knob skirt Ø175.4</text>
+
+    <g font-family="IBM Plex Mono, monospace" font-size="11">
+      <line x1="198" y1="440" x2="198" y2="474" stroke="var(--rule2)"/>
+      <line x1="334" y1="440" x2="334" y2="474" stroke="var(--rule2)"/>
+      <line x1="198" y1="470" x2="334" y2="470" stroke="var(--accent)" stroke-width="1.4" marker-start="url(#a2)" marker-end="url(#a2)"/>
+      <text x="214" y="490" fill="var(--accent)" font-weight="500">4.0 white channel</text>
+
+      <line x1="334" y1="252" x2="334" y2="180" stroke="var(--rule2)"/>
+      <line x1="433" y1="252" x2="433" y2="180" stroke="var(--rule2)"/>
+      <line x1="334" y1="186" x2="433" y2="186" stroke="var(--ink3)" stroke-width="1.2" marker-start="url(#d2)" marker-end="url(#d2)"/>
+      <text x="384" y="176" text-anchor="middle" fill="var(--ink)">4.0 thick</text>
+
+      <line x1="399" y1="160" x2="399" y2="130" stroke="var(--rule2)"/>
+      <line x1="433" y1="160" x2="433" y2="130" stroke="var(--rule2)"/>
+      <line x1="399" y1="136" x2="433" y2="136" stroke="var(--accent)" stroke-width="1.4" marker-start="url(#a2)" marker-end="url(#a2)"/>
+      <text x="441" y="140" fill="var(--accent)" font-weight="500">+2.0 proud</text>
+
+      <line x1="445" y1="243" x2="500" y2="243" stroke="var(--rule2)"/>
+      <line x1="445" y1="430" x2="500" y2="430" stroke="var(--rule2)"/>
+      <line x1="494" y1="243" x2="494" y2="430" stroke="var(--ink3)" stroke-width="1.2" marker-start="url(#d2)" marker-end="url(#d2)"/>
+      <text x="504" y="340" fill="var(--ink2)">5.5</text>
+      <text x="444" y="290" fill="var(--ink)">Ø179.4</text>
+    </g>
+    <text x="112" y="796" font-family="IBM Plex Mono, monospace" font-size="10.5" fill="var(--ink3)">r 79.5 →  outward  →  r 90</text>
+  </svg>
+  </div>
+  <figcaption>Two changes. <b>Optically</b>: the strip hangs face-down from a ledge and fires at a white floor 4 mm below; the diffuser is lit only by what comes back up, so no LED is ever in direct view. <b>Structurally</b>: the ring becomes <b>4.0 mm thick with a vertical outer face</b>, standing 2 mm proud at Ø179.4, seated on a 1 mm shelf added to the top of the stainless ring so nothing cantilevers.</figcaption>
+</figure>
+
+<!-- ============ FIG 3 : THREE DIRECTIONS ============ -->
+<figure class="wide">
+  <div class="figtop"><span class="figno">FIG 3</span><span class="figtitle">Which way the LEDs point — the whole decision</span></div>
+  <div class="figscroll">
+  <svg viewBox="0 0 900 340" role="img" aria-label="Three channel details compared: LEDs firing outward at the diffuser from 0.2 millimetres, LEDs firing up with a baffle shielding the diffuser, and LEDs firing down onto a white floor. Only the second and third give the diffuser no direct view of a source.">
+    <defs>
+      <marker id="a3" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,1 L9,5 L0,9 z" fill="var(--accent)"/></marker>
+    </defs>
+
+    <!-- A : outward -->
+    <g>
+      <text x="20" y="22" font-family="Archivo, sans-serif" font-size="13" font-weight="600" fill="var(--ink)">A · outward (as built)</text>
+      <rect x="20" y="40" width="200" height="200" fill="var(--sunk)" stroke="var(--rule2)"/>
+      <rect x="20" y="40" width="16" height="200" fill="var(--plastic)" stroke="var(--ink3)"/>
+      <rect x="196" y="40" width="24" height="200" fill="var(--opal)" stroke="var(--opal-line)" stroke-width="1.3"/>
+      <rect x="176" y="90" width="20" height="100" fill="var(--knob)" stroke="var(--knob-line)"/>
+      <rect x="188" y="126" width="8" height="28" fill="var(--accent)"/>
+      <g stroke="var(--accent)" stroke-width="1.6"><line x1="192" y1="140" x2="200" y2="140" marker-end="url(#a3)"/></g>
+      <rect x="20" y="240" width="200" height="14" fill="var(--steel)" stroke="var(--steel-line)"/>
+      <text x="30" y="286" font-family="IBM Plex Mono, monospace" font-size="11" fill="var(--accent)" font-weight="500">direct view: yes</text>
+      <text x="30" y="304" font-family="IBM Plex Mono, monospace" font-size="11" fill="var(--ink2)">heat → plastic</text>
+      <text x="30" y="322" font-family="IBM Plex Mono, monospace" font-size="11" fill="var(--ink2)">needs 120+ LEDs</text>
+    </g>
+
+    <!-- B : up + baffle -->
+    <g>
+      <text x="350" y="22" font-family="Archivo, sans-serif" font-size="13" font-weight="600" fill="var(--ink)">B · up, with a baffle</text>
+      <rect x="350" y="40" width="200" height="200" fill="var(--sunk)" stroke="var(--rule2)"/>
+      <rect x="350" y="40" width="16" height="200" fill="var(--plastic)" stroke="var(--ink3)"/>
+      <rect x="526" y="40" width="24" height="200" fill="var(--opal)" stroke="var(--opal-line)" stroke-width="1.3"/>
+      <rect x="350" y="40" width="176" height="10" fill="var(--white-face)" stroke="var(--white-line)" stroke-width="0.8"/>
+      <rect x="380" y="216" width="80" height="24" fill="var(--knob)" stroke="var(--knob-line)"/>
+      <rect x="410" y="208" width="20" height="8" fill="var(--accent)"/>
+      <rect x="500" y="160" width="8" height="80" fill="var(--white-face)" stroke="var(--white-line)"/>
+      <text x="470" y="152" font-family="IBM Plex Mono, monospace" font-size="10" fill="var(--ink)">baffle</text>
+      <g stroke="var(--accent)" stroke-width="1.5" fill="none">
+        <path d="M420,204 L390,58" marker-end="url(#a3)"/>
+        <path d="M420,204 L420,58" marker-end="url(#a3)"/>
+        <path d="M420,204 L470,58" marker-end="url(#a3)"/>
+      </g>
+      <g stroke="var(--accent)" stroke-width="1.4" fill="none" opacity="0.75">
+        <path d="M400,56 L522,120" marker-end="url(#a3)"/>
+        <path d="M460,56 L522,84" marker-end="url(#a3)"/>
+      </g>
+      <rect x="350" y="240" width="200" height="14" fill="var(--steel)" stroke="var(--steel-line)"/>
+      <text x="360" y="286" font-family="IBM Plex Mono, monospace" font-size="11" fill="var(--ink)" font-weight="500">direct view: no</text>
+      <text x="360" y="304" font-family="IBM Plex Mono, monospace" font-size="11" fill="var(--ink2)">heat → steel ✓</text>
+      <text x="360" y="322" font-family="IBM Plex Mono, monospace" font-size="11" fill="var(--ink2)">top of band brightest</text>
+    </g>
+
+    <!-- C : down -->
+    <g>
+      <text x="680" y="22" font-family="Archivo, sans-serif" font-size="13" font-weight="600" fill="var(--ink)">C · down at a white floor</text>
+      <rect x="680" y="40" width="200" height="200" fill="var(--sunk)" stroke="var(--rule2)"/>
+      <rect x="680" y="40" width="16" height="200" fill="var(--plastic)" stroke="var(--ink3)"/>
+      <rect x="856" y="40" width="24" height="200" fill="var(--opal)" stroke="var(--opal-line)" stroke-width="1.3"/>
+      <rect x="680" y="228" width="176" height="12" fill="var(--white-face)" stroke="var(--white-line)" stroke-width="0.8"/>
+      <rect x="696" y="70" width="110" height="22" fill="var(--plastic)" stroke="var(--ink3)"/>
+      <rect x="696" y="92" width="110" height="20" fill="var(--knob)" stroke="var(--knob-line)"/>
+      <rect x="736" y="112" width="24" height="8" fill="var(--accent)"/>
+      <g stroke="var(--accent)" stroke-width="1.5" fill="none">
+        <path d="M748,122 L706,224" marker-end="url(#a3)"/>
+        <path d="M748,122 L748,224" marker-end="url(#a3)"/>
+        <path d="M748,122 L796,224" marker-end="url(#a3)"/>
+      </g>
+      <g stroke="var(--accent)" stroke-width="1.4" fill="none" opacity="0.75">
+        <path d="M712,226 L852,140" marker-end="url(#a3)"/>
+        <path d="M752,226 L852,180" marker-end="url(#a3)"/>
+        <path d="M792,226 L852,214" marker-end="url(#a3)"/>
+      </g>
+      <rect x="680" y="240" width="200" height="14" fill="var(--steel)" stroke="var(--steel-line)"/>
+      <text x="690" y="286" font-family="IBM Plex Mono, monospace" font-size="11" fill="var(--ink)" font-weight="500">direct view: no</text>
+      <text x="690" y="304" font-family="IBM Plex Mono, monospace" font-size="11" fill="var(--accent)">heat → plastic ledge</text>
+      <text x="690" y="322" font-family="IBM Plex Mono, monospace" font-size="11" fill="var(--ink2)">most even; costs light</text>
+    </g>
+  </svg>
+  </div>
+  <figcaption>The question is not up or down, it is <b>whether the diffuser can see a source at all</b>. A fails on that. B and C both pass, and differ on where the heat goes and which end of the band runs brightest. C is the most even and the one to test first; B keeps the strip on the stainless, which is worth having if the bench says the two look the same.</figcaption>
+</figure>
+
+<!-- ============ FIG 4 : UNROLLED ============ -->
+<figure class="wide">
+  <div class="figtop"><span class="figno">FIG 4</span><span class="figtitle">Unrolled plan — why indirect changes the count</span></div>
+  <div class="figscroll">
+  <svg viewBox="0 0 900 470" role="img" aria-label="Unrolled plan comparing direct lighting at 10 millimetre pitch, which gives separate pools of light, with indirect lighting where each LED makes a wide pool on a white floor and neighbouring pools merge before the light reaches the diffuser.">
+    <defs>
+      <radialGradient id="pl" cx="50%" cy="100%" r="75%">
+        <stop offset="0%" stop-color="var(--accent)" stop-opacity="0.95"/>
+        <stop offset="55%" stop-color="var(--accent)" stop-opacity="0.30"/>
+        <stop offset="100%" stop-color="var(--accent)" stop-opacity="0"/>
+      </radialGradient>
+      <radialGradient id="pw" cx="50%" cy="100%" r="75%">
+        <stop offset="0%" stop-color="var(--accent)" stop-opacity="0.55"/>
+        <stop offset="70%" stop-color="var(--accent)" stop-opacity="0.22"/>
+        <stop offset="100%" stop-color="var(--accent)" stop-opacity="0"/>
+      </radialGradient>
+      <marker id="d4" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,2 L9,5 L0,8 z" fill="var(--ink3)"/></marker>
+    </defs>
+
+    <text x="20" y="24" font-family="Archivo, sans-serif" font-size="13" font-weight="600" fill="var(--ink)">Direct · 53 LEDs · pitch 10.0 · gap 0.2 — the source is a 2 mm chip</text>
+    <rect x="20" y="40" width="740" height="26" fill="var(--opal)" stroke="var(--opal-line)" stroke-width="1.2"/>
+    <g>
+      <ellipse cx="80" cy="66" rx="26" ry="22" fill="url(#pl)"/><ellipse cx="200" cy="66" rx="26" ry="22" fill="url(#pl)"/>
+      <ellipse cx="320" cy="66" rx="26" ry="22" fill="url(#pl)"/><ellipse cx="440" cy="66" rx="26" ry="22" fill="url(#pl)"/>
+      <ellipse cx="560" cy="66" rx="26" ry="22" fill="url(#pl)"/><ellipse cx="680" cy="66" rx="26" ry="22" fill="url(#pl)"/>
+    </g>
+    <rect x="20" y="72" width="740" height="20" fill="var(--knob)" stroke="var(--knob-line)"/>
+    <g fill="var(--accent)">
+      <rect x="74" y="72" width="12" height="7"/><rect x="194" y="72" width="12" height="7"/><rect x="314" y="72" width="12" height="7"/>
+      <rect x="434" y="72" width="12" height="7"/><rect x="554" y="72" width="12" height="7"/><rect x="674" y="72" width="12" height="7"/>
+    </g>
+    <g font-family="IBM Plex Mono, monospace" font-size="11" fill="var(--ink3)">
+      <line x1="80" y1="100" x2="80" y2="122" stroke="var(--rule2)"/><line x1="200" y1="100" x2="200" y2="122" stroke="var(--rule2)"/>
+      <line x1="80" y1="116" x2="200" y2="116" stroke="var(--ink3)" stroke-width="1.1" marker-start="url(#d4)" marker-end="url(#d4)"/>
+      <text x="140" y="136" text-anchor="middle">pitch 10.0</text>
+    </g>
+    <text x="772" y="60" font-family="IBM Plex Mono, monospace" font-size="11" fill="var(--ink)">diffuser</text>
+    <text x="772" y="88" font-family="IBM Plex Mono, monospace" font-size="11" fill="var(--ink)">LEDs</text>
+    <text x="772" y="130" font-family="IBM Plex Mono, monospace" font-size="11" fill="var(--accent)" font-weight="500">six lamps</text>
+
+    <line x1="20" y1="196" x2="880" y2="196" stroke="var(--rule)"/>
+
+    <text x="20" y="232" font-family="Archivo, sans-serif" font-size="13" font-weight="600" fill="var(--ink)">Indirect · 60 LEDs · pitch 8.8 · throw 4.0 — the source is an 8 mm pool on the floor</text>
+    <rect x="20" y="248" width="740" height="26" fill="var(--opal)" stroke="var(--opal-line)" stroke-width="1.2"/>
+    <rect x="20" y="248" width="740" height="26" fill="var(--accent)" opacity="0.5"/>
+    <rect x="20" y="286" width="740" height="88" fill="var(--sunk)" stroke="var(--rule2)"/>
+    <!-- floor pools, wide and overlapping -->
+    <g>
+      <ellipse cx="61"  cy="374" rx="62" ry="70" fill="url(#pw)"/><ellipse cx="126" cy="374" rx="62" ry="70" fill="url(#pw)"/>
+      <ellipse cx="191" cy="374" rx="62" ry="70" fill="url(#pw)"/><ellipse cx="256" cy="374" rx="62" ry="70" fill="url(#pw)"/>
+      <ellipse cx="321" cy="374" rx="62" ry="70" fill="url(#pw)"/><ellipse cx="386" cy="374" rx="62" ry="70" fill="url(#pw)"/>
+      <ellipse cx="451" cy="374" rx="62" ry="70" fill="url(#pw)"/><ellipse cx="516" cy="374" rx="62" ry="70" fill="url(#pw)"/>
+      <ellipse cx="581" cy="374" rx="62" ry="70" fill="url(#pw)"/><ellipse cx="646" cy="374" rx="62" ry="70" fill="url(#pw)"/>
+      <ellipse cx="711" cy="374" rx="62" ry="70" fill="url(#pw)"/>
+    </g>
+    <rect x="20" y="374" width="740" height="14" fill="var(--white-face)" stroke="var(--white-line)"/>
+    <g fill="var(--accent)">
+      <rect x="55" y="292" width="12" height="7"/><rect x="120" y="292" width="12" height="7"/><rect x="185" y="292" width="12" height="7"/>
+      <rect x="250" y="292" width="12" height="7"/><rect x="315" y="292" width="12" height="7"/><rect x="380" y="292" width="12" height="7"/>
+      <rect x="445" y="292" width="12" height="7"/><rect x="510" y="292" width="12" height="7"/><rect x="575" y="292" width="12" height="7"/>
+      <rect x="640" y="292" width="12" height="7"/><rect x="705" y="292" width="12" height="7"/>
+    </g>
+    <rect x="20" y="278" width="740" height="14" fill="var(--knob)" stroke="var(--knob-line)"/>
+    <g font-family="IBM Plex Mono, monospace" font-size="11" fill="var(--ink3)">
+      <line x1="61" y1="398" x2="61" y2="420" stroke="var(--rule2)"/><line x1="126" y1="398" x2="126" y2="420" stroke="var(--rule2)"/>
+      <line x1="61" y1="414" x2="126" y2="414" stroke="var(--ink3)" stroke-width="1.1" marker-start="url(#d4)" marker-end="url(#d4)"/>
+      <text x="94" y="434" text-anchor="middle">8.8</text>
+    </g>
+    <text x="772" y="268" font-family="IBM Plex Mono, monospace" font-size="11" fill="var(--ink)">diffuser</text>
+    <text x="772" y="290" font-family="IBM Plex Mono, monospace" font-size="11" fill="var(--ink)">LEDs, facing down</text>
+    <text x="772" y="392" font-family="IBM Plex Mono, monospace" font-size="11" fill="var(--ink)">white floor</text>
+    <text x="772" y="434" font-family="IBM Plex Mono, monospace" font-size="11" fill="var(--accent)" font-weight="500">one line, at 60</text>
+  </svg>
+  </div>
+  <figcaption>The published pitch-to-distance rules apply to <b>a source the diffuser can see</b>. Firing down substitutes an 8 mm pool of bounced light for a 2 mm chip, and the pools merge on the floor before any of it reaches the opal — which is why the count can fall rather than rise. <b>Test 60 first.</b> If the ripple survives, 90 and 120 are the next steps up.</figcaption>
+</figure>
+
+</section>
+
+<!-- ============ COUNT ============ -->
+<section class="col">
+  <h2>How many LEDs, revised</h2>
+  <p>The counts below are the <em>direct</em> case, and they are the pessimistic bound — what you would need if the diffuser could see the chips. They are worth keeping because they tell you where 120 came from, and because the arithmetic on the readout side does not change.</p>
+  <p>On the readout side nothing is demanding: 36 already gives 10° steps, and dimming the last lit LED slides the arc's end between positions, so a blended band moves continuously rather than stepping. <strong>Every count in this table is more than enough to show 40 %.</strong> The number is chosen entirely by how the band looks.</p>
+</section>
+
+<div class="tablewrap full">
+  <table>
+    <caption>Direct-lit requirement — strip at r 83.8, circumference 527 mm</caption>
+    <thead><tr><th>Count</th><th class="n">Step</th><th class="n">Pitch</th><th class="n">Scale per LED</th><th class="n">Gap : pitch at 4.0 mm</th><th>Direct-lit verdict</th></tr></thead>
+    <tbody>
+      <tr><td>12</td><td class="n">30.0°</td><td class="n">43.9</td><td class="n">8.3 %</td><td class="n">1 : 0.09</td><td>twelve lamps</td></tr>
+      <tr><td>24</td><td class="n">15.0°</td><td class="n">22.0</td><td class="n">4.2 %</td><td class="n">1 : 0.18</td><td>beads on a wire</td></tr>
+      <tr><td>36</td><td class="n">10.0°</td><td class="n">14.6</td><td class="n">2.8 %</td><td class="n">1 : 0.27</td><td>scalloped</td></tr>
+      <tr class="now"><td>53 — now</td><td class="n">6.8°</td><td class="n">9.9</td><td class="n">1.9 %</td><td class="n">1 : 0.40</td><td>scalloped</td></tr>
+      <tr class="pick"><td>60 — test this</td><td class="n">6.0°</td><td class="n">8.8</td><td class="n">1.7 %</td><td class="n">1 : 0.46</td><td>ripple, unless indirect</td></tr>
+      <tr><td>90</td><td class="n">4.0°</td><td class="n">5.9</td><td class="n">1.1 %</td><td class="n">1 : 0.68</td><td>near-continuous</td></tr>
+      <tr><td>120</td><td class="n">3.0°</td><td class="n">4.4</td><td class="n">0.8 %</td><td class="n">1 : 0.91</td><td>continuous</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<section class="col">
+  <p><strong>60 is also the right number for the object.</strong> Six degrees per LED is exactly one per knob detent — the light and the mechanism then share a unit, and a single detent of rotation is a single step of the arc. If the bench says 60 ripples, 120 gives you two per detent and the same logic holds. 90 does not divide into 60 and is the one to avoid.</p>
+</section>
+
+<!-- ============ THE RING ============ -->
+<section class="col"><h2>The ring itself</h2></section>
+
+<div class="tablewrap full">
+  <table>
+    <caption>Diffuser section — as built against proposed</caption>
+    <thead><tr><th>&nbsp;</th><th>v15 as built</th><th>Proposed</th><th>Why</th></tr></thead>
+    <tbody>
+      <tr><td>Inner face</td><td>r 85.8</td><td>r 85.8</td><td>unchanged — the channel's outer wall</td></tr>
+      <tr><td>Outer face</td><td>r 86.7 → 87.7, leaning</td><td>r 89.7, vertical</td><td>your call; reads as a band, not a bevel</td></tr>
+      <tr><td>Thickness</td><td>0.9 at the foot, 1.9 at the top</td><td>4.0 throughout</td><td>the foot is what breaks</td></tr>
+      <tr><td>Height</td><td>5.5 (z 8.0–13.5)</td><td>5.5 (z 8.0–13.5)</td><td>set by the knob skirt, unchanged</td></tr>
+      <tr><td>Object diameter</td><td>Ø175.4</td><td>Ø179.4 at the band</td><td>stands 2.0 proud of knob and plate</td></tr>
+      <tr><td>Seat</td><td>0.9 wide on steel</td><td>4.0 wide on a 1 mm ring shelf</td><td>a real bearing face, no cantilever</td></tr>
+      <tr><td>Stock</td><td>2 mm web — below the laser rule</td><td>4 mm web in 6 mm cast opal</td><td>comfortably CNC-routable</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<section class="split full">
+  <div>
+    <h3>What thickening buys</h3>
+    <ul>
+      <li><strong>Roughly nine times the bending stiffness</strong> against its current thickest section, and the 0.9 mm foot — the actual failure point — stops existing. Stiffness goes as thickness cubed.</li>
+      <li><strong>Twice the scattering path.</strong> Hiding power rises with the distance light travels through the opal, so a 4 mm wall does real optical work that a 1.9 mm one cannot.</li>
+      <li><strong>A part you can machine.</strong> A 4 mm web in 6 mm cast opal sheet sits well inside the 1.5 mm CNC minimum wall; the 2 mm web did not.</li>
+      <li><strong>A proper seat.</strong> 4 mm of flat bottom face on steel, clamped axially through a compliant gasket, with radial clearance for the 0.09 mm thermal differential and moisture swell.</li>
+      <li><strong>Edges you can chamfer.</strong> At 0.9 mm there was nothing to break; at 4 mm every edge gets a 0.3 mm chamfer, which is where cracks otherwise start.</li>
+    </ul>
+  </div>
+  <div>
+    <h3>What it costs</h3>
+    <ul>
+      <li><strong>Transmission.</strong> 4 mm of a 36 % grade passes far less than 1.9 mm did. Move up the range — Perspex Opal 030 at ~68 %, or Evonik 0D010 DF at 83 % through 3 mm, which diffuses by beads through the bulk rather than surface texture. That is the right grade for a thick wall anyway.</li>
+      <li><strong>The silhouette changes.</strong> A 2 mm proud band between a Ø175.4 knob and a Ø175.4 plate is a visible collar. It should be a decision, not a side effect — but the teaser's strongest frames are the glow, so a band that stands out from the metal may be the better object.</li>
+      <li><strong>The rim ring grows a shelf.</strong> 1 mm tall out to r 89.7 on its top face, to carry the overhang. Trivial on a turned part, but it re-opens the ring drawing and the 92 vent openings sit just below it — check the shelf does not close their mouths.</li>
+      <li><strong>The ring takes the knocks now.</strong> Standing proud, it is the first thing a sleeve catches. At 4 mm that is survivable; at 0.9 it would not have been.</li>
+      <li><strong>Still no stock tube at Ø179.4.</strong> Machined from sheet either way — but 4 mm makes that a routine job rather than a fragile one.</li>
+    </ul>
+  </div>
+</section>
+
+<section class="col">
+  <div class="note">
+    <h3>The bench test, revised</h3>
+    <p>One rig now answers three questions. Print a straight channel 100 mm long in black, 4.0 mm wide, with a white floor and a white roof, and a slot at one end for a strip of opal stood up as the outer wall. Make three strips of LEDs at 8.8, 5.9 and 4.4 mm pitch, and mount each so it can face <em>outward</em>, <em>up behind a baffle</em>, or <em>down at the floor</em>. Try 2 mm and 4 mm opal.</p>
+    <p>Photograph each combination in the dark at fixed exposure from 600 mm. What you are reading off: <strong>does 60 LEDs firing down look as good as 120 firing outward?</strong> If it does — and the physics says it should — the count halves, the current halves, and the whole thing gets easier.</p>
+  </div>
+</section>
+
+<footer class="col">
+  Geometry from <span class="mono">desk-dial-v15-specification.md</span> §4.8, §5.2, §5.3, §8.1. Direct-lit hiding ratios from BrightView Technologies' published lamp-spacing table and the general 1 : 1 backlighting rule, both in <span class="mono">the60-halo-diffuser-research.md</span>. The indirect case has no published rule — the 8 mm pool is a geometric estimate, and the bench reading is what settles it.
+</footer>
+
+</div>
+
+</body>
+</html>

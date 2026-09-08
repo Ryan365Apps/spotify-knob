@@ -43,6 +43,10 @@ struct ring_t {
 
     lv_obj_t *root;
     lv_obj_t *slots[RING_MAX_SLOTS];
+    /* True where the app drew its own shape instead of a font symbol, so the
+     * text and colour paths know to leave that slot alone. */
+    bool      slot_drawn[RING_MAX_SLOTS];
+    lv_obj_t *hero_drawn;
     lv_obj_t *hero_glyph;
     lv_obj_t *hero_name;
     lv_obj_t *hero_count;
@@ -124,7 +128,9 @@ static void layout(ring_t *r)
         lv_obj_align(r->slots[i], LV_ALIGN_CENTER,
                      (int32_t)(RING_RADIUS * sinf(rad)),
                      (int32_t)(-RING_RADIUS * cosf(rad)));
-        lv_obj_set_style_text_opa(r->slots[i], falloff(r, deg), 0);
+        /* Object opacity, not text opacity: a slot may be a drawn shape
+         * rather than a label, and this fades both. */
+        lv_obj_set_style_opa(r->slots[i], falloff(r, deg), 0);
     }
 }
 
@@ -136,14 +142,40 @@ static void layout(ring_t *r)
 static void recolour(ring_t *r)
 {
     for (int i = 0; i < r->cfg.count; i++) {
+        if (r->slot_drawn[i]) {
+            continue;      /* a drawn shape keeps the colour it was built with */
+        }
         lv_obj_set_style_text_color(r->slots[i],
                                     (i == r->sel) ? lv_color_hex(0xEAFFF1)
                                                   : lv_color_white(), 0);
     }
 }
 
+#define HERO_PX 52
+
 static void hero_update(ring_t *r)
 {
+    /* The centre glyph is rebuilt rather than restyled when the app draws its
+     * own shape. That is a handful of objects once per detent, not per frame,
+     * so it costs nothing worth counting. */
+    if (r->hero_drawn != NULL) {
+        lv_obj_delete(r->hero_drawn);
+        r->hero_drawn = NULL;
+    }
+    if (r->cfg.draw_glyph != NULL) {
+        lv_obj_t *box = lv_obj_create(lv_obj_get_parent(r->hero_glyph));
+        lv_obj_remove_style_all(box);
+        lv_obj_set_size(box, HERO_PX, HERO_PX);
+        lv_obj_align(box, LV_ALIGN_CENTER, 0, -34);
+        lv_obj_remove_flag(box, LV_OBJ_FLAG_SCROLLABLE | LV_OBJ_FLAG_CLICKABLE);
+        if (r->cfg.draw_glyph(r->sel, box, HERO_PX, lv_color_hex(0xEAFFF1))) {
+            r->hero_drawn = box;
+            lv_obj_add_flag(r->hero_glyph, LV_OBJ_FLAG_HIDDEN);
+        } else {
+            lv_obj_delete(box);
+            lv_obj_remove_flag(r->hero_glyph, LV_OBJ_FLAG_HIDDEN);
+        }
+    }
     lv_label_set_text(r->hero_glyph, r->cfg.glyph_at(r->sel));
     lv_label_set_text(r->hero_name, r->cfg.name_at(r->sel));
     if (r->hero_count != NULL) {
@@ -313,10 +345,28 @@ ring_t *ring_create(lv_obj_t *parent, const ring_cfg_t *cfg)
     lv_obj_set_style_bg_color(dot, cfg->accent, 0);
     lv_obj_set_style_bg_opa(dot, LV_OPA_COVER, 0);
 
+#define SLOT_PX 28
     for (int i = 0; i < cfg->count; i++) {
-        r->slots[i] = lv_label_create(r->root);
-        lv_obj_set_style_text_font(r->slots[i], &lv_font_montserrat_28, 0);
-        lv_label_set_text(r->slots[i], cfg->glyph_at(i));
+        /* An app may draw a shape the symbol font cannot spell - Dictation's
+         * microphone, which LVGL has no glyph for and which came out as a
+         * telephone handset. Everything else is still a font character. */
+        if (cfg->draw_glyph != NULL) {
+            lv_obj_t *box = lv_obj_create(r->root);
+            lv_obj_remove_style_all(box);
+            lv_obj_set_size(box, SLOT_PX, SLOT_PX);
+            lv_obj_remove_flag(box, LV_OBJ_FLAG_SCROLLABLE);
+            if (cfg->draw_glyph(i, box, SLOT_PX, lv_color_white())) {
+                r->slots[i] = box;
+                r->slot_drawn[i] = true;
+            } else {
+                lv_obj_delete(box);
+            }
+        }
+        if (r->slots[i] == NULL) {
+            r->slots[i] = lv_label_create(r->root);
+            lv_obj_set_style_text_font(r->slots[i], &lv_font_montserrat_28, 0);
+            lv_label_set_text(r->slots[i], cfg->glyph_at(i));
+        }
         lv_obj_add_flag(r->slots[i], LV_OBJ_FLAG_CLICKABLE);
         lv_obj_set_ext_click_area(r->slots[i], 12);
         lv_obj_add_event_cb(r->slots[i], slot_cb, LV_EVENT_CLICKED, PACK(slot, i));
@@ -352,7 +402,7 @@ ring_t *ring_create(lv_obj_t *parent, const ring_cfg_t *cfg)
     /* Back is visible: a gesture nobody can see is not an exit. */
     lv_obj_t *back = lv_label_create(r->root);
     lv_obj_set_style_text_font(back, &lv_font_montserrat_20, 0);
-    lv_obj_set_style_text_color(back, lv_color_hex(0x5C6068), 0);
+    lv_obj_set_style_text_color(back, lv_color_hex(0xB4BAC2), 0);
     lv_label_set_text(back, LV_SYMBOL_LEFT);
     lv_obj_align(back, LV_ALIGN_CENTER, 0, 138);
     lv_obj_add_flag(back, LV_OBJ_FLAG_CLICKABLE);
@@ -442,7 +492,9 @@ void ring_refresh(ring_t *r)
         return;
     }
     for (int i = 0; i < r->cfg.count; i++) {
-        lv_label_set_text(r->slots[i], r->cfg.glyph_at(i));
+        if (!r->slot_drawn[i]) {
+            lv_label_set_text(r->slots[i], r->cfg.glyph_at(i));
+        }
     }
     recolour(r);
     hero_update(r);

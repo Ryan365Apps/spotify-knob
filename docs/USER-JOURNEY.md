@@ -4,7 +4,7 @@ Every screen on the device, what each input does on it, and where each one takes
 
 Kept current in the same turn as any interaction change, alongside `BUILD.md` and `design/simulator.html`. If this file and the device disagree, the file is wrong.
 
-**Last updated 2026-09-04.** Standard build (the one-off device on the Waveshare board). The halo project, the 60, runs the same software and so the same map.
+**Last updated 2026-09-05.** Standard build (the one-off device on the Waveshare board). The halo project, the 60, runs the same software and so the same map.
 
 ---
 
@@ -29,19 +29,19 @@ The back affordance is a chevron at the foot of the screen with a generous tap a
         │                          │ tap a glyph               │ returns you
         │                          ▼                           │ where you were
         │        ┌─────────┬─────────┬─────────┬─────────┐     │
-        └────────┤ Spotify │  Clock  │Dictation│Launcher │◄────┘
+        └────────┤ Spotify │Dictation│Launcher │  Clock  │◄────┘
                  └────┬────┴────┬────┴────┬────┴────┬────┘
                       │         │         │         │      + Settings
                       │         │         │         │
    ┌──────────────────┘         │         │         └──────────────┐
    ▼                            ▼         ▼                        ▼
-NOW PLAYING                  Clock     13 A/B                   15 A ring
-   │ tap                     face      one screen                │ tap entry
-   ▼                            │ dial                           ▼
-CONTROLS ──── tap chip ────►  wind     (no sub-screens)      15 B "Launching"
-   │  5 s idle                  │ 2 s                             │ 1.5 s
-   ▼                            ▼                                 ▼
-NOW PLAYING                  Clock face                      Spotify (home)
+NOW PLAYING                13 A/B    15 A ring                 Clock face
+   │ tap                    one screen  │ tap entry                 │ dial
+   ▼                            │       ▼                           ▼
+CONTROLS ──── tap chip ────►  (none)  15 B "Launching"            wind
+   │  5 s idle                          │ 1.5 s                     │ 2 s
+   ▼                                    ▼                           ▼
+NOW PLAYING                       Spotify (home)                Clock face
    │ dial (volume allowed)
    ▼
 volume / seek overlay ── tap, or 2 s ──► NOW PLAYING
@@ -68,7 +68,7 @@ volume / seek overlay ── tap, or 2 s ──► NOW PLAYING
 
 **Six slots: five apps and Back.** Back is deliberately a duplicate of the chevron. It is discoverable where a chevron is not, and the sixth slot puts the glyphs 126 px apart at the 126 px ring radius rather than 148, which is the difference Ryan read on glass as five glyphs "fighting for space" (2026-09-04).
 
-Apps in registry order: **Spotify, Clock, Dictation, Launcher, Settings.** Spotify is app 0, which is what the device boots to and what `shell_switch_home()` returns to.
+Apps in registry order: **Spotify, Dictation, Launcher, Clock, Settings** (reordered 2026-09-05 — Dictation second, Clock fourth). Spotify is app 0, which is what the device boots to and what `shell_switch_home()` returns to.
 
 ---
 
@@ -130,6 +130,18 @@ The timer belongs to the shell, not to this app, so it keeps counting wherever y
 
 `main/wispr_app.c`, screens 13 A and 13 B of rev W. One screen in two states; there are no sub-screens.
 
+The ring is drawn into a canvas by `bloom_draw_wedge` at band 0.70 — the same call the Spotify progress rim uses — never as an `lv_arc`.
+
+| State | Rim | Mark | Mic and title | Under it |
+|---|---|---|---|---|
+| Idle, link up | white | green, one lap every 4 s | white | CLICK OR SPIN TO START |
+| Live | red, pulsing | red | red, "Live" | CLICK OR SPIN TO STOP, and the count **above** the mic |
+| No link | dim grey | none | grey | what to do about it |
+
+A whole rim in green read as an alert rather than as readiness (2026-09-05), so the rim is white and the travelling mark carries the colour — the same division the Spotify rim uses between its wedge and its chip. The mark is `bloom_draw_chip`, one disc a frame at 5 fps, on a rim that only redraws when its colour changes.
+
+**The menu shows a microphone, not a telephone.** LVGL's symbol font has no microphone in it, so `knob_app_t` gained an optional `draw_glyph` and Dictation draws its own from three primitives — the same drawing at 28 px on the rim, 52 px in the centre and 60 px on its own screen.
+
 | Input | Believed off | Believed on |
 |---|---|---|
 | Tap | Sends the combo → on | Sends the combo → off |
@@ -187,13 +199,59 @@ No position counter, because the device cannot know how many windows exist or wh
 |---|---|---|
 | Ring | Dial | One item per detent, wraps. **Reversed 2026-09-04** to match the menu |
 | Ring | Tap | → that item's value |
+| Ring | Chevron | → the menu. **Added 2026-09-05**; before that Settings had no visible exit at all |
 | Ring | Long-press | → the menu |
 | Value | Dial | Adjusts. **Not reversed** — a quantity has its own direction, and brightness that fell when you turned it up would be nonsense |
 | Value | Tap | → the ring, and writes to NVS |
 
+### Dictation — the pairing screen
+
+**The BLE radio starts here, not at boot.** Opening this item, the Dictation app, or the Launcher is what brings it up; before that `hid_state()` is `OFF` and nothing has been allocated. The device therefore boots exactly as it did before BLE existed. The reason is in `BUILD.md` section 8 under Wave 10: started at boot, the controller left 2 635 bytes of internal RAM and the device could not complete a TLS handshake.
+
+
+The one item with a state that changes on its own, so it refreshes on the tick rather than waiting to be nudged.
+
+| Link state | Centre | Underneath |
+|---|---|---|
+| Advertising | `Radial` | "add it as a Bluetooth keyboard" |
+| Pairing | the six-digit passkey | "type this on the PC" |
+| Connected | `paired` | "turn to forget this PC" |
+| Stack down | `off` | "BLE did not start" |
+
+The passkey is generated fresh per pairing and shown on the panel. The IDF example hardcodes `123456`; this device has a screen, so there is no reason to.
+
+**Forgetting the PC asks twice.** One detent arms it (`forget?` / "turn again to forget this PC"), the next one does it. It is the only destructive action in Settings, and a bonded HID keyboard can type anything into the PC it is paired with, so brushing the dial should not be enough. Leaving the screen disarms it.
+
 Written on leaving an item, never on every detent.
 
 **Owed:** this app still carries its own copy of the ring rather than using `main/ring.c`. It is a value editor as well as a ring, so migrating it is more than a move. Until it happens, a change to ring behaviour has to be made in two places — which is exactly the drift that made the extraction worth doing.
+
+---
+
+## Boot
+
+`main/boot_anim.c`, drawn to [design/boot-sequence.html](../design/boot-sequence.html).
+
+| From | To | What happens |
+|---|---|---|
+| 0.00 s | 0.55 s | Three rapid red blinks |
+| 0.55 s | 2.55 s | Black. Long enough that you start to wonder, which is the point |
+| 2.55 s | 3.20 s | An ember at the centre, growing without stopping |
+| 3.20 s | 7.20 s | The spiral run: a front expands out of the ember to the rim, and keeps going, sliding off the edge |
+| 7.20 s | 7.75 s | The rim strikes — the whole edge becomes one line, decaying on its own clock |
+| 7.75 s | 8.90 s | The run in reverse, accelerating as it converges on the middle |
+| 8.90 s | — | **It fires the run again on a cardiac rhythm.** Two fronts 0.23 s apart, then a rest. ~46 bpm |
+| 9.20 s | 10.40 s | **TORQUE OS** fades in |
+
+**Everything is a front.** A radius, a softness and an amplitude — and the run, the collapse and every heartbeat are the same visual event at different times, with every point summing the flare of every live front. There is no phase machine; the phase names are a reading aid. That is the design's own structure and it is what makes the heartbeat read as the run firing again rather than as a separate glow.
+
+**The spiral comes from differential spin.** Outer points are carried further than inner ones, so the field shears as the front passes through it. Without it the geometry is right and the motion is wrong — an expanding circle rather than a run.
+
+**It holds until there is something to show, then lifts.** The sequence sits on LVGL's top layer over an already-running Spotify, exactly as the menu does, and lifts when `is_ready` on app 0 says a poll has landed — or after twenty seconds, so a device with no network still reaches the UI. Nothing responds to touch or the dial while it is up.
+
+*The first arrangement put boot on its own screen and switched to the app afterwards. Spotify was then entered with no state and its connecting field flashed up for a second before the first poll — one animation cutting to a different one and back, which is worse than either.*
+
+**Scaled from the design, which is authored for the 60.** The timeline is unchanged to the millisecond, because the timing *is* the design. **800 points at their honest size**, not the 2,600 of the original and not the 300-with-bigger-dots of the first attempt — what has to survive a change of scale is the ratio of dot size to spacing, and enlarging dots to cover gaps is what turns a field of points into a smear. Dots are placed to sub-pixel accuracy with a tight falloff, because at two pixels across a rounded centre snaps a whole column at a time. The wordmark is Montserrat tracked out rather than Michroma, which is not on the device — the same substitution already recorded for the Spotify title.
 
 ---
 

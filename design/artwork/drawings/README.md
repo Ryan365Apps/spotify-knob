@@ -1,75 +1,58 @@
-# Technical drawing sheets — the 60, v9
+# Technical drawing sheets — the 60, v15
 
 Plain engineering drawings: black on white, hatched sections, title block. Nothing here is
-styled and nothing is drawn by hand — every line is projected from the v9 CAD source, so a
-sheet cannot disagree with the model. Dimension and note text is written from the parameter
-names too, so a number on a sheet is the number in `params.py`.
+styled and nothing is drawn by hand — every line is projected from the v15 CAD, so a sheet
+cannot disagree with the model. Dimension and note text is written from the parameter names
+too, so a number on a sheet is the number in `params.py`.
 
 | Sheet | What it covers |
 |---|---|
-| `the60_v9_D01_knob_support` | Knob support. Section A–A on the 30°–210° axis through the wheel at 30°; detail X (V-groove and collar contact, 8:1); detail Y (bush and post, 7:1); plan section at z 20 showing why the wheels are at 30/150/270; isometric of the wheel and bush. |
-| `the60_v9_D02_light_display_encoder` | The vertical stack. Section B–B on the 330°–150° axis through the encoder, with the whole height ladder; detail P (halo, 8:1, on an LED pitch); detail Q (encoder and code band, 8:1); plan through the halo at z 6.3; plan through the display seat tabs at z 28.1. |
-| `the60_v9_D03_drive_clutch` | The drive. Section C–C on the 90°–270° axis with the clutch engaged; detail R showing engaged and released side by side; plan inside the plate at z 2.5; plan at the drive band; isometric of the carriage and the servo tray. |
-| `the60_v9_D04_plate_floor_ports` | The steel plate at 1:1 and the floor at 1:1; section D–D through the back at 0°; detail S of the port face. Cut-outs, fixings, perimeter ports, USB-C, jack and light sensor. |
+| `the60_v15_D01_knob_support` | Knob support. Section A–A on the 30°–210° axis through the wheel at 30°; detail X (V-groove and collar contact, 8:1); detail Y (bush and post, 7:1); plan through the wheels; isometric of the wheel and bush. |
+| `the60_v15_D02_light_display_encoder` | The vertical stack. Section B–B on the 310°–130° axis through the encoder, with the whole height ladder; detail P (halo, 7:1); detail Q (encoder and code ring, 4.5:1); plan through the halo; plan under the display's seat face. |
+| `the60_v15_D03_drive_clutch` | The drive. Section C–C on the 90°–270° axis with the clutch engaged; detail R showing engaged and released side by side; plan inside the core; plan at the drive band; isometric of the carriage and the servo tray. |
+| `the60_v15_D04_core_rim_ports` | The base as three parts: the machined aluminium core, the stainless rim ring and the closing plate. Section D–D through the port face; detail S of the ring's vented outer wall; plan of the core's top face; plan through the vents; isometric of the ring. |
+| `the60_v15_D05_cooling` | The cooling circuit. Section E–E through the blower at 51°; detail T of the discharge trench and its hood; plan of the duct and fin channels; plan of the ring alone at the vent height; isometric of the blower, saddle and hood lid. |
 
 Each sheet is A3 landscape (420 × 297) in three formats: `.pdf` to print or send, `.svg` to
 edit in Illustrator or Inkscape, `.png` to drop into a document.
 
-## What changed from the v8 set
+## What changed from the v9 set
 
-v9 is a different machine below the knob, so two of the v8 sheets were rebuilt and two are new:
+v15 is a different machine below the knob, so D04 was rebuilt around a different base and D05
+is new:
 
-* The **gimbal drive and over-centre clutch are gone**. The motor is a JD-Power MY-3514C on a
-  carriage that slides radially through the plate, and the clutch is a linear servo pushing the
-  carriage. That is D03, which v8 never had.
-* The **halo moved**. It is 90 LEDs lying flat on the plate at r 58.8, firing outward into a
-  diffuser at r 60–62.5, continuous through 360°. v8 stood the ring on the outside of the wall.
-* The **wheels moved** from 60/180/300 to 30/150/270 and up to z 23.4–27.4, and the plate screws
-  no longer share structure with the posts.
-* The **plate is Ø124 × 5 steel**, not Ø123 × 3 printed, and it now carries a port slot with
-  USB-C, a 3.5 mm jack and the ambient-light sensor. That is D04, which v8 never had.
-* The **port board is no longer an invented envelope**: the port assembly is modelled, and its
-  boards have outlines in `boards/`.
+* The **base is now three parts**: a CNC 6082 aluminium core with a cooling duct in it, a
+  machined stainless rim ring round it carrying the vent openings, and a 1 mm laser-cut
+  aluminium closing plate underneath. v9 had a single Ø124 × 5 steel plate.
+* **Active cooling exists.** A Delta blower breathes down through the core's web into a ducted
+  space between the web and the closing plate, and air leaves through passages across the
+  ring's inner land. That is D05, which v9 never had.
+* The **halo moved out onto the wall.** The LED strip now stands vertically on the wall's outer
+  face at r 84.0–85.6, firing straight out through a diffuser at r 85.8–87.7. v9 lay a flex
+  ring flat on the plate at r 58.8 and fired outward across the gap.
+* The **structure is inverted.** There is no ledge: the display's seat flange is the datum face
+  and the wheel posts hang below it. The display is bonded to that flat face; the columns and
+  M4 seat tabs are gone.
+* The **encoder reads from below.** The code ring moved off the bore into the crown's underside,
+  so the bore is smooth for the wheels and the encoder gap is set by a shim on a flat face.
+* The **device grew**: r 87.7 rather than r 62.5, and 35.9 tall overall.
 
 ## Where the geometry comes from
 
-`docs/v9/the60_v9/the60_v9/src/params.py` and `model.py`, built with build123d, with every
-bought part placed from its own STEP body in `design/cad/bought-parts/step`. Sections are
-Boolean intersections with a half space or a slab; hidden-line projection is build123d's
-`Drawing` (OpenCascade HLR).
+Bodies are read from `docs/v15/the60_v15_assembly.step` (and
+`the60_v15_assembly_free_spin.step` for the released clutch), because the vendor STEP files
+that `model.py` imports are not all in the repo. Dimension text comes from
+`docs/v15/the60_v15/src/params.py`. Sections are Boolean intersections with a half space or a
+slab; hidden-line projection is build123d's `Drawing` (OpenCascade hidden-line removal).
 
-## Regenerating
+The knob is drawn on its turned profile, rebuilt from the parameters. The knurl is on the real
+part but is not drawn: in section every diamond would be projected.
 
-Needs Python with `build123d` and `cairosvg`. It does not need Blender.
+## Rebuilding
 
     pip install build123d cairosvg
-    export THE60_SRC=.../docs/v9/the60_v9/the60_v9/src
-    export THE60_OUT=.../design/artwork/drawings
     python scripts/build.py
 
-`params.py` expects the bought-part STEP files two levels above `src`, in `bought/bought-parts`.
-If they live in `design/cad/bought-parts` instead, either copy that folder into place or point
-`params.BOUGHT` at it.
-
-`scripts/` holds:
-
-* `engine.py` — the model (cached to BREP so a rerun takes seconds, not two minutes), Boolean
-  sectioning, hidden-line views, per-part section hatching.
-* `sheet.py` — the A3 sheet, frame, title block, view ports, dimensions, balloons, notes.
-* `sheet1.py` … `sheet4.py` — the four sheets.
-* `build.py` — runs all four and writes PDF and PNG.
-
-## Two things to know before trusting a sheet
-
-1. **MODELLED, NOT PRINTED.** No v9 part has been made. Every dimension is a model value, not a
-   measurement.
-2. Bodies the model tags **ENVELOPE** or **ASSUMED** are drawn as envelopes, not as the real
-   part: the motor (Ø35 × 14 with no base/bell split), the servo, the pushrod, the plug bodies,
-   and the LED flex. The five bench items in `docs/v9/V9.md` are the ones that decide whether the
-   drawn geometry survives contact with the real parts — the motor base diameter above all,
-   because it is what keeps the LED ring unbroken.
-
-## Not drawn
-
-Electrical layout. The board outlines in `boards/` are shapes, not schematics, and no sheet
-here shows a track, a connector pinout or a wiring route.
+The first run reads the 31 MB assembly (about 25 seconds) and caches every body as a BREP file
+under `scripts/.cache`; later runs take seconds. The cache invalidates itself when the STEP is
+re-exported.

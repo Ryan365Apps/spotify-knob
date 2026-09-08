@@ -359,6 +359,8 @@ static void build_taskview_layer(lv_obj_t *parent)
 
 static void launcher_on_enter(lv_obj_t *parent)
 {
+    hid_start();     /* on demand, not at boot - see hid.h */
+
     lv_obj_set_style_bg_color(parent, lv_color_hex(COL_GROUND), 0);
     lv_obj_add_event_cb(parent, screen_click_cb, LV_EVENT_CLICKED, NULL);
     lv_obj_add_event_cb(parent, screen_click_cb, LV_EVENT_LONG_PRESSED, NULL);
@@ -402,6 +404,7 @@ static void launcher_on_exit(void)
     /* The shell deletes the screen and every widget on it. This app holds no
      * buffers of its own. */
     s_launch_layer = s_launch_name = s_task_layer = NULL;
+    hid_stop();       /* the radio is Spotify's again - see hid.h */
     ESP_LOGI(TAG, "exited");
 }
 

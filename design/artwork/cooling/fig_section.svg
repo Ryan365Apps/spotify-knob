@@ -1,0 +1,79 @@
+<svg class="sch" viewBox="0 0 900 372" role="img" aria-label="A slice through the dial showing air entering at one rim, crossing the duct under the floor, passing through the blower and leaving at the opposite rim" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <marker id="sc" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse"><path d="M 0 1.2 L 10 5 L 0 8.8 z" class="fc"/></marker>
+    <marker id="sw" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse"><path d="M 0 1.2 L 10 5 L 0 8.8 z" class="fw"/></marker>
+  </defs>
+
+  <!-- desk -->
+  <line x1="52" y1="330" x2="848" y2="330" stroke="currentColor" stroke-width="1" opacity=".35"/>
+  <text class="lbl" x="52" y="345" opacity=".75">desk</text>
+
+  <!-- knob and cavity, outline only -->
+  <path class="cav" d="M 134.3 210.6 L 134.3 93.6 L 765.7 93.6 L 765.7 210.6"/>
+  <path class="cav" d="M 150.5 210.6 L 150.5 111.7 L 219 111.7 M 681 111.7 L 749.5 111.7 L 749.5 210.6"/>
+  <rect class="cav" x="219" y="126" width="462" height="18"/>
+  <text class="lbl" x="450" y="80" text-anchor="middle">knob — the surface you hold, and the one the standard caps</text>
+  <text class="lbl" x="450" y="139" text-anchor="middle" opacity=".8">display</text>
+  <text class="lbl" x="450" y="232" text-anchor="middle" opacity=".8">sealed cavity — no forced air passes through here</text>
+
+  <!-- structure walls -->
+  <path class="cav" d="M 151.9 252 L 151.9 144 M 748.1 252 L 748.1 144" opacity=".6"/>
+
+  <!-- light band -->
+  <rect class="metal" x="134.3" y="219" width="8" height="33"/>
+  <rect class="metal" x="757.7" y="219" width="8" height="33"/>
+
+  <!-- the base: ring, core, closing plate, pad -->
+  <rect class="metal" x="134.3" y="252" width="45" height="48"/>
+  <rect class="metal" x="720.7" y="252" width="45" height="48"/>
+  <rect class="metal" x="179.3" y="252" width="541.4" height="48"/>
+  <rect class="duct" x="190.1" y="264" width="519.8" height="30"/>
+  <rect class="metal" x="190.1" y="294" width="519.8" height="6"/>
+  <rect class="metal" x="134.3" y="300" width="631.4" height="9" opacity=".14"/>
+
+  <!-- web, with the blower's hole in it -->
+  <rect class="metal" x="190.1" y="252" width="429.9" height="12"/>
+  <rect class="metal" x="648" y="252" width="61.9" height="12"/>
+
+  <!-- fin channel ticks -->
+  <g stroke="currentColor" stroke-width=".8" opacity=".3">
+    <path d="M 230 266 v 26 M 262 266 v 26 M 294 266 v 26 M 326 266 v 26 M 358 266 v 26 M 390 266 v 26 M 422 266 v 26 M 454 266 v 26 M 486 266 v 26 M 518 266 v 26 M 550 266 v 26 M 582 266 v 26"/>
+  </g>
+
+  <!-- ring openings, both sides -->
+  <g stroke="currentColor" stroke-width="1" opacity=".55">
+    <path d="M 134.3 270 h 45 M 134.3 282 h 45 M 720.7 270 h 45 M 720.7 282 h 45"/>
+  </g>
+
+  <!-- blower, saddle and hood -->
+  <rect class="metal" x="600" y="156" width="68" height="30"/>
+  <path class="cav" d="M 620 186 L 620 252 M 648 186 L 648 252"/>
+  <text class="lbl" x="634" y="150" text-anchor="middle">blower</text>
+
+  <!-- trench and its lid -->
+  <rect class="hot" x="690.5" y="252" width="43.9" height="42"/>
+  <rect class="metal" x="686" y="246" width="52" height="6"/>
+  <text class="lbl" x="726" y="238" text-anchor="start">trench</text>
+
+  <!-- flow -->
+  <path class="flow-c" d="M 76 279 L 604 279 L 620 279 L 620 194" marker-end="url(#sc)"/>
+  <path class="flow-w" d="M 668 171 L 700 171 L 712 183 L 712 286 L 745 286 L 824 286" marker-end="url(#sw)"/>
+
+  <!-- step badges -->
+  <g>
+    <circle class="numbg" cx="120" cy="262" r="9"/><text class="num" x="120" y="266" text-anchor="middle">1</text>
+    <circle class="numbg" cx="196" cy="262" r="9"/><text class="num" x="196" y="266" text-anchor="middle">2</text>
+    <circle class="numbg" cx="386" cy="262" r="9"/><text class="num" x="386" y="266" text-anchor="middle">3</text>
+    <circle class="numbg" cx="580" cy="262" r="9"/><text class="num" x="580" y="266" text-anchor="middle">4</text>
+    <circle class="numbg" cx="634" cy="204" r="9"/><text class="num" x="634" y="208" text-anchor="middle">5</text>
+    <circle class="numbg" cx="768" cy="266" r="9"/><text class="num" x="768" y="270" text-anchor="middle">6</text>
+  </g>
+
+  <!-- callouts -->
+  <text class="lbl" x="76" y="303" >room air</text>
+  <text class="lbl" x="400" y="316" text-anchor="middle">duct, 5 mm tall · 19 fin channels · closing plate under it</text>
+  <text class="lbl" x="824" y="303" text-anchor="end">warm air out</text>
+  <text class="lbl" x="157" y="322" text-anchor="middle">ring</text>
+  <text class="lbl" x="743" y="322" text-anchor="middle">ring</text>
+  <text class="lbl" x="450" y="358" text-anchor="middle" opacity=".7">heights exaggerated about twice; the object is 175 mm across and 36 mm tall</text>
+</svg>

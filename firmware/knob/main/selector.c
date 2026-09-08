@@ -58,6 +58,21 @@ static const char *name_at(int i)
     return (app != NULL) ? app->name : "";
 }
 
+/* An app with a shape the symbol font cannot spell draws it itself. The menu
+ * only forwards; it has no opinion about what any app looks like. */
+static bool draw_glyph(int i, lv_obj_t *into, int px, lv_color_t colour)
+{
+    if (i == s_app_count) {
+        return false;                     /* Back is a font chevron */
+    }
+    const knob_app_t *app = shell_app_at(i);
+    if (app == NULL || app->draw_glyph == NULL) {
+        return false;
+    }
+    app->draw_glyph(into, px, colour);
+    return true;
+}
+
 static void on_pick(int index)
 {
     if (index == s_app_count) {
@@ -95,6 +110,7 @@ void selector_open(void)
         .initial = shell_app_active_index(),
         .glyph_at = glyph_at,
         .name_at = name_at,
+        .draw_glyph = draw_glyph,
         .on_pick = on_pick,
         .on_back = on_back,
         .own_ground = true,        /* the selector is chrome and owns its ground */

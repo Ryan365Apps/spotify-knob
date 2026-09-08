@@ -46,6 +46,7 @@
 
 #include "app_shell.h"
 #include "bidi_knob.h"
+#include "boot_anim.h"
 #include "clock_app.h"
 #include "hid.h"
 #include "launcher_app.h"
@@ -855,13 +856,14 @@ static bidi_knob_handle_t s_knob = NULL;
  * because it is what the device shows on boot and what everything returns
  * to. */
 static const knob_app_t *const s_apps[] = {
-    &spotify_app, &clock_app, &wispr_app, &launcher_app, &settings_app,
+    &spotify_app, &wispr_app, &launcher_app, &clock_app, &settings_app,
 };
 #define APP_COUNT (sizeof(s_apps) / sizeof(s_apps[0]))
 
 static int s_active_index = 0;
 static const knob_app_t *s_active_app = NULL;
 static lv_obj_t *s_app_screen = NULL;
+static lv_obj_t *s_boot_screen = NULL;
 
 int shell_app_count(void)
 {
@@ -1020,7 +1022,11 @@ lv_obj_t *shell_back_button(lv_obj_t *parent)
 {
     lv_obj_t *back = lv_label_create(parent);
     lv_obj_set_style_text_font(back, &lv_font_montserrat_20, 0);
-    lv_obj_set_style_text_color(back, lv_color_hex(0x5C6068), 0);
+    /* Brighter than the 0x5C6068 it started at. Against a lit rim the old grey
+     * disappeared, and an exit you cannot find is not an exit (Ryan, on glass,
+     * 2026-09-05). It still recedes against the hero in the centre, which is
+     * the balance this is trying to strike. */
+    lv_obj_set_style_text_color(back, lv_color_hex(0xB4BAC2), 0);
     lv_label_set_text(back, LV_SYMBOL_LEFT);
     lv_obj_align(back, LV_ALIGN_CENTER, 0, 138);
     lv_obj_add_flag(back, LV_OBJ_FLAG_CLICKABLE);
@@ -1187,6 +1193,9 @@ static void input_task(void *arg)
         /* The dial is not an LVGL input device, so tell LVGL it happened -
          * that is what the sleep timer measures. */
         lv_display_trigger_activity(NULL);
+        if (boot_anim_running()) {
+            continue;      /* a boot animation is not a screen you interact with */
+        }
         if (shell_is_asleep()) {
             /* A brief spin of a dark screen turns it on and does nothing
              * else. Adjusting the volume of something you cannot see is not
@@ -1340,9 +1349,31 @@ void app_main(void)
     hid_init();
     lvgl_port_lock(0);
     alarm_overlay_create();
+
     lvgl_port_unlock();
+
+    /* Spotify starts polling underneath, and the boot sequence covers it.
+     *
+     * The obvious arrangement - boot on its own screen, then switch to the app
+     * when the sequence ends - is what shipped first and it was wrong: Spotify
+     * was entered with no state, so its connecting field flashed up for a
+     * second before the first poll landed. One animation cutting to a
+     * different one and back is worse than either.
+     *
+     * So the app is entered first and the sequence sits on LVGL's top layer
+     * over it, exactly as the menu does. When it lifts there is real data
+     * underneath. */
     shell_switch_to(0);
-    ESP_LOGI(TAG, "shell up, %d apps, long-press for the selector", shell_app_count());
+
+    lvgl_port_lock(0);
+    s_boot_screen = lv_obj_create(lv_layer_top());
+    lv_obj_remove_style_all(s_boot_screen);
+    lv_obj_set_size(s_boot_screen, 360, 360);
+    lv_obj_center(s_boot_screen);
+    lv_obj_remove_flag(s_boot_screen, LV_OBJ_FLAG_SCROLLABLE);
+    lv_obj_add_flag(s_boot_screen, LV_OBJ_FLAG_CLICKABLE);   /* swallows touches */
+    boot_anim_start(s_boot_screen);
+    lvgl_port_unlock();
 
     /* Wave 8: the shell's own loop is watched.
      *
@@ -1391,6 +1422,32 @@ void app_main(void)
             shell_wake();
             wake_shield_drop();
             lvgl_port_unlock();
+        }
+
+        /* Hand over from the boot sequence.
+         *
+         * Two conditions, and the second is the shell's own readiness rather
+         * than any app's - a token in hand means Wi-Fi is up and Spotify will
+         * have something to say the moment it is asked. The patience limit is
+         * what stops a device with no network sitting on the heartbeat
+         * forever: this is a boot animation, not a status screen, and after
+         * twenty seconds the UI is more use than the reassurance. */
+        if (s_boot_screen != NULL && boot_anim_at_heartbeat()) {
+            const knob_app_t *home = shell_app_at(0);
+            const bool ready = (home != NULL && home->is_ready != NULL)
+                                   ? home->is_ready() : true;
+            if (ready || boot_anim_elapsed() > 20.0f) {
+                ESP_LOGI(TAG, "boot sequence lifting after %d ms (%s)",
+                         (int)(boot_anim_elapsed() * 1000.0f),
+                         ready ? "app has something to show" : "out of patience");
+                boot_anim_stop();
+                lvgl_port_lock(0);
+                lv_obj_delete(s_boot_screen);
+                s_boot_screen = NULL;
+                lvgl_port_unlock();
+                ESP_LOGI(TAG, "shell up, %d apps, long-press for the menu",
+                         shell_app_count());
+            }
         }
 
         if (s_timer_end_us != 0 && esp_timer_get_time() >= s_timer_end_us) {

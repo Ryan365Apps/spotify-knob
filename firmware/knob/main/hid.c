@@ -1,30 +1,28 @@
 /*
- * The HID layer. Wave 10 puts NimBLE behind this; today it is a stub that
- * logs what it would have sent, so the Wispr and Launcher screens can be
- * judged on glass before any BLE stack exists.
+ * HID policy: the action enum, the one table that turns an action into a key
+ * code, and the send discipline. The transport is behind hid_transport.h and
+ * is NimBLE as of Wave 10 - see hid_ble.c.
  *
- * The stub reports itself as connected. That is deliberate and it is why
- * hid_is_stub() exists: the screens need to be exercisable now, and every
- * send prints a line saying no keystroke left the building. Nothing here
- * touches the radio, so this cannot affect Wi-Fi throughput, and nothing here
- * claims USB - USB HID and the flashing port are the same peripheral on this
- * board and there is no BOOT button to recover with (BUILD.md section 3).
+ * The split is the point. This file is short enough to read in a minute, and
+ * everything the security rule depends on is in it: hid_send takes a
+ * hid_action_t, chord_for is the only function that produces a key code, and
+ * an action outside the enum's ranges fails closed. Nothing here accepts a
+ * string, and nothing below here ever sees anything but two bytes.
  *
- * When Wave 10 lands, delete HID_TRANSPORT_STUB and fill in send_report().
- * The rest of the firmware should not need one line changed, because nothing
- * above this file knows what a key code is.
+ * The stub this replaced (2026-09-04) reported itself connected so the Wispr
+ * and Launcher screens could be built before the radio existed. hid_is_stub()
+ * survives it and now returns false.
  */
 #include <stdint.h>
 #include <stdio.h>
 
 #include "esp_log.h"
+#include "esp_timer.h"
 
 #include "hid.h"
+#include "hid_transport.h"
 
 static const char *TAG = "hid";
-
-/* Wave 10 removes this. */
-#define HID_TRANSPORT_STUB 1
 
 /* USB HID modifier bits and usage IDs. These are the only place in the
  * firmware where a key code appears, and they are all compile-time
@@ -137,36 +135,102 @@ const char *hid_action_name(hid_action_t action)
     }
 }
 
-#if HID_TRANSPORT_STUB
-
-static esp_err_t send_report(const chord_t *c)
+bool hid_is_stub(void)
 {
-    ESP_LOGI(TAG, "would send modifiers 0x%02X usage 0x%02X - no BLE yet (Wave 10)",
-             c->modifiers, c->usage);
-    return ESP_OK;
+    return false;      /* NimBLE landed in Wave 10 */
 }
 
 bool hid_connected(void)
 {
-    /* The stub says yes so the screens can be worked on. hid_is_stub is how
-     * anything that cares tells the difference. */
-    return true;
+    return hid_transport_connected();
 }
 
-bool hid_is_stub(void)
+hid_state_t hid_state(void)
 {
-    return true;
+    return hid_transport_state();
 }
+
+uint32_t hid_passkey(void)
+{
+    return hid_transport_passkey();
+}
+
+esp_err_t hid_advertise(void)
+{
+    return hid_transport_advertise();
+}
+
+void hid_forget_host(void)
+{
+    hid_transport_forget_host();
+}
+
+static bool s_started = false;
 
 void hid_init(void)
 {
-    ESP_LOGW(TAG, "HID transport is the Wave 10 stub - actions are logged, "
-                  "nothing is sent to the PC");
+    /* Deliberately empty of anything expensive. Starting the radio at boot
+     * took internal RAM from 43 KB to 2635 bytes on hardware (2026-09-04) and
+     * the device could no longer complete a TLS handshake, so it never got
+     * past the splash. The stack now waits until a screen asks for it. */
+    ESP_LOGI(TAG, "HID ready, radio not started - it comes up with Dictation, "
+                  "the Launcher, or Settings");
 }
 
-#else
-#error "Wave 10: implement NimBLE HID here. Keyboard descriptor only - no consumer control, no mouse."
-#endif
+esp_err_t hid_start(void)
+{
+    if (s_started) {
+        return ESP_OK;
+    }
+    if (hid_transport_stopping()) {
+        /* A teardown is still in flight. Starting on top of it is how the
+         * stack ends up half up and half down. */
+        ESP_LOGW(TAG, "still shutting down - not starting again yet");
+        return ESP_ERR_INVALID_STATE;
+    }
+    const esp_err_t err = hid_transport_init();
+    if (err != ESP_OK) {
+        ESP_LOGE(TAG, "BLE HID did not start (%s) - screens will report no host "
+                      "rather than pretending", esp_err_to_name(err));
+        return err;
+    }
+    s_started = true;
+    return ESP_OK;
+}
+
+void hid_stop(void)
+{
+    if (!s_started) {
+        return;
+    }
+    /* Asynchronous: the teardown has to wait for a disconnect before it frees
+     * anything, and this is called from on_exit on the LVGL thread where
+     * nothing may block. s_started drops now so nothing re-enters mid-flight;
+     * the radio itself is gone a few hundred milliseconds later. */
+    hid_transport_deinit();
+    s_started = false;
+    ESP_LOGI(TAG, "HID stopping - the radio and its memory come back shortly");
+}
+
+bool hid_is_started(void)
+{
+    return s_started;
+}
+
+/*
+ * Send discipline, from BUILD.md section 5.
+ *
+ * Chords are serialised with at least 600 ms between them, so one movement can
+ * never double-send. The simulator desynced itself exactly this way on
+ * 2026-08-31, which is where the rule comes from.
+ *
+ * The refusal is reported rather than swallowed, and that matters: the Wispr
+ * app only flips its believed state when a chord was actually dispatched, so a
+ * suppressed send has to come back as an error or the belief drifts from
+ * reality with nothing to correct it.
+ */
+#define CHORD_GAP_MS 600
+static int64_t s_last_send_us = 0;
 
 esp_err_t hid_send(hid_action_t action)
 {
@@ -179,6 +243,18 @@ esp_err_t hid_send(hid_action_t action)
         ESP_LOGW(TAG, "%s not sent - no host connected", hid_action_name(action));
         return ESP_ERR_INVALID_STATE;
     }
+
+    const int64_t now = esp_timer_get_time();
+    if (now - s_last_send_us < (int64_t) CHORD_GAP_MS * 1000) {
+        ESP_LOGW(TAG, "%s suppressed - inside the %d ms chord gap",
+                 hid_action_name(action), CHORD_GAP_MS);
+        return ESP_ERR_NOT_FINISHED;
+    }
+
     ESP_LOGI(TAG, "send %s", hid_action_name(action));
-    return send_report(&c);
+    const esp_err_t err = hid_transport_send(c.modifiers, c.usage);
+    if (err == ESP_OK) {
+        s_last_send_us = esp_timer_get_time();
+    }
+    return err;
 }

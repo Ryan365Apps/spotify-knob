@@ -1,13 +1,17 @@
-"""Build the whole v9 sheet set: SVG from the model, then PDF and PNG.
+"""Build the whole v15 sheet set: SVG from the assembly, then PDF and PNG.
 
     pip install build123d cairosvg
-    export THE60_SRC=/path/to/the60_v9/src        # holds params.py and model.py
-    export THE60_OUT=/path/to/design/artwork/drawings
     python build.py
 
-The first run builds the assembly (about two minutes) and caches every body as a
-BREP file under THE60_CACHE (default /root/work/cache); later runs take seconds.
-The cache invalidates itself when model.py, params.py or knurl.py changes.
+Geometry comes from docs/v15/the60_v15_assembly.step (and the free-spin export for
+the released clutch), not from a rebuild of model.py: the vendor STEP files model.py
+needs are not all in the repo. Dimension text still comes from
+docs/v15/the60_v15/src/params.py, so a number on a sheet is the number in params.
+
+Override with THE60_ASM, THE60_ASMF, THE60_SRC, THE60_OUT, THE60_CACHE if the repo
+is laid out differently. The first run reads the 31 MB STEP (about 25 seconds) and
+caches every body as a BREP file; later runs take seconds. The cache invalidates
+itself when the STEP is re-exported.
 """
 import os, runpy, sys
 
@@ -16,7 +20,7 @@ sys.path.insert(0, HERE)
 import engine                                    # noqa: E402  (fails early if the model is not reachable)
 from meta import OUT                             # noqa: E402
 
-SHEETS = ["sheet1.py", "sheet2.py", "sheet3.py", "sheet4.py"]
+SHEETS = ["sheet1.py", "sheet2.py", "sheet3.py", "sheet4.py", "sheet5.py"]
 
 def main():
     engine.parts(True)                           # build or load the cache once, for every sheet

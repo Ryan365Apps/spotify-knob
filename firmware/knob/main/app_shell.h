@@ -21,7 +21,17 @@
 
 typedef struct {
     const char *name;          /* shown in the selector            */
-    const void *glyph;         /* selector icon                    */
+    const void *glyph;         /* selector icon, as a font symbol  */
+
+    /* Optional, and only for an app whose icon does not exist in the font.
+     *
+     * LVGL's symbol set has no microphone - it runs to speakers, bells,
+     * keyboards and a telephone handset - so Dictation drew as a phone, which
+     * is the wrong idea entirely. An app that needs a shape the font cannot
+     * spell draws it here from primitives instead, into a square container of
+     * `px`, using `colour` for every stroke. Leave it NULL and `glyph` is
+     * used. */
+    void (*draw_glyph)(lv_obj_t *into, int px, lv_color_t colour);
     lv_color_t  accent;        /* the app's colour in the UI       */
 
     void (*on_enter)(lv_obj_t *parent);   /* build widgets, start polling */
@@ -42,6 +52,16 @@ typedef struct {
      * LVGL thread nothing and stopping it would make coming back slower. */
     void (*on_pause)(void);
     void (*on_resume)(void);
+
+    /* Optional. Has this app got anything worth looking at yet?
+     *
+     * The boot sequence uses it to decide when to get out of the way. Without
+     * it the sequence ended on its own clock, Spotify was entered a moment
+     * later with no state, and its connecting field flashed up for a second
+     * before the first poll landed - one animation cutting to a different one
+     * and back, which is worse than either. Now the app is entered *behind*
+     * the boot sequence and the sequence lifts when this says yes. */
+    bool (*is_ready)(void);
 } knob_app_t;
 
 /* Shell services available to apps. */
