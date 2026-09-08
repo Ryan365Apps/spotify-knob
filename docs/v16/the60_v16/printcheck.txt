@@ -1,0 +1,126 @@
+
+== knob_body  (layer 0.16; ONE PIECE. top face down, no supports. bore smooth except the V-RIDGE on its relief band (v16: a 1.2 tall 90 deg ridge at z 19.9-23.1 - printed top-down its lower flank is a 45 deg overhang, fine); the 0.15 code-ring recess is in the crown's underside (the bed face, so it prints as a shallow pocket))
+   185.4 x 185.4 x 19.5 tall; 2406 faces
+   OVERHANG flat 177.0 wide        166.5 mm2  z 15.1-15.1 above the bed, r 125.2-125.2 (centre r 0.0, 0 deg), 177.0 x 177.0
+   OVERHANG flat 184.6 wide          9.4 mm2  z 13.1-13.1 above the bed, r 130.5-130.5 (centre r 0.0, 316 deg), 184.6 x 184.6
+
+== internal_structure  (layer 0.20; v16: INVERTED as v15 - the seat flange's top face on the bed, the wall growing up from it (its 50 deg ramp outward at z 13.8-16.2 self-supports), the wall foot at the top. SUPPORTS: the halo ledge + lip (a 6.3-wide ring hanging outward at z 13.2-14.3 - removable, the face it marks is under the knob skirt) and the two Ø8 fixed-post tops (z 19.0). The block channel's roof (8.4 wide) is a bridge; its walls and end wall print up from it. The pillar tops and the LRA clip ribs carry 45 deg cones/webs; the windows are open at the bed; 0.3 chamfers on the bed face's edges)
+   185.4 x 185.4 x 18.0 tall; 639 faces
+   OVERHANG flat 185.4 wide       3764.1 mm2  z 11.7-11.7 above the bed, r 131.1-131.1 (centre r 0.0, 0 deg), 185.4 x 185.4
+   OVERHANG flat 26.6 wide         304.7 mm2  z 12.0-12.0 above the bed, r 58.3-84.9 (centre r 71.3, 90 deg), 12.4 x 26.6
+   OVERHANG flat 32.0 wide         136.0 mm2  z 0.6-0.6 above the bed, r 63.2-69.2 (centre r 64.2, 4 deg), 4.2 x 32.0
+   OVERHANG (curved)                35.8 mm2  z 0.0-0.3 above the bed, r 91.8-84.4 (centre r 51.6, 152 deg), 77.4 x 120.1
+   OVERHANG (curved)                30.5 mm2  z 0.0-0.3 above the bed, r 36.7-119.2 (centre r 51.6, 28 deg), 77.4 x 120.1
+   OVERHANG flat 7.6 wide           24.2 mm2  z 7.0-7.0 above the bed, r 86.2-76.9 (centre r 81.5, 210 deg), 6.3 x 7.6
+   OVERHANG flat 7.6 wide           24.2 mm2  z 7.0-7.0 above the bed, r 80.8-82.5 (centre r 81.5, 330 deg), 6.3 x 7.6
+   BRIDGE 14.0 mm                   22.4 mm2  z 7.0-7.0 above the bed, r 82.8-84.7 (centre r 83.5, 90 deg), 14.0 x 1.9
+   OVERHANG flat 12.9 wide          20.5 mm2  z 7.0-7.0 above the bed, r 90.2-76.5 (centre r 83.3, 210 deg), 8.4 x 12.9
+   OVERHANG flat 12.9 wide          20.5 mm2  z 7.0-7.0 above the bed, r 83.3-84.1 (centre r 83.3, 330 deg), 8.4 x 12.9
+   OVERHANG 45 deg from horizontal     14.8 mm2  z 2.0-9.0 above the bed, r 75.5-80.9 (centre r 78.1, 111 deg), 3.5 x 7.1
+   OVERHANG 45 deg from horizontal     14.8 mm2  z 2.0-9.0 above the bed, r 75.2-81.2 (centre r 78.1, 104 deg), 3.5 x 7.1
+   ... 116 more small ones
+   SIDE HOLE Ø2.4                   15.1 mm2  z 14.3-16.7 above the bed, r 58.0-60.0 (centre r 59.0, 90 deg), 2.4 x 2.0
+
+== halo_liner  (layer 0.16; v16: WHITE PETG, flat on its floor face; the 0.6 wall stands up; no supports. Cut at the two tail notches)
+   181.0 x 181.0 x 3.4 tall; 15 faces
+   no downward faces off the bed, no side holes: prints as it stands, no supports
+
+== wheel_block  (layer 0.12; v16: flat on its bottom face; the Ø2.9 pin hole vertical; the spring pocket and the M2 insert hole are side holes (Ø4.2 / Ø3.2 - small, print as drawn); PETG, 4 perimeters)
+   8.0 x 13.0 x 5.0 tall; 15 faces
+   OVERHANG (curved)                 7.2 mm2  z 1.4-3.6 above the bed, r 80.1-75.7 (centre r 77.9, 270 deg), 2.2 x 4.4
+   OVERHANG (curved)                 4.8 mm2  z 1.4-3.6 above the bed, r 73.9-71.0 (centre r 72.5, 270 deg), 2.2 x 2.9
+   SIDE HOLE Ø2.2                   20.0 mm2  z 1.4-3.6 above the bed, r 73.9-71.0 (centre r 72.5, 270 deg), 2.2 x 2.9
+   SIDE HOLE Ø2.2                   30.4 mm2  z 1.4-3.6 above the bed, r 80.1-75.7 (centre r 77.9, 270 deg), 2.2 x 4.4
+
+== drive_collar  (layer 0.12; v16: axis vertical, the lead-in chamfer at the bottom; press over the bell's top 3.5 (ID 35 -0.05); PETG (prototype) / POM (production))
+   39.4 x 39.4 x 3.5 tall; 5 faces
+   OVERHANG (curved)                49.3 mm2  z 0.0-0.3 above the bed, r 53.7-88.1 (centre r 68.5, 90 deg), 35.6 x 35.6
+
+== mcu_tray  (layer 0.16; v16: flat on its underside; the MCU pocket is a 0.6 recess in the top; four Ø2.2 holes)
+   48.4 x 43.1 x 1.2 tall; 15 faces
+   no downward faces off the bed, no side holes: prints as it stands, no supports
+
+== tray_keeper  (layer 0.16; v16: flat; a frame with a window over the MCU's parts; four Ø2.2 holes)
+   48.4 x 43.1 x 1.2 tall; 18 faces
+   no downward faces off the bed, no side holes: prints as it stands, no supports
+
+== board_spacer  (layer 0.12; v16: a FAMILY - Ø5 tubes, bore 2.2: 3.0 (x6, under the driver, haptic and level-shifter breakouts), 1.0 (x4, under the audio board), 4.4 (x4, between the audio's nuts and the tray); axis vertical)
+   5.0 x 5.0 x 3.0 tall; 4 faces
+   no downward faces off the bed, no side holes: prints as it stands, no supports
+
+== carriage  (layer 0.16; standing on the Ø37 shoe, tab up; 12 mm bridge over the sensor pocket; PETG, 4 perimeters (the tab is loaded across its layers))
+   37.0 x 40.8 x 14.5 tall; 23 faces
+   BRIDGE 15.4 mm                  204.3 mm2  z 3.3-3.3 above the bed, r 60.3-77.6 (centre r 68.5, 90 deg), 15.4 x 17.4
+   BRIDGE 2.4 mm                    19.2 mm2  z 3.0-3.0 above the bed, r 49.0-57.0 (centre r 53.0, 90 deg), 2.4 x 8.0
+
+== servo_mount  (layer 0.20; flat; a floorless frame for the AGFRC servo, open toward the tab; two ears screwed to the plate)
+   32.0 x 22.9 x 6.5 tall; 27 faces
+   BRIDGE 6.0 mm                     9.0 mm2  z 5.0-5.0 above the bed, r 20.5-22.0 (centre r 21.1, 90 deg), 6.0 x 1.5
+
+== connect_bracket  (layer 0.20; standing on its straight -y edge, the slab vertical (1.5 thick, 28 wide, 50 tall): the feet, ears and bosses stick out sideways and print without support; the M2 insert holes and the csk cones are sideways at Ø3.2 / Ø5.4, fine at that size. (On its feet the slab would hang 1.5 over the bed for 28 mm: supports))
+   41.4 x 5.0 x 50.0 tall; 43 faces
+   OVERHANG (curved)                 9.9 mm2  z 2.0-8.0 above the bed, r 50.8-56.2 (centre r 53.5, 347 deg), 6.0 x 2.0
+   OVERHANG (curved)                 9.9 mm2  z 42.0-48.0 above the bed, r 71.8-77.4 (centre r 74.6, 351 deg), 6.0 x 2.0
+   OVERHANG (curved)                 9.9 mm2  z 2.0-8.0 above the bed, r 71.8-77.4 (centre r 74.6, 351 deg), 6.0 x 2.0
+   OVERHANG (curved)                 9.3 mm2  z 42.0-48.0 above the bed, r 50.8-56.2 (centre r 53.5, 347 deg), 6.0 x 2.0
+   OVERHANG (curved)                 8.6 mm2  z 5.5-12.5 above the bed, r 47.7-53.7 (centre r 50.7, 350 deg), 6.4 x 1.5
+   OVERHANG (curved)                 7.9 mm2  z 3.4-6.6 above the bed, r 73.2-75.9 (centre r 74.5, 351 deg), 3.2 x 3.0
+   OVERHANG (curved)                 7.9 mm2  z 43.4-46.6 above the bed, r 73.2-75.9 (centre r 74.5, 351 deg), 3.2 x 3.0
+   OVERHANG (curved)                 6.1 mm2  z 3.4-6.6 above the bed, r 52.1-54.6 (centre r 53.4, 348 deg), 3.2 x 3.0
+   OVERHANG (curved)                 5.3 mm2  z 43.4-46.6 above the bed, r 52.1-54.6 (centre r 53.4, 348 deg), 3.2 x 3.0
+   OVERHANG (curved)                 4.6 mm2  z 44.6-47.4 above the bed, r 49.2-51.6 (centre r 50.4, 350 deg), 2.8 x 2.0
+   OVERHANG (curved)                 4.6 mm2  z 7.6-10.4 above the bed, r 49.2-51.6 (centre r 50.4, 350 deg), 2.8 x 2.0
+   OVERHANG (curved)                 3.9 mm2  z 42.5-49.5 above the bed, r 48.6-53.7 (centre r 51.1, 350 deg), 5.5 x 1.5
+   ... 3 more small ones
+   SIDE HOLE Ø2.8                   17.6 mm2  z 7.6-10.4 above the bed, r 49.2-51.6 (centre r 50.4, 350 deg), 2.8 x 2.0
+   SIDE HOLE Ø2.8                   17.6 mm2  z 44.6-47.4 above the bed, r 49.2-51.6 (centre r 50.4, 350 deg), 2.8 x 2.0
+   SIDE HOLE Ø2.8                    2.9 mm2  z 46.2-47.3 above the bed, r 51.8-52.2 (centre r 52.0, 347 deg), 0.8 x 2.0
+   SIDE HOLE Ø2.8                    2.9 mm2  z 44.6-44.9 above the bed, r 50.8-51.7 (centre r 51.2, 346 deg), 1.4 x 2.0
+   SIDE HOLE Ø3.2                   28.3 mm2  z 3.4-6.6 above the bed, r 52.1-54.6 (centre r 53.4, 348 deg), 3.2 x 3.0
+   SIDE HOLE Ø3.2                   30.2 mm2  z 3.4-6.6 above the bed, r 73.2-75.9 (centre r 74.5, 351 deg), 3.2 x 3.0
+   SIDE HOLE Ø3.2                   30.2 mm2  z 43.4-46.6 above the bed, r 73.2-75.9 (centre r 74.5, 351 deg), 3.2 x 3.0
+
+== speaker_cradle  (layer 0.20; flat; ring under the speaker flange with three snap fingers)
+   45.1 x 46.9 x 7.2 tall; 50 faces
+   OVERHANG flat 3.0 wide            1.0 mm2  z 6.1-6.1 above the bed, r 76.4-75.4 (centre r 75.9, 119 deg), 3.0 x 0.5
+   OVERHANG flat 2.7 wide            1.0 mm2  z 6.1-6.1 above the bed, r 64.0-64.1 (centre r 64.0, 145 deg), 1.9 x 2.7
+   OVERHANG flat 2.8 wide            1.0 mm2  z 6.1-6.1 above the bed, r 41.5-43.2 (centre r 42.3, 116 deg), 1.7 x 2.8
+
+== blower_saddle  (layer 0.16; v15: on its flat top face (the motion board's face) on the bed, the hood's neck walls grow up from it; no supports. Two Ø2.2 through-holes vertical)
+   46.7 x 48.7 x 11.2 tall; 20 faces
+   no downward faces off the bed, no side holes: prints as it stands, no supports
+
+== hood_lid  (layer 0.16; v15: flat, 2.5 thick, two Ø2.2 holes; butts against the saddle's neck)
+   31.0 x 31.0 x 2.5 tall; 16 faces
+   no downward faces off the bed, no side holes: prints as it stands, no supports
+
+== encoder_shim  (layer 0.10; v15: flat, one per height in ENC_SHIM_FAMILY (0.7 / 0.8 / 0.9 / 1.0 / 1.1) - print the set, fit the one the bench wants)
+   12.9 x 14.8 x 0.9 tall; 8 faces
+   no downward faces off the bed, no side holes: prints as it stands, no supports
+
+== port_face  (layer 0.16; lying on its outer face (the socket openings print as vertical holes); the USB-C shelf, the light-sensor foot and the screw rail stand up from it; no supports)
+   11.6 x 70.0 x 13.6 tall; 60 faces
+   BRIDGE 17.0 mm                  119.2 mm2  z 6.4-6.4 above the bed, r 11.0-29.1 (centre r 20.0, 77 deg), 7.0 x 17.0
+   OVERHANG (curved)                69.9 mm2  z 0.3-7.9 above the bed, r 35.9-13.9 (centre r 15.2, 305 deg), 1.5 x 45.2
+   OVERHANG flat 8.5 wide           12.8 mm2  z 8.2-8.2 above the bed, r 21.8-30.3 (centre r 26.1, 70 deg), 1.5 x 8.5
+   OVERHANG flat 9.5 wide           12.4 mm2  z 1.5-1.5 above the bed, r 28.0-30.4 (centre r 28.8, 84 deg), 9.5 x 1.3
+   OVERHANG (curved)                10.1 mm2  z 5.4-7.9 above the bed, r 29.9-36.3 (centre r 33.1, 75 deg), 1.5 x 6.2
+   OVERHANG flat 11.0 wide           9.3 mm2  z 1.5-1.5 above the bed, r 8.1-15.7 (centre r 11.1, 36 deg), 2.1 x 11.0
+
+-- summary (134s)
+   knob_body            SUPPORTS NEEDED                      unsupported downward area   176.0 mm2; bridges  0 (longest  0.0 mm); side holes 0
+   internal_structure   SUPPORTS NEEDED                      unsupported downward area  4477.9 mm2; bridges 99 (longest 14.0 mm); side holes 1
+   halo_liner           no supports                          unsupported downward area     0.0 mm2; bridges  0 (longest  0.0 mm); side holes 0
+   wheel_block          no supports                          unsupported downward area    12.0 mm2; bridges  0 (longest  0.0 mm); side holes 2
+   drive_collar         small overhangs, no supports needed  unsupported downward area    49.3 mm2; bridges  0 (longest  0.0 mm); side holes 0
+   mcu_tray             no supports                          unsupported downward area     0.0 mm2; bridges  0 (longest  0.0 mm); side holes 0
+   tray_keeper          no supports                          unsupported downward area     0.0 mm2; bridges  0 (longest  0.0 mm); side holes 0
+   board_spacer         no supports                          unsupported downward area     0.0 mm2; bridges  0 (longest  0.0 mm); side holes 0
+   carriage             no supports                          unsupported downward area     0.0 mm2; bridges  2 (longest 15.4 mm); side holes 0
+   servo_mount          no supports                          unsupported downward area     0.0 mm2; bridges  1 (longest  6.0 mm); side holes 0
+   connect_bracket      small overhangs, no supports needed  unsupported downward area    92.2 mm2; bridges  0 (longest  0.0 mm); side holes 7
+   speaker_cradle       no supports                          unsupported downward area     3.1 mm2; bridges  0 (longest  0.0 mm); side holes 0
+   blower_saddle        no supports                          unsupported downward area     0.0 mm2; bridges  0 (longest  0.0 mm); side holes 0
+   hood_lid             no supports                          unsupported downward area     0.0 mm2; bridges  0 (longest  0.0 mm); side holes 0
+   encoder_shim         no supports                          unsupported downward area     0.0 mm2; bridges  0 (longest  0.0 mm); side holes 0
+   port_face            small overhangs, no supports needed  unsupported downward area   114.5 mm2; bridges  1 (longest 17.0 mm); side holes 0
