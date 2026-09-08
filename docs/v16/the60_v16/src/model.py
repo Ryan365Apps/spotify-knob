@@ -33,12 +33,12 @@ def zbore(d, z0, z1, az=0.0, r=0.0, t=0.0):
 def rbore(d, r0, r1, az, z, t=0.0):
     return (Pos(0, 0, z) * Rot(0, 0, az) * Pos((r0 + r1) / 2, t, 0) * Rot(0, 90, 0)
             * Cylinder(d/2, r1 - r0, align=(Align.CENTER, Align.CENTER, Align.CENTER)))
-def csk_hole(d, z0, z1, az, r, head_d=6.5, head_h=1.6):
+def csk_hole(d, z0, z1, az, r, head_d=CSK_M25_HEAD_D, head_h=CSK_M25_HEAD_H):
     """countersunk from the underside (z0)"""
     h = zbore(d, z0 - 1, z1 + 1, az, r)
     h += polar(az, r, z0 - 0.01) * Cone(head_d/2, d/2, head_h, align=(Align.CENTER, Align.CENTER, Align.MIN))
     return h
-def csk_xy(d, x, y, z0, z1, head_d=6.5, head_h=1.6):
+def csk_xy(d, x, y, z0, z1, head_d=CSK_M25_HEAD_D, head_h=CSK_M25_HEAD_H):
     return Pos(x, y, 0) * (cyl(d/2, z0 - 1, z1 + 1) + Pos(0, 0, z0 - 0.01) * Cone(head_d/2, d/2, head_h, align=(Align.CENTER, Align.CENTER, Align.MIN)))
 def revolve_profile(pts):
     return revolve(Plane.XZ * Polygon(*pts, align=None), Axis.Z)
@@ -384,14 +384,14 @@ def base_plate():
     p -= gasket_groove()
     for (x, y) in CLOSING_SCREW_XY:                                                     # M2.5 tapped for the closing plate's countersunk screws
         p -= Pos(x, y, -1) * Cylinder(1.0, CLOSING_T + 4.0, align=(Align.CENTER, Align.CENTER, Align.MIN))
-    for az in RING_SCREW_AZ:                                                            # M3 csk from below through the shoulder into the ring's flange
-        p -= csk_hole(3.4, 0, RIM_STEP_Z, az, RING_SCREW_R)
-    p -= zbore(2.5, RIM_STEP_Z - 3.0, RIM_STEP_Z + 0.1, RING_BOND_AZ, RING_BOND_R)         # the ring's bond screw, M3 tapped 3.0 into the shoulder from its top face (GROUNDING 4.1)
+    for az in RING_SCREW_AZ:                                                            # M2.5 csk from below through the shoulder into the ring's flange
+        p -= csk_hole(CSK_M25_D, 0, RIM_STEP_Z, az, RING_SCREW_R)
+    p -= zbore(TAP_M25_D, RIM_STEP_Z - 3.0, RIM_STEP_Z + 0.1, RING_BOND_AZ, RING_BOND_R)   # the ring's bond screw, M2.5 tapped 3.0 into the shoulder from its top face (GROUNDING 4.1)
     for (x, y) in top_screw_xy():                                                       # everything bolted to the plate top: M2.5 tapped, blind, 3.5 into web + pier
         p -= Pos(x, y, PLATE_T - BLIND_D) * Cylinder(1.0, BLIND_D + 0.1, align=(Align.CENTER, Align.CENTER, Align.MIN))
     for (x, y) in blower_screw_xy():                                                    # the blower's two M2 into piers
         p -= Pos(x, y, PLATE_T - BLIND_D) * Cylinder(0.8, BLIND_D + 0.1, align=(Align.CENTER, Align.CENTER, Align.MIN))
-    p -= Pos(GND_BOND_XY[0], GND_BOND_XY[1], PLATE_T - BLIND_D) * Cylinder(1.25, BLIND_D + 0.1, align=(Align.CENTER, Align.CENTER, Align.MIN))   # chassis ground: M3 tapped blind into its pier
+    p -= Pos(GND_BOND_XY[0], GND_BOND_XY[1], PLATE_T - BLIND_D) * Cylinder(TAP_M25_D/2, BLIND_D + 0.1, align=(Align.CENTER, Align.CENTER, Align.MIN))   # chassis ground: M2.5 tapped blind into its pier
     for (x, y) in stud_xy():                                                            # v16: the boards' M2 studs pass up through full-depth islands (Ø2.2 clearance)
         p -= Pos(x, y, -1) * Cylinder(STUD_HOLE_D/2, PLATE_T + 2, align=(Align.CENTER, Align.CENTER, Align.MIN))
     return p                                                                            # (v16: no ribs)
@@ -462,14 +462,14 @@ def rim_ring():
     p -= trench(-1, PLATE_T + 1) & cyl(TRENCH_R1, -2, PLATE_T + 2)                        # v15: the blower's trench: flange notch, inner land cut away, groove top open, between TRENCH_FOOT_AZ out to TRENCH_R1
     p -= port_slot(); p -= carriage_hole()                                            # the carriage's shoe drops through the ring at 90 deg too (r 46-85.5)
     for az in PLATE_SCREW_AZ:                                                           # the structure's plate screws, csk from below (through the Ø9 lands in the groove)
-        p -= csk_hole(3.4, 0, PLATE_T, az, PILLAR_R)
-    for az in RING_SCREW_AZ:                                                            # the ring screws' countersinks (in the core's shoulder) reach 1.7 past the core's edge into the ring's inner land: the same cone here
-        p -= polar(az, RING_SCREW_R, -0.01) * Cone(6.5/2, 3.4/2, 1.6, align=(Align.CENTER, Align.CENTER, Align.MIN))
+        p -= csk_hole(CSK_M25_D, 0, PLATE_T, az, PILLAR_R)
+    for az in RING_SCREW_AZ:                                                            # the ring screws' countersinks (in the core's shoulder) reach 0.85 past the core's edge into the ring's inner land: the same cone here
+        p -= polar(az, RING_SCREW_R, -0.01) * Cone(CSK_M25_HEAD_D/2, CSK_M25_D/2, CSK_M25_HEAD_H, align=(Align.CENTER, Align.CENTER, Align.MIN))
     for t in (-PORT_TAB_T, PORT_TAB_T):                                                 # port-face rail: Ø1.6, tapped M2
         p -= zbore(1.6, -1, PLATE_T + 1, 0.0, PORT_TAB_R, t)
-    for az in RING_SCREW_AZ:                                                            # M3 tapped in the flange, blind from below
-        p -= zbore(2.5, RIM_STEP_Z - 0.1, PLATE_T - 0.6, az, RING_SCREW_R)
-    p -= zbore(3.4, RIM_STEP_Z - 1, PLATE_T + 1, RING_BOND_AZ, RING_BOND_R)                # the dedicated bond screw's clearance hole through the flange (GROUNDING 4.1)
+    for az in RING_SCREW_AZ:                                                            # M2.5 tapped in the flange, blind from below
+        p -= zbore(TAP_M25_D, RIM_STEP_Z - 0.1, PLATE_T - 0.6, az, RING_SCREW_R)
+    p -= zbore(2.8, RIM_STEP_Z - 1, PLATE_T + 1, RING_BOND_AZ, RING_BOND_R)                # the dedicated bond screw's Ø2.8 clearance hole through the flange (GROUNDING 4.1)
     for az in HOOD_SCREW_AZ:                                                            # v15: the hood lid's M2 taps 3 deep in the ring's flange
         p -= zbore(1.6, PLATE_T - 3.0, PLATE_T + 1, az, HOOD_SCREW_R)
     return p
@@ -619,7 +619,6 @@ def slit_azs():
         out.append(az)
     return out
 port_azs = slit_azs
-INSERT_M3_SHORT_L = 4.0
 CHANNEL_HALF = BLOCK_W/2 + CHANNEL_CLEAR                       # 4.2: half the channel's clear width
 CHANNEL_OUT_HALF = CHANNEL_HALF + CHANNEL_WALL_T                # 6.2: to the outside of its walls
 def block_channel():
@@ -666,14 +665,14 @@ def structure():
     s += zbore(UNDER_BOSS_D, Z_SEAT_BOT - UNDER_BOSS_H, Z_SEAT_BOT + 0.01, BLEED_AZ, BLEED_FOOT_R)
     s -= zbore(INSERT_M2_D, Z_SEAT_BOT - UNDER_BOSS_H - 1, Z_SEAT_BOT - UNDER_BOSS_H + INSERT_M2_L, BLEED_AZ, BLEED_FOOT_R)
     s -= zbore(2.2, Z_SEAT_BOT - UNDER_BOSS_H + INSERT_M2_L - 0.5, Z_SEAT_TOP + 1, BLEED_AZ, BLEED_FOOT_R)
-    # three M3 pillars on the wall for the plate screws from below
+    # three M2.5 pillars on the wall for the plate screws from below (v16b: M3 -> M2.5; the Ø7 pillar keeps 1.75 of wall round the Ø3.5 insert)
     for az in PILLAR_AZ:
         s += zbore(7.0, Z_PLATE_TOP - 0.01, PILLAR_TOP, az, PILLAR_R)
         s += blk(R_WALL_IN + 0.5 - PILLAR_R, 7.0, Z_PLATE_TOP - 0.01, PILLAR_TOP, az, (PILLAR_R + R_WALL_IN + 0.5)/2) & wall_inside()
         s += polar(az, PILLAR_R, PILLAR_TOP - 0.01) * Cone(3.5, 0.01, 3.5, align=(Align.CENTER, Align.CENTER, Align.MIN))   # PRINT (inverted): 45 deg cone on the pillar's top - it prints downward-pointing, no support
         s += (polar(az, (PILLAR_R + R_WALL_IN + 0.5)/2, PILLAR_TOP - 0.01) * extrude(Plane.XZ * Polygon((-(R_WALL_IN + 0.5 - PILLAR_R)/2, 0), ((R_WALL_IN + 0.5 - PILLAR_R)/2, 0), ((R_WALL_IN + 0.5 - PILLAR_R)/2, 3.5), align=None), 3.5, both=True)) & wall_inside()   # ... and a 45 deg web up the wall side
-        s -= zbore(INSERT_M3_D, Z_PLATE_TOP - 1, Z_PLATE_TOP + INSERT_M3_SHORT_L + 0.3, az, PILLAR_R)
-        s -= polar(az, PILLAR_R, Z_PLATE_TOP + INSERT_M3_SHORT_L + 0.29) * Cone(INSERT_M3_D/2, 0.01, INSERT_M3_D/2, align=(Align.CENTER, Align.CENTER, Align.MIN))   # PRINT: 45 deg roof on the blind hole
+        s -= zbore(INSERT_M25_D, Z_PLATE_TOP - 1, Z_PLATE_TOP + INSERT_M25_L + 0.3, az, PILLAR_R)
+        s -= polar(az, PILLAR_R, Z_PLATE_TOP + INSERT_M25_L + 0.29) * Cone(INSERT_M25_D/2, 0.01, INSERT_M25_D/2, align=(Align.CENTER, Align.CENTER, Align.MIN))   # PRINT: 45 deg roof on the blind hole
     # cuts
     s -= motor_relief()
     for az in WHEEL_FIXED_AZ:
@@ -1131,15 +1130,15 @@ def bleed_bodies():
     out["knob_bleed_screw"] = polar(BLEED_AZ, BLEED_FOOT_R, z0 + 0.2) * Cylinder(1.9, 1.6, align=(Align.CENTER, Align.CENTER, Align.MIN))   # M2 x 4 pan head over a ring terminal
     return out
 def bond_bodies():
-    """GROUNDING 3.1 and 4.1: the chassis bond (M3 pan head, external-tooth star washer, ring terminal) on the plate top beside the
+    """GROUNDING 3.1 and 4.1: the chassis bond (M2.5 pan head, external-tooth star washer, ring terminal) on the plate top beside the
     power inlet; the rim ring's dedicated bond screw through its flange into the core's shoulder, star washer under the head"""
     out = {}
     x, y = GND_BOND_XY
-    out["chassis_bond_star_washer"] = Pos(x, y, Z_PLATE_TOP) * (Cylinder(3.5, 0.6, align=(Align.CENTER, Align.CENTER, Align.MIN)) - Cylinder(1.7, 3))
-    out["chassis_bond_ring_terminal"] = Pos(x, y, Z_PLATE_TOP + 0.6) * (Cylinder(3.5, 0.8, align=(Align.CENTER, Align.CENTER, Align.MIN)) - Cylinder(1.7, 3)) + box_at(x + 3.0, x + 11.0, y - 2.0, y + 2.0, Z_PLATE_TOP + 0.6, Z_PLATE_TOP + 1.4)
-    out["chassis_bond_screw"] = Pos(x, y, Z_PLATE_TOP + 1.4) * Cylinder(2.75, 2.0, align=(Align.CENTER, Align.CENTER, Align.MIN))
-    out["ring_bond_star_washer"] = polar(RING_BOND_AZ, RING_BOND_R, PLATE_T) * (Cylinder(3.5, 0.6, align=(Align.CENTER, Align.CENTER, Align.MIN)) - Cylinder(1.7, 3))
-    out["ring_bond_screw"] = polar(RING_BOND_AZ, RING_BOND_R, PLATE_T + 0.6) * Cylinder(2.75, 2.0, align=(Align.CENTER, Align.CENTER, Align.MIN)) + polar(RING_BOND_AZ, RING_BOND_R, RIM_STEP_Z - 2.8) * Cylinder(1.45, PLATE_T + 0.6 - RIM_STEP_Z + 2.8, align=(Align.CENTER, Align.CENTER, Align.MIN))
+    out["chassis_bond_star_washer"] = Pos(x, y, Z_PLATE_TOP) * (Cylinder(STAR_M25_OD/2, 0.6, align=(Align.CENTER, Align.CENTER, Align.MIN)) - Cylinder(STAR_M25_ID/2, 3))
+    out["chassis_bond_ring_terminal"] = Pos(x, y, Z_PLATE_TOP + 0.6) * (Cylinder(3.0, 0.8, align=(Align.CENTER, Align.CENTER, Align.MIN)) - Cylinder(STAR_M25_ID/2, 3)) + box_at(x + 2.5, x + 11.0, y - 2.0, y + 2.0, Z_PLATE_TOP + 0.6, Z_PLATE_TOP + 1.4)
+    out["chassis_bond_screw"] = Pos(x, y, Z_PLATE_TOP + 1.4) * Cylinder(PAN_M25_HEAD_D/2, PAN_M25_HEAD_H, align=(Align.CENTER, Align.CENTER, Align.MIN))
+    out["ring_bond_star_washer"] = polar(RING_BOND_AZ, RING_BOND_R, PLATE_T) * (Cylinder(STAR_M25_OD/2, 0.6, align=(Align.CENTER, Align.CENTER, Align.MIN)) - Cylinder(STAR_M25_ID/2, 3))
+    out["ring_bond_screw"] = polar(RING_BOND_AZ, RING_BOND_R, PLATE_T + 0.6) * Cylinder(PAN_M25_HEAD_D/2, PAN_M25_HEAD_H, align=(Align.CENTER, Align.CENTER, Align.MIN)) + polar(RING_BOND_AZ, RING_BOND_R, RIM_STEP_Z - 2.8) * Cylinder(1.25, PLATE_T + 0.6 - RIM_STEP_Z + 2.8, align=(Align.CENTER, Align.CENTER, Align.MIN))
     return out
 def wire_bodies():
     """GROUNDING 6 and 5: the USB-C receptacle's shell wire to the chassis bond (Ø1.3, drawn as its route: up out of the port slot

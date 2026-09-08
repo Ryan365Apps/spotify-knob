@@ -305,7 +305,7 @@ for n in ("bob_board", "drv_board", "ls_board", "audio_board", "mcu_tray"):
     ok(f"{n} clearances: " + ", ".join(f"{k} {d:.1f}" for d, k in dd) + f"; to the structure {dw:.1f}")
 sec("the printed parts that keep M2.5 screws into the plate's top: blind tapped holes stop in the web + pier")
 holes = top_screw_xy()
-(ok if BLIND_D <= WEB_T + PIER_H - 1.0 else fail)(f"{len(holes)} x M2.5 (servo frame, connect bracket, speaker cradle) + 2 x M2 (blower) + 1 x M3 (chassis bond) blind holes {BLIND_D} deep from the top face: {WEB_T} of web + {PIER_H} of pier = {WEB_T + PIER_H} of metal, {WEB_T + PIER_H - BLIND_D:.1f} of floor left, {DUCT_H - PIER_H:.1f} of duct under each pier")
+(ok if BLIND_D <= WEB_T + PIER_H - 1.0 else fail)(f"{len(holes)} x M2.5 (servo frame, connect bracket, speaker cradle) + 2 x M2 (blower) + 1 x M2.5 (chassis bond) blind holes {BLIND_D} deep from the top face: {WEB_T} of web + {PIER_H} of pier = {WEB_T + PIER_H} of metal, {WEB_T + PIER_H - BLIND_D:.1f} of floor left, {DUCT_H - PIER_H:.1f} of duct under each pier")
 holes = holes + blower_screw_xy() + [GND_BOND_XY]
 for (x, y) in holes:
     r = math.hypot(x, y)
@@ -353,7 +353,7 @@ d = bought_on["knob_bleed_leaf_ASSUMED"].distance_to(knob)
 x, y = GND_BOND_XY
 ok(f"chassis bond at ({x:.0f}, {y:.0f}), r {math.hypot(x, y):.1f}, az {math.degrees(math.atan2(y, x)) % 360:.0f}: {math.hypot(x - PORT_FACE_R0, y - PORT_BARREL_T):.0f} mm from the barrel inlet; the rim ring's bond screw at az {RING_BOND_AZ}, r {RING_BOND_R}: {math.hypot(x - RING_BOND_R*math.cos(math.radians(RING_BOND_AZ)), y - RING_BOND_R*math.sin(math.radians(RING_BOND_AZ))):.0f} mm from it")
 probe = polar(RING_BOND_AZ, RING_BOND_R, RIM_STEP_Z - 2.9) * Cylinder(1.0, 2.8, align=(Align.CENTER, Align.CENTER, Align.MIN))
-(ok if inter(probe, made["base_plate"]) < 0.05 and inter(bought_on["ring_bond_screw"], made["rim_ring_STEEL"]) < 0.05 else fail)("the ring bond screw passes the flange's Ø3.4 clearance and threads 3.0 into the core's shoulder (no other feature in the way)")
+(ok if inter(probe, made["base_plate"]) < 0.05 and inter(bought_on["ring_bond_screw"], made["rim_ring_STEEL"]) < 0.05 else fail)("the ring bond screw passes the flange's Ø2.8 clearance and threads 3.0 into the core's shoulder (no other feature in the way)")
 wires = [n for n in bought_on if n.startswith("usbc_shell_wire")]
 ok(f"USB-C shell wire: {len(wires)} segments from the receptacle's board up out of the slot, under the connect bracket's slab (z 8.1-9.4 in its 1.5 gap) to the chassis terminal - the 3.5 mm jack's shell touches nothing metal (the port face is PETG: a stated requirement, GROUNDING 6)")
 ok(f"halo: {LED_N} LEDs at {LED_PER_M}/m on the strip at r {(R_STRIP_IN + R_STRIP_OUT)/2:.1f} = {HALO_PEAK_A:.2f} A at full white ({HALO_PEAK_A*5:.1f} W) - the peak that sizes the converter and the halo feed; HALO-OPTICS: 60 or 120 on the bench (120 = 5.76 A); no sustained cap")
@@ -409,14 +409,14 @@ for az, kind in va:
 (ok if not blind else fail)("every cut opening breaks into the groove behind it" + ("" if not blind else ": blind at " + ", ".join(blind)))
 badf = []
 voids = core_tunnels() + trench(CLOSING_T, PLATE_T)
-for az in RING_SCREW_AZ:                                # the csk head (Ø6.5 -> 3.4 over 1.6) and the shank, 0.3 of metal round them
-    probe = polar(az, RING_SCREW_R, 0.0) * Cone(3.55, 2.0, 1.6, align=(Align.CENTER, Align.CENTER, Align.MIN)) + polar(az, RING_SCREW_R, 1.5) * Cylinder(2.0, RIM_STEP_Z - 1.6, align=(Align.CENTER, Align.CENTER, Align.MIN))
+for az in RING_SCREW_AZ:                                # the csk head (Ø4.7 -> 2.7 over 1.0) and the shank, 0.3 of metal round them
+    probe = polar(az, RING_SCREW_R, 0.0) * Cone(CSK_M25_HEAD_D/2 + 0.3, CSK_M25_D/2 + 0.3, CSK_M25_HEAD_H, align=(Align.CENTER, Align.CENTER, Align.MIN)) + polar(az, RING_SCREW_R, CSK_M25_HEAD_H - 0.1) * Cylinder(CSK_M25_D/2 + 0.3, RIM_STEP_Z - CSK_M25_HEAD_H, align=(Align.CENTER, Align.CENTER, Align.MIN))
     if inter(probe, voids) > 0.05: badf.append(f"ring screw {az}")
 rvoids = trench(-1, PLATE_T + 1) + ring_groove() + ring_land_grooves()
 for az in HOOD_SCREW_AZ:
     probe = polar(az, HOOD_SCREW_R, PLATE_T - 3.2) * Cylinder(1.4, 3.4, align=(Align.CENTER, Align.CENTER, Align.MIN))
     if inter(probe, rvoids) > 0.05: badf.append(f"hood screw {az}")
-probe = polar(RING_BOND_AZ, RING_BOND_R, 0.5) * Cylinder(2.2, RIM_STEP_Z - 0.6, align=(Align.CENTER, Align.CENTER, Align.MIN))
+probe = polar(RING_BOND_AZ, RING_BOND_R, 0.5) * Cylinder(1.7, RIM_STEP_Z - 0.6, align=(Align.CENTER, Align.CENTER, Align.MIN))
 if inter(probe, voids) > 0.05: badf.append("ring bond")
 (ok if not badf else fail)(f"every ring fixing on a land: {len(RING_SCREW_AZ)} ring screws, the bond screw at {RING_BOND_AZ}, the hood's two" + ("" if not badf else " - NOT: " + ", ".join(badf)))
 ok(f"fins: {len(channel_ys())} channels {FIN_CH_W} x {DUCT_H} on {FIN_PITCH}, finned full length (design-changes item 2 asked for fins over the compute module and converter only - neither sits over a channel: the Pi is in a window through the duct, the converter over the front collector)")

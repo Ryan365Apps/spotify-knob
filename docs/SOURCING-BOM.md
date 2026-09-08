@@ -136,19 +136,30 @@
 
 ## 12 · Fasteners and small parts
 
+As built in v16 (`docs/v16/the60_v16/docs/V16-SPECIFICATION.md` 4.18 is the full count). One screw size above M2: **every former M3 is M2.5** (Ryan, 8 Sep).
+
 | Part | Description | Per unit | Buy | Supplier | Price | Status |
 |---|---|---|---|---|---|---|
-| M3 countersunk + heat-set inserts | Plate to pillars | 8 | 700 | Accu / Ruthex | — | ✅ |
-| M2.5 screws and nuts | Boards | ~16 | 1,200 | Accu | — | ✅ |
-| M2 screws | Port face rail | 2 | 200 | Accu | — | ✅ |
-| External-tooth star washers | Chassis bond and rim-ring bond | 2 | 200 | any | — | ✅ |
-| Grub screws | Lock the eccentric bushes | 3 | 250 | Accu | — | ✅ |
+| DIN 7991 M2.5 × 8 countersunk | Plate to the structure's pillars (3) and rim ring to the core (7) | 10 | 800 | Accu | — | ✅ |
+| M2.5 heat-set inserts, Ø3.5 × 4.0 | In the structure's three pillars | 3 | 250 | Ruthex / CNC Kitchen | — | ✅ |
+| DIN 7985 M2.5 pan (× 8 and × 6) | Ring bond (× 8, thread-locked) and chassis bond (× 6) | 2 | 200 | Accu | — | ✅ |
+| DIN 6798 A M2.5 external-tooth star washers | Under both bond screws | 2 | 200 | any | — | ✅ |
+| M2.5 ring terminal, 22–24 AWG | The chassis bond wire | 1 | 100 | any | — | ✅ |
+| DIN 7991 M2 countersunk studs (4 × M2 × 22, 8 × M2 × 16) + DIN 934 M2 nuts | Every plate board and the MCU tray: studs from below, nuts above | 12 + 16 | 1,000 + 1,200 | Accu | — | ✅ |
+| M2.5 × 12 hex standoffs, M2.5 × 6 csk, M2.5 × 5, 0.5 washers | The Pi and adapter stack | 4 + 4 + 4 + 4 | 300 each | Accu | — | ✅ |
+| M2.5 × 4 | Servo frame, connect bracket (csk), speaker cradle, closing plate (9, csk) | 15 | 1,200 | Accu | — | ✅ |
+| M2 × 16 pan | Blower saddle + blower into the piers | 2 | 200 | Accu | — | ✅ |
+| M2 × 4, × 5, × 6 + M2 inserts | Port face rail (2), hood lid (2), encoder board (2 + 2 inserts), connect board (4 + 4 inserts), bleed foot (1 + 1 insert) | 11 + 7 | 900 + 600 | Accu / Ruthex | — | ✅ |
+| M2 × 18 pan + M2 nut | The sprung block's captive release screw | 1 + 1 | 100 | Accu | — | ✅ |
+| V623ZZ V-groove bearings | The three knob wheels (V depth ASSUMED 1.2 — measure before the ridge is cut) | 3 | 250 | bearing supplier | — | ⏳ V to confirm |
+| ISO 8734 Ø3 m6 × 10 and × 16 dowel pins + M3 × 0.5 washers | The wheels' axles (2 fixed, 1 in the block) and the fixed posts' washers | 2 + 1 + 2 | 250 each | Accu | — | ✅ |
+| Ø4 × 16 compression spring, ~0.8 N/mm | The sprung block | 1 | 100 | Lee Spring / Accu | — | ⏳ rate to confirm on the bench |
 | Ø2 m6 × 8 dowel pins | Display centring, in bosses under the seat flange | 3 | 250 | Accu | — | ✅ |
-| M2 × 18 | Blower saddle through-bolts | 2 | 200 | Accu | — | ✅ |
 | Display bonding tape | 0.5 mm double-sided foam, under the glass edge | 1 | 70 | 3M | — | ✅ |
+| Foam gaskets | Blower inlet (0.3), hood (0.3), closing plate (0.2, two pieces), opal ring (0.3) | 5 | 400 | die-cut | — | ✅ |
 | Thread lock | For the bonding screws | — | 1 | Loctite | — | ✅ |
 
-**No screws anywhere on the knob.**
+**No screws anywhere on the knob.** Deleted, do not buy: grub screws (there are no eccentric bushes), M3 anything.
 
 ## 13 · Packaging
 
